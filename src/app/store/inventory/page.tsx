@@ -81,11 +81,13 @@ export default function InventoryPage() {
   });
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.email) {
+      setIsLoading(false);
+      return;
+    };
 
     setIsLoading(true);
-    const storeDocRef = doc(firestore, "stores", user.email!);
-    const productsCollectionRef = collection(storeDocRef, "products");
+    const productsCollectionRef = collection(firestore, "stores", user.email, "products");
 
     const unsubscribe = onSnapshot(
       productsCollectionRef,
@@ -102,7 +104,7 @@ export default function InventoryPage() {
         toast({
           variant: "destructive",
           title: "Error fetching products",
-          description: "Could not load inventory from the database.",
+          description: "Could not load inventory from the database. Check console for details.",
         });
         setIsLoading(false);
       }
@@ -112,7 +114,7 @@ export default function InventoryPage() {
   }, [user, firestore, toast]);
 
   const onSubmit: SubmitHandler<ProductFormValues> = async (data) => {
-    if (!user) {
+    if (!user?.email) {
       toast({
         variant: "destructive",
         title: "Not authenticated",
@@ -122,15 +124,16 @@ export default function InventoryPage() {
     }
 
     try {
-      const storeDocRef = doc(firestore, "stores", user.email!);
-      const productsCollectionRef = collection(storeDocRef, "products");
+      const storeDocRef = doc(firestore, "stores", user.email);
       
-      // Check if store document exists, if not create it.
+      // Ensure the store document exists before adding to the subcollection.
+      // This can be helpful on the first product add.
       const storeDoc = await getDoc(storeDocRef);
       if (!storeDoc.exists()) {
         await setDoc(storeDocRef, { owner: user.email, createdAt: new Date() });
       }
 
+      const productsCollectionRef = collection(storeDocRef, "products");
       await addDoc(productsCollectionRef, { ...data, id: data.barcode });
       
       toast({
@@ -144,7 +147,7 @@ export default function InventoryPage() {
       toast({
         variant: "destructive",
         title: "Error adding product",
-        description: error.message,
+        description: "An error occurred. Please check security rules and console for details.",
       });
     }
   };
@@ -271,7 +274,7 @@ export default function InventoryPage() {
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>{formatCurrency(product.price)}</TableCell>
                     <TableCell className="text-center">{product.quantity}</TableCell>
-                    <TableCell className="text-right font-mono">{product.id}</TableCell>
+                    <TableCell className="text-right font-mono">{product.barcode}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
