@@ -37,13 +37,16 @@ export default function LoginPage() {
 
   const handleLoginSuccess = async (user: any) => {
     if (user.email === 'root.linea@gmail.com') {
-      router.push("/admin");
+      router.push("/store/dashboard");
       return;
     }
     const idTokenResult = await user.getIdTokenResult();
     if (idTokenResult.claims.admin) {
       router.push("/admin");
-    } else {
+    } else if (idTokenResult.claims.shop_owner) {
+      router.push("/store/dashboard");
+    }
+    else {
       router.push("/");
     }
   };
@@ -138,11 +141,17 @@ export default function LoginPage() {
               Google
             </Button>
           </CardContent>
-          <CardFooter className="flex justify-center text-center text-sm text-muted-foreground">
+          <CardFooter className="flex flex-col gap-2 justify-center text-center text-sm text-muted-foreground">
               <p>
                   Don't have an account?{" "}
                   <Link href="/signup" className="text-primary hover:underline">
                       Sign up
+                  </Link>
+              </p>
+              <p>
+                  Are you a shop owner?{" "}
+                  <Link href="/store/signup" className="text-primary hover:underline">
+                      Create your store
                   </Link>
               </p>
           </CardFooter>
