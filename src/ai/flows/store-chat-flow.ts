@@ -123,10 +123,8 @@ const storeAnalystFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (history) => {
-    const lastUserMessage = history.findLast(h => h.role === 'user')?.content || '';
 
     const llmResponse = await ai.generate({
-      prompt: lastUserMessage,
       history,
       tools: [getMonthlySales, getTopProducts, getSalesByDay, getRecentSales, getTopCustomers],
       system: `
