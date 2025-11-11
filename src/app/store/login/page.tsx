@@ -78,7 +78,7 @@ export default function StoreLoginPage() {
     }
   };
   
-  if (loading || (!loading && user)) {
+  if (loading || user) {
     return null;
   }
 

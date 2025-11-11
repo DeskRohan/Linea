@@ -30,7 +30,7 @@ export default function RoleSelectionPage() {
         }
     }, [user, loading, router]);
     
-    if (loading || (!loading && user)) {
+    if (loading || user) {
         return null;
     }
 
