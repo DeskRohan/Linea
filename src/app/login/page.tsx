@@ -33,7 +33,7 @@ export default function LoginPage() {
     if (!loading && user) {
       handleLoginSuccess(user);
     }
-  }, [user, loading]);
+  }, [user, loading, router]);
 
   const handleLoginSuccess = async (user: FirebaseUser) => {
     // This login is only for customers
@@ -67,7 +67,7 @@ export default function LoginPage() {
     }
   };
   
-  if (loading) {
+  if (loading || user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>Loading...</p>
