@@ -7,15 +7,14 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth, useUser } from "@/firebase";
 
 import {
-  Boxes,
   LayoutDashboard,
+  Boxes,
   BarChart3,
+  Users,
   Settings,
   LogOut,
   Store,
   PanelLeft,
-  Users,
-  PlusCircle,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -132,31 +131,35 @@ export default function StoreLayout({
 const NavLinks = ({ mobile }: { mobile?: boolean }) => {
   const pathname = usePathname();
   const links = [
-    { href: "/store/dashboard", text: "Dashboard" },
-    { href: "/store/inventory", text: "Inventory" },
-    { href: "/store/analytics", text: "Analytics" },
-    { href: "/store/customers", text: "Customers" },
-    { href: "/store/settings", text: "Settings" },
+    { href: "/store/dashboard", text: "Dashboard", icon: LayoutDashboard },
+    { href: "/store/inventory", text: "Inventory", icon: Boxes },
+    { href: "/store/analytics", text: "Analytics", icon: BarChart3 },
+    { href: "/store/customers", text: "Customers", icon: Users },
+    { href: "/store/settings", text: "Settings", icon: Settings },
   ];
 
-  const mobileClasses = "text-muted-foreground hover:text-foreground";
-  const desktopClasses =
-    "text-muted-foreground transition-colors hover:text-foreground";
+  const baseClasses = "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+  const activeClasses = "bg-muted text-primary"
+
+  const mobileClasses = "text-lg font-semibold";
+  const desktopClasses = "text-base";
 
   return (
     <>
       {links.map((link) => {
         const isActive = pathname.startsWith(link.href);
+        const Icon = link.icon;
         return (
           <Link
             key={link.href}
             href={link.href}
             className={cn(
-              "font-medium",
+              baseClasses,
               mobile ? mobileClasses : desktopClasses,
-              isActive && "text-foreground"
+              isActive && activeClasses
             )}
           >
+            <Icon className="h-5 w-5" />
             {link.text}
           </Link>
         );

@@ -81,8 +81,6 @@ export default function StoreLoginPage() {
     );
   }
 
-  // If user is logged in, useEffect will redirect.
-  // We return null to avoid flashing the login page.
   if (user) {
     return null;
   }

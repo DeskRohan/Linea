@@ -20,8 +20,6 @@ export default function RoleSelectionPage() {
   const { user, loading } = useUser();
   const router = useRouter();
 
-  // This effect will redirect the user if they are already logged in.
-  // It's a simple example; a more robust solution might check for a specific role claim.
   useEffect(() => {
     if (!loading && user) {
       // Simple heuristic: if email contains 'store', redirect to store dashboard.
@@ -44,7 +42,7 @@ export default function RoleSelectionPage() {
     );
   }
 
-  // If user is logged in, show loading while redirecting
+  // If user is logged in, show loading while redirecting to avoid flashing content
   if (user) {
     return (
        <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">

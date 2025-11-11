@@ -81,10 +81,8 @@ export default function LoginPage() {
     );
   }
 
-  // If user is logged in, useEffect will redirect.
-  // We return null to avoid flashing the login page.
   if (user) {
-    return null;
+    return null; // Don't render anything while redirecting
   }
 
   return (
