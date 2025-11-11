@@ -18,7 +18,6 @@ import {
   Boxes,
   LayoutDashboard,
   BarChart3,
-  Users,
   Settings,
   LogOut,
   Store,
@@ -83,7 +82,7 @@ export default function StoreLayout({
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                   <Link href="#">
+                   <Link href="/store/inventory">
                     <Boxes />
                     Manage Inventory
                   </Link>
@@ -94,14 +93,6 @@ export default function StoreLayout({
                    <Link href="#">
                     <BarChart3 />
                     Analytics
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                   <Link href="#">
-                    <Users />
-                    Customers
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
