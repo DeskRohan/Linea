@@ -31,6 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import Link from "next/link";
+import AiChatbot from "@/components/ai-chatbot";
 
 
 export default function StoreDashboard() {
@@ -96,78 +97,14 @@ export default function StoreDashboard() {
         </Card>
       </div>
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader className="flex flex-row items-center">
-            <div className="grid gap-2">
-              <CardTitle>Recent Sales</CardTitle>
-              <CardDescription>
-                Recent transactions from your store.
-              </CardDescription>
-            </div>
-            <Button asChild size="sm" className="ml-auto gap-1">
-              <Link href="/store/analytics">
-                View All
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Liam Johnson</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      liam@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">₹20,800.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Olivia Smith</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      olivia@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">₹12,500.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Noah Williams</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      noah@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">₹29,100.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Emma Brown</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      emma@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">₹37,450.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Liam Johnson</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      liam@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">₹20,800.00</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
+         <Card className="xl:col-span-2">
+            <CardHeader>
+                <CardTitle>AI Business Analyst</CardTitle>
+                <CardDescription>Ask questions about your store's performance.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <AiChatbot />
+            </CardContent>
         </Card>
         <Card>
           <CardHeader>
@@ -249,6 +186,79 @@ export default function StoreDashboard() {
               </div>
               <div className="ml-auto font-medium">+₹3,245.00</div>
             </div>
+          </CardContent>
+        </Card>
+        <Card className="xl:col-span-3">
+          <CardHeader className="flex flex-row items-center">
+            <div className="grid gap-2">
+              <CardTitle>Recent Sales</CardTitle>
+              <CardDescription>
+                Recent transactions from your store.
+              </CardDescription>
+            </div>
+            <Button asChild size="sm" className="ml-auto gap-1">
+              <Link href="/store/analytics">
+                View All
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>
+                    <div className="font-medium">Liam Johnson</div>
+                    <div className="hidden text-sm text-muted-foreground md:inline">
+                      liam@example.com
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">₹20,800.00</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <div className="font-medium">Olivia Smith</div>
+                    <div className="hidden text-sm text-muted-foreground md:inline">
+                      olivia@example.com
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">₹12,500.00</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <div className="font-medium">Noah Williams</div>
+                    <div className="hidden text-sm text-muted-foreground md:inline">
+                      noah@example.com
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">₹29,100.00</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <div className="font-medium">Emma Brown</div>
+                    <div className="hidden text-sm text-muted-foreground md:inline">
+                      emma@example.com
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">₹37,450.00</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <div className="font-medium">Liam Johnson</div>
+                    <div className="hidden text-sm text-muted-foreground md:inline">
+                      liam@example.com
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">₹20,800.00</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
