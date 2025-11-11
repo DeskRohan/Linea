@@ -21,7 +21,7 @@ export default function AiChatbot() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const scrollViewportRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -50,14 +50,11 @@ export default function AiChatbot() {
   };
 
   useEffect(() => {
-    if (scrollViewportRef.current) {
-        const scrollable = scrollViewportRef.current.children[0]
-        if (scrollable) {
-            scrollable.scrollTo({
-                top: scrollable.scrollHeight,
-                behavior: 'smooth'
-            });
-        }
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
     }
   }, [messages]);
 
@@ -81,7 +78,7 @@ export default function AiChatbot() {
                 </Button>
           </CardHeader>
           <CardContent className="flex-grow flex flex-col overflow-hidden p-0">
-            <ScrollArea className="flex-grow p-4" viewportRef={scrollViewportRef}>
+            <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
                 <div className="flex flex-col gap-4">
                 {messages.map((message, index) => (
                     <div
