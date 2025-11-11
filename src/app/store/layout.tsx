@@ -14,10 +14,21 @@ import {
   LogOut,
   Store,
   PanelLeft,
+  Mail,
+  Instagram,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,28 +88,63 @@ export default function StoreLayout({
           </SheetContent>
         </Sheet>
         <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="rounded-full"
-              >
-                <Avatar>
-                  <AvatarImage src={""} />
-                  <AvatarFallback>S</AvatarFallback>
-                </Avatar>
-                <span className="sr-only">Toggle user menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Dialog>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full"
+                >
+                  <Avatar>
+                    <AvatarImage src={""} />
+                    <AvatarFallback>S</AvatarFallback>
+                  </Avatar>
+                  <span className="sr-only">Toggle user menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DialogTrigger asChild>
+                  <DropdownMenuItem>Support</DropdownMenuItem>
+                </DialogTrigger>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Contact Support</DialogTitle>
+                <DialogDescription>
+                  Contact the application architect for support.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                  <div className="font-semibold">
+                    <p className="text-lg">Rohan Godakhindi</p>
+                    <p className="text-sm text-muted-foreground">Application Architect</p>
+                  </div>
+
+                  <div className="space-y-3">
+                     <a href="https://wa.me/9110218701" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
+                      <MessageSquare className="h-5 w-5 text-green-500" />
+                      <span className="text-sm font-medium">9110218701</span>
+                    </a>
+                    <a href="mailto:rohangodakhindi@gmail.com" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
+                      <Mail className="h-5 w-5 text-gray-500" />
+                      <span className="text-sm font-medium">rohangodakhindi@gmail.com</span>
+                    </a>
+                    <a href="https://www.instagram.com/_irohang" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
+                      <Instagram className="h-5 w-5 text-pink-500" />
+                      <span className="text-sm font-medium">_irohang</span>
+                    </a>
+                  </div>
+
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
