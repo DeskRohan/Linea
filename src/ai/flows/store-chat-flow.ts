@@ -100,7 +100,7 @@ const getTopCustomers = ai.defineTool(
 
 // Define Chat History Schema
 const ChatMessageSchema = z.object({
-  role: z.enum(['user', 'bot']),
+  role: z.enum(['user', 'bot', 'system']),
   content: z.string(),
 });
 export type ChatMessage = z.infer<typeof ChatMessageSchema>;
@@ -124,10 +124,7 @@ const storeAnalystFlow = ai.defineFlow(
   },
   async (history) => {
 
-    const llmResponse = await ai.generate({
-      history,
-      tools: [getMonthlySales, getTopProducts, getSalesByDay, getRecentSales, getTopCustomers],
-      system: `
+    const systemPrompt = `
         You are Navya, an AI business analyst for a local shop owner.
         Your goal is to answer questions about the store's performance based on the data available through the provided tools.
         Be friendly, conversational, and helpful.
@@ -135,7 +132,11 @@ const storeAnalystFlow = ai.defineFlow(
         When asked for sales data, summarize the key trends.
         If you don't know the answer or the data is not available, just say so.
         Do not make up any information. Only use the information provided by the tools.
-      `,
+      `;
+
+    const llmResponse = await ai.generate({
+      history: [{role: 'system', content: systemPrompt}, ...history],
+      tools: [getMonthlySales, getTopProducts, getSalesByDay, getRecentSales, getTopCustomers],
     });
 
     return llmResponse.text;
