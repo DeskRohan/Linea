@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -100,21 +101,6 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [lastScannedId]);
-  
-  if (loading || !user) {
-    return (
-       <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center space-x-4">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-[250px]" />
-            <Skeleton className="h-4 w-[200px]" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
 
   const renderContent = () => {
     switch (appState) {
@@ -127,6 +113,7 @@ export default function Home() {
             onCheckout={() => setAppState("completed")}
             lastScannedId={lastScannedId}
             user={user}
+            loading={loading}
             onLogout={handleLogout}
           />
         );
@@ -141,6 +128,7 @@ export default function Home() {
             onCheckout={() => setAppState("completed")}
             lastScannedId={lastScannedId}
             user={user}
+            loading={loading}
             onLogout={handleLogout}
           />
         );
@@ -161,6 +149,7 @@ const ShoppingScreen = ({
   onCheckout,
   lastScannedId,
   user,
+  loading,
   onLogout,
 }: {
   cartItems: CartItem[];
@@ -169,6 +158,7 @@ const ShoppingScreen = ({
   onCheckout: () => void;
   lastScannedId: string | null;
   user: any;
+  loading: boolean;
   onLogout: () => void;
 }) => (
   <div className="w-full h-screen md:h-auto max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -201,11 +191,15 @@ const ShoppingScreen = ({
           </CardDescription>
         </div>
          <div className="flex items-center gap-4">
-            <Avatar>
-              <AvatarImage src={user.photoURL} />
-              <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <Button variant="ghost" size="icon" onClick={onLogout}>
+            {loading ? (
+              <Skeleton className="h-10 w-10 rounded-full" />
+            ) : user ? (
+              <Avatar>
+                <AvatarImage src={user.photoURL} />
+                <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+              </Avatar>
+            ) : null}
+            <Button variant="ghost" size="icon" onClick={onLogout} disabled={loading}>
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
