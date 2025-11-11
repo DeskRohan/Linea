@@ -137,7 +137,7 @@ const storeAnalystFlow = ai.defineFlow(
     const fullHistory: ChatMessage[] = [
       { role: 'user', content: systemPrompt },
       { role: 'bot', content: 'OK.' },
-      ...history.slice(1), // Exclude the initial "hello" from the bot
+      ...history, // Use the full history from the client
     ];
 
     const llmResponse = await ai.generate({
