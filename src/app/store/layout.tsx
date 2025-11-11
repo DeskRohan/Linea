@@ -12,13 +12,13 @@ import {
   Store,
   PanelLeft,
   Users,
+  PlusCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/firebase/auth/use-user";
 import { getAuth, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
@@ -99,6 +99,9 @@ export default function StoreLayout({
           </SheetContent>
         </Sheet>
         <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
+          <Button>
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Product
+          </Button>
            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
@@ -160,3 +163,5 @@ const NavLinks = ({ mobile }: { mobile?: boolean }) => {
     </>
   )
 }
+
+    
