@@ -46,14 +46,13 @@ export default function AiChatbot() {
 
     setIsLoading(true);
     const userMessage: DisplayMessage = { role: "user", content: input };
-    const newMessages: DisplayMessage[] = [...messages, userMessage];
-    setMessages(newMessages);
+    setMessages(prev => [...prev, userMessage]);
     setInput("");
     scrollToBottom();
     
     // The AI flow expects the specific `user` or `model` roles.
     // We send the whole history, excluding the initial greeting from the bot.
-    const flowHistory = newMessages.slice(1).map(m => ({ ...m, role: m.role as 'user' | 'model'}));
+    const flowHistory = [...messages.slice(1), userMessage];
 
     try {
       const botResponse = await chatWithStoreBot(flowHistory);
