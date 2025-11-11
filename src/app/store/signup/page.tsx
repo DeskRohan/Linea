@@ -1,9 +1,13 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { useAuth, useUser, useFirestore } from "@/firebase";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SwiftPayLogo } from "@/components/icons/logo";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 const VALID_ACTIVATION_KEY = "rhlinea2k25";
 
@@ -26,25 +31,79 @@ export default function StoreSignupPage() {
   const [storeName, setStoreName] = useState("");
   const [activationKey, setActivationKey] = useState("");
   const router = useRouter();
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const { user, loading } = useUser();
   const { toast } = useToast();
 
-  const handleEmailSignUp = (event: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      router.push("/store/dashboard");
+    }
+  }, [user, router]);
+
+  const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (activationKey !== VALID_ACTIVATION_KEY) {
       toast({
         variant: "destructive",
         title: "Invalid Activation Key",
-        description: "Please enter the correct activation key to create a store.",
+        description:
+          "Please enter the correct activation key to create a store.",
       });
       return;
     }
-    toast({
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const newUser = userCredential.user;
+
+      if (newUser) {
+        await updateProfile(newUser, {
+          displayName: storeName,
+        });
+
+        // Create a document for the store in Firestore
+        const storeDocRef = doc(firestore, "stores", newUser.email!);
+        await setDoc(storeDocRef, {
+          owner: newUser.email,
+          shopName: storeName,
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      toast({
         title: "Store Created",
         description: "You can now log in to your store dashboard.",
-    });
-    router.push("/store/dashboard");
+      });
+      router.push("/store/dashboard");
+    } catch (error: any) {
+      console.error("Store Signup Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Signup Failed",
+        description: error.message,
+      });
+    }
   };
+
+  if (loading) {
+     return (
+      <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Loading...</p>
+      </main>
+    );
+  }
+
+  if (user) {
+    return null;
+  }
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
@@ -54,7 +113,9 @@ export default function StoreSignupPage() {
             <SwiftPayLogo className="h-16 w-16" />
           </div>
           <CardTitle className="text-2xl">Create Your Store</CardTitle>
-          <CardDescription>Join SwiftPay and start selling today.</CardDescription>
+          <CardDescription>
+            Join SwiftPay and start selling today.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleEmailSignUp} className="space-y-4">
@@ -74,7 +135,7 @@ export default function StoreSignupPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="store@example.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -82,21 +143,21 @@ export default function StoreSignupPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                required 
+              <Input
+                id="password"
+                type="password"
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-             <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="activationKey">Activation Key</Label>
-              <Input 
-                id="activationKey" 
+              <Input
+                id="activationKey"
                 type="password"
                 placeholder="Enter your activation key"
-                required 
+                required
                 value={activationKey}
                 onChange={(e) => setActivationKey(e.target.value)}
               />
@@ -107,15 +168,18 @@ export default function StoreSignupPage() {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 justify-center text-center text-sm text-muted-foreground">
-            <p>
-                Already have an account?{" "}
-                <Link href="/store/login" className="text-primary hover:underline">
-                    Sign in
-                </Link>
-            </p>
-             <Link href="/" className="text-primary hover:underline">
-                  Back to role selection
-              </Link>
+          <p>
+            Already have an account?{" "}
+            <Link
+              href="/store/login"
+              className="text-primary hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
+          <Link href="/" className="text-primary hover:underline">
+            Back to role selection
+          </Link>
         </CardFooter>
       </Card>
     </main>

@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Package,
   LogOut,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,7 @@ import { findProductByBarcode, type CartItem } from "@/lib/products";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth, useUser } from "@/firebase";
 
 type AppState = "shopping" | "completed";
 
@@ -40,10 +42,20 @@ const formatCurrency = (amount: number) => {
 
 export default function ShoppingPage() {
   const router = useRouter();
+  const { user, loading } = useUser();
+  const auth = useAuth();
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [lastScannedId, setLastScannedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // If not loading and no user, redirect to login
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
+
 
   const handleScanSuccess = (decodedText: string) => {
     const product = findProductByBarcode(decodedText);
@@ -72,6 +84,7 @@ export default function ShoppingPage() {
   };
 
   const handleLogout = async () => {
+    await auth.signOut();
     router.push("/");
   };
 
@@ -89,12 +102,21 @@ export default function ShoppingPage() {
     }
   }, [lastScannedId]);
 
+  if (loading || !user) {
+    return (
+       <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Loading...</p>
+      </main>
+    )
+  }
   
   const renderContent = () => {
     switch (appState) {
       case "shopping":
         return (
           <ShoppingScreen
+            user={user}
             cartItems={cartItems}
             total={total}
             onScanSuccess={handleScanSuccess}
@@ -108,6 +130,7 @@ export default function ShoppingPage() {
       default:
         return (
            <ShoppingScreen
+            user={user}
             cartItems={cartItems}
             total={total}
             onScanSuccess={handleScanSuccess}
@@ -127,6 +150,7 @@ export default function ShoppingPage() {
 }
 
 const ShoppingScreen = ({
+  user,
   cartItems,
   total,
   onScanSuccess,
@@ -134,6 +158,7 @@ const ShoppingScreen = ({
   lastScannedId,
   onLogout,
 }: {
+  user: any;
   cartItems: CartItem[];
   total: number;
   onScanSuccess: (decodedText: string) => void;
@@ -172,8 +197,8 @@ const ShoppingScreen = ({
         </div>
          <div className="flex items-center gap-4">
             <Avatar>
-              <AvatarImage src={undefined} />
-              <AvatarFallback>U</AvatarFallback>
+              <AvatarImage src={user?.photoURL} />
+              <AvatarFallback>{user?.email?.[0].toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
             <Button variant="ghost" size="icon" onClick={onLogout}>
               <LogOut className="h-5 w-5" />

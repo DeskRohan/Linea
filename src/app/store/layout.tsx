@@ -1,8 +1,11 @@
 
 "use client";
 
-import * as React from "react"
+import * as React from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuth, useUser } from "@/firebase";
+
 import {
   Boxes,
   LayoutDashboard,
@@ -13,13 +16,11 @@ import {
   PanelLeft,
   Users,
   PlusCircle,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,8 +28,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 export default function StoreLayout({
   children,
@@ -36,10 +37,28 @@ export default function StoreLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const auth = useAuth();
+  const { user, loading } = useUser();
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.push("/store/login");
+    }
+  }, [user, loading, router]);
 
   const handleLogout = async () => {
+    await auth.signOut();
     router.push("/");
   };
+
+  if (loading || !user) {
+    return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -79,12 +98,16 @@ export default function StoreLayout({
           </SheetContent>
         </Sheet>
         <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
-           <DropdownMenu>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="icon" className="rounded-full">
+              <Button
+                variant="secondary"
+                size="icon"
+                className="rounded-full"
+              >
                 <Avatar>
-                    <AvatarImage src={''} />
-                    <AvatarFallback>S</AvatarFallback>
+                  <AvatarImage src={user?.photoURL || ""} />
+                  <AvatarFallback>{user?.email?.[0].toUpperCase() || 'S'}</AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
               </Button>
@@ -117,11 +140,12 @@ const NavLinks = ({ mobile }: { mobile?: boolean }) => {
   ];
 
   const mobileClasses = "text-muted-foreground hover:text-foreground";
-  const desktopClasses = "text-muted-foreground transition-colors hover:text-foreground";
+  const desktopClasses =
+    "text-muted-foreground transition-colors hover:text-foreground";
 
   return (
     <>
-      {links.map(link => {
+      {links.map((link) => {
         const isActive = pathname.startsWith(link.href);
         return (
           <Link
@@ -135,8 +159,8 @@ const NavLinks = ({ mobile }: { mobile?: boolean }) => {
           >
             {link.text}
           </Link>
-        )
+        );
       })}
     </>
-  )
-}
+  );
+};
