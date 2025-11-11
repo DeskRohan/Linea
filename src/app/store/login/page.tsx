@@ -17,7 +17,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SwiftPayLogo } from "@/components/icons/logo";
-import { Chrome } from "lucide-react";
 
 export default function StoreLoginPage() {
   const [email, setEmail] = useState("");
@@ -26,10 +25,6 @@ export default function StoreLoginPage() {
 
   const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
-    router.push("/store/dashboard");
-  };
-
-  const handleGoogleSignIn = () => {
     router.push("/store/dashboard");
   };
 
@@ -70,24 +65,6 @@ export default function StoreLoginPage() {
               Sign In
             </Button>
           </form>
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleGoogleSignIn}
-          >
-            <Chrome className="mr-2 h-4 w-4" />
-            Google
-          </Button>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 justify-center text-center text-sm text-muted-foreground">
           <p>
