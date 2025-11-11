@@ -1,10 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { useFirestore, useUser } from "@/firebase";
-
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -31,57 +28,19 @@ interface StoreSettings {
 }
 
 export default function ShopSettingsPage() {
-  const { user } = useUser();
-  const firestore = useFirestore();
   const { toast } = useToast();
 
   const [settings, setSettings] = useState<StoreSettings>({
-    shopName: "",
-    shopAddress: "",
-    invoicePrefix: "",
-    invoiceFooter: "",
-    whatsapp: "",
-    gstin: "",
-    terms: "",
+    shopName: "My Awesome Store",
+    shopAddress: "123 Main Street, Anytown, 12345",
+    invoicePrefix: "INV-",
+    invoiceFooter: "Thank you for your business!",
+    whatsapp: "9876543210",
+    gstin: "29AABCU9603R1ZM",
+    terms: "1. All sales are final. 2. No returns or exchanges.",
   });
 
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      if (user) {
-        setIsLoading(true);
-        try {
-          const storeDocRef = doc(firestore, "stores", user.email!);
-          const docSnap = await getDoc(storeDocRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setSettings({
-              shopName: data.shopName || "",
-              shopAddress: data.shopAddress || "",
-              invoicePrefix: data.invoicePrefix || "",
-              invoiceFooter: data.invoiceFooter || "",
-              whatsapp: data.whatsapp || "",
-              gstin: data.gstin || "",
-              terms: data.terms || "",
-            });
-          }
-        } catch (error) {
-          console.error("Error fetching settings:", error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not fetch store settings.",
-          });
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchSettings();
-  }, [user, firestore, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -89,43 +48,17 @@ export default function ShopSettingsPage() {
   };
   
   const handleSave = async () => {
-    if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Not Authenticated",
-        description: "You must be logged in to save settings.",
-      });
-      return;
-    }
-
     setIsSaving(true);
-    try {
-      const storeDocRef = doc(firestore, "stores", user.email!);
-      await setDoc(storeDocRef, settings, { merge: true });
+    // Mock saving
+    setTimeout(() => {
+      setIsSaving(false);
       toast({
-        title: "Settings Saved",
-        description: "Your store settings have been updated successfully.",
+        title: "Settings Saved (Mock)",
+        description: "Your store settings have been updated.",
         action: <Check className="h-5 w-5 text-green-500" />,
       });
-    } catch (error) {
-      console.error("Error saving settings:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not save settings. Please try again.",
-      });
-    } finally {
-      setIsSaving(false);
-    }
+    }, 1000);
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
 
   return (
     <>

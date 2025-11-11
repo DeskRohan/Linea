@@ -1,16 +1,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  createUserWithEmailAndPassword,
-  updateProfile,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
-import { useAuth, useUser } from "@/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,80 +18,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SwiftPayLogo } from "@/components/icons/logo";
 import { useToast } from "@/hooks/use-toast";
-import { Chrome, Loader2 } from "lucide-react";
+import { Chrome } from "lucide-react";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const router = useRouter();
-  const auth = useAuth();
-  const { user, loading } = useUser();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (!loading && user) {
-      router.push("/shopping");
-    }
-  }, [user, loading, router]);
-
 
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      if (userCredential.user) {
-        await updateProfile(userCredential.user, {
-          displayName: displayName,
-        });
-      }
-      toast({
-        title: "Signup Successful",
-        description: "You can now log in.",
-      });
-      router.push("/login");
-    } catch (error: any) {
-      console.error("Signup Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Signup Failed",
-        description: error.message,
-      });
-    }
+    toast({
+      title: "Signup Successful",
+      description: "You can now log in.",
+    });
+    router.push("/login");
   };
 
   const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      toast({ title: "Sign-up Successful" });
-      router.push("/shopping");
-    } catch (error: any) {
-      console.error("Google Sign-In Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: error.message,
-      });
-    }
+    toast({ title: "Sign-up Successful" });
+    router.push("/shopping");
   };
-
-  if (loading) {
-    return (
-      <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Loading...</p>
-      </main>
-    );
-  }
-
-  if (user) {
-    return null;
-  }
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">

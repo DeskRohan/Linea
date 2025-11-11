@@ -1,15 +1,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
-import { useAuth, useUser } from "@/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,67 +17,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SwiftPayLogo } from "@/components/icons/logo";
-import { Chrome, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Chrome } from "lucide-react";
 
 export default function StoreLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-  const auth = useAuth();
-  const { user, loading } = useUser();
-  const { toast } = useToast();
 
-  useEffect(() => {
-    if (!loading && user) {
-      router.push("/store/dashboard");
-    }
-  }, [user, loading, router]);
-
-  const handleLogin = async (event: React.FormEvent) => {
+  const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({ title: "Login Successful" });
-      router.push("/store/dashboard");
-    } catch (error: any) {
-      console.error("Login Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: error.message,
-      });
-    }
+    router.push("/store/dashboard");
   };
 
-  const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      toast({ title: "Login Successful" });
-      router.push("/store/dashboard");
-    } catch (error: any) {
-      console.error("Google Sign-In Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: error.message,
-      });
-    }
+  const handleGoogleSignIn = () => {
+    router.push("/store/dashboard");
   };
-
-  if (loading) {
-    return (
-      <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Loading...</p>
-      </main>
-    );
-  }
-
-  if (user) {
-    return null;
-  }
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">

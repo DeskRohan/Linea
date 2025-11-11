@@ -4,7 +4,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useAuth, useUser } from "@/firebase";
 
 import {
   LayoutDashboard,
@@ -15,7 +14,6 @@ import {
   LogOut,
   Store,
   PanelLeft,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -36,28 +34,10 @@ export default function StoreLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const auth = useAuth();
-  const { user, loading } = useUser();
-
-  React.useEffect(() => {
-    if (!loading && !user) {
-      router.push("/store/login");
-    }
-  }, [user, loading, router]);
 
   const handleLogout = async () => {
-    await auth.signOut();
     router.push("/");
   };
-
-  if (loading || !user) {
-    return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -105,8 +85,8 @@ export default function StoreLayout({
                 className="rounded-full"
               >
                 <Avatar>
-                  <AvatarImage src={user?.photoURL || ""} />
-                  <AvatarFallback>{user?.email?.[0].toUpperCase() || 'S'}</AvatarFallback>
+                  <AvatarImage src={""} />
+                  <AvatarFallback>S</AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
               </Button>

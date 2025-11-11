@@ -1,12 +1,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { useAuth, useUser, useFirestore } from "@/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SwiftPayLogo } from "@/components/icons/logo";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
 
 const VALID_ACTIVATION_KEY = "rhlinea2k25";
 
@@ -31,16 +27,7 @@ export default function StoreSignupPage() {
   const [storeName, setStoreName] = useState("");
   const [activationKey, setActivationKey] = useState("");
   const router = useRouter();
-  const auth = useAuth();
-  const firestore = useFirestore();
-  const { user, loading } = useUser();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (!loading && user) {
-      router.push("/store/dashboard");
-    }
-  }, [user, loading, router]);
 
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -55,55 +42,12 @@ export default function StoreSignupPage() {
       return;
     }
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const newUser = userCredential.user;
-
-      if (newUser) {
-        await updateProfile(newUser, {
-          displayName: storeName,
-        });
-
-        // Create a document for the store in Firestore
-        const storeDocRef = doc(firestore, "stores", newUser.email!);
-        await setDoc(storeDocRef, {
-          owner: newUser.email,
-          shopName: storeName,
-          createdAt: new Date().toISOString(),
-        });
-      }
-
-      toast({
-        title: "Store Created",
-        description: "You can now log in to your store dashboard.",
-      });
-      router.push("/store/dashboard");
-    } catch (error: any) {
-      console.error("Store Signup Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Signup Failed",
-        description: error.message,
-      });
-    }
+    toast({
+      title: "Store Created",
+      description: "You can now log in to your store dashboard.",
+    });
+    router.push("/store/dashboard");
   };
-
-  if (loading) {
-     return (
-      <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Loading...</p>
-      </main>
-    );
-  }
-
-  if (user) {
-    return null;
-  }
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">

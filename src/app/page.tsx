@@ -11,47 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SwiftPayLogo } from "@/components/icons/logo";
-import { User, Store, Loader2 } from "lucide-react";
-import { useUser } from "@/firebase";
+import { User, Store } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export default function RoleSelectionPage() {
-  const { user, loading } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && user) {
-      // Simple heuristic: if email contains 'store', redirect to store dashboard.
-      // In a real app, you'd use custom claims or a user profile document.
-      if (user.email?.includes('store')) {
-        router.push("/store/dashboard");
-      } else {
-        router.push("/shopping");
-      }
-    }
-  }, [user, loading, router]);
-
-
-  if (loading) {
-    return (
-      <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Loading...</p>
-      </main>
-    );
-  }
-
-  // If user is logged in, show loading while redirecting to avoid flashing content
-  if (user) {
-    return (
-       <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Redirecting...</p>
-      </main>
-    );
-  }
-
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
