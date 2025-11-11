@@ -10,7 +10,8 @@ import {
   Settings,
   LogOut,
   Store,
-  PanelLeft
+  PanelLeft,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/firebase/auth/use-user";
@@ -21,6 +22,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 
 export default function StoreLayout({
@@ -54,97 +63,81 @@ export default function StoreLayout({
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <aside className="fixed inset-y-0 left-0 z-10 hidden w-60 flex-col border-r bg-background sm:flex">
-        <nav className="flex flex-col h-full">
-          <div className="flex items-center gap-2 p-4 border-b">
-              <Store className="w-8 h-8 text-primary" />
-              <span className="text-lg font-semibold">{user?.displayName || "My Store"}</span>
-          </div>
-          <div className="flex-1 overflow-auto py-2">
-            <div className="flex flex-col gap-1 px-4">
-              <NavLinks />
-            </div>
-          </div>
-          <div className="mt-auto p-4 border-t">
-              <div className="flex items-center gap-4">
-                  {loading ? (
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  ) : user ? (
-                  <Avatar>
-                      <AvatarImage src={user.photoURL ?? ''} />
-                      <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  ) : null}
-                  <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{user?.displayName}</p>
-                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={handleLogout}>
-                      <LogOut className="h-5 w-5" />
-                  </Button>
-              </div>
-          </div>
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+          <Link
+            href="/store/dashboard"
+            className="flex items-center gap-2 text-lg font-semibold md:text-base"
+          >
+            <Store className="h-6 w-6" />
+            <span className="sr-only">{user?.displayName || "My Store"}</span>
+          </Link>
+          <NavLinks />
         </nav>
-      </aside>
-      <div className="flex flex-col sm:pl-60">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:hidden">
-           <Sheet>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="outline" className="sm:hidden">
-                <PanelLeft className="h-5 w-5" />
-                <span className="sr-only">Toggle Menu</span>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="shrink-0 md:hidden"
+            >
+              <PanelLeft className="h-5 w-5" />
+              <span className="sr-only">Toggle navigation menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left">
+            <nav className="grid gap-6 text-lg font-medium">
+              <Link
+                href="/store/dashboard"
+                className="flex items-center gap-2 text-lg font-semibold"
+              >
+                <Store className="h-6 w-6" />
+                <span className="">{user?.displayName || "My Store"}</span>
+              </Link>
+              <NavLinks mobile />
+            </nav>
+          </SheetContent>
+        </Sheet>
+        <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
+           <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="icon" className="rounded-full">
+                <Avatar>
+                    <AvatarImage src={user?.photoURL ?? ''} />
+                    <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <span className="sr-only">Toggle user menu</span>
               </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="sm:max-w-xs flex flex-col p-0">
-              <nav className="flex flex-col h-full">
-                <div className="flex items-center gap-2 p-4 border-b">
-                    <Store className="w-8 h-8 text-primary" />
-                    <span className="text-lg font-semibold">{user?.displayName || "My Store"}</span>
-                </div>
-                <div className="flex-1 overflow-auto py-2">
-                  <div className="flex flex-col gap-1 px-4">
-                    <NavLinks />
-                  </div>
-                </div>
-                 <div className="mt-auto p-4 border-t">
-                    <div className="flex items-center gap-4">
-                        {loading ? (
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        ) : user ? (
-                        <Avatar>
-                            <AvatarImage src={user.photoURL ?? ''} />
-                            <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        ) : null}
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold truncate">{user?.displayName}</p>
-                            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={handleLogout}>
-                            <LogOut className="h-5 w-5" />
-                        </Button>
-                    </div>
-                </div>
-              </nav>
-            </SheetContent>
-          </Sheet>
-        </header>
-        <main className="flex-1">
-          {children}
-        </main>
-      </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push('/store/settings')}>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        {children}
+      </main>
     </div>
   );
 }
 
-const NavLinks = () => {
+const NavLinks = ({ mobile }: { mobile?: boolean }) => {
   const pathname = usePathname();
   const links = [
-    { href: "/store/dashboard", icon: LayoutDashboard, text: "Dashboard" },
-    { href: "/store/inventory", icon: Boxes, text: "Manage Inventory" },
-    { href: "#", icon: BarChart3, text: "Analytics" },
-    { href: "/store/settings", icon: Settings, text: "Shop Settings" },
+    { href: "/store/dashboard", text: "Dashboard" },
+    { href: "/store/inventory", text: "Inventory" },
+    { href: "/store/analytics", text: "Analytics" },
+    { href: "/store/customers", text: "Customers" },
   ];
+
+  const mobileClasses = "text-muted-foreground hover:text-foreground";
+  const desktopClasses = "text-muted-foreground transition-colors hover:text-foreground";
 
   return (
     <>
@@ -155,11 +148,11 @@ const NavLinks = () => {
             key={link.href}
             href={link.href}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-              isActive && "bg-muted text-primary"
+              "font-medium",
+              mobile ? mobileClasses : desktopClasses,
+              isActive && "text-foreground"
             )}
           >
-            <link.icon className="h-4 w-4" />
             {link.text}
           </Link>
         )
