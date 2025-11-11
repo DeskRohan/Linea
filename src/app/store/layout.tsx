@@ -11,7 +11,6 @@ import {
   BarChart3,
   Users,
   Settings,
-  LogOut,
   Store,
   PanelLeft,
   Mail,
@@ -38,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import AiChatbot from "@/components/ai-chatbot";
 
 export default function StoreLayout({
   children,
@@ -150,6 +150,7 @@ export default function StoreLayout({
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         {children}
       </main>
+      <AiChatbot />
     </div>
   );
 }

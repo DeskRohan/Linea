@@ -31,8 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import Link from "next/link";
-import AiChatbot from "@/components/ai-chatbot";
-
 
 export default function StoreDashboard() {
   return (
@@ -97,16 +95,7 @@ export default function StoreDashboard() {
         </Card>
       </div>
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
-         <Card className="xl:col-span-2">
-            <CardHeader>
-                <CardTitle>AI Business Analyst</CardTitle>
-                <CardDescription>Ask questions about your store's performance.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <AiChatbot />
-            </CardContent>
-        </Card>
-        <Card>
+        <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle>Recent Customers</CardTitle>
           </CardHeader>
@@ -188,20 +177,12 @@ export default function StoreDashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card className="xl:col-span-3">
-          <CardHeader className="flex flex-row items-center">
-            <div className="grid gap-2">
-              <CardTitle>Recent Sales</CardTitle>
-              <CardDescription>
+        <Card className="xl:col-span-1">
+          <CardHeader>
+            <CardTitle>Recent Sales</CardTitle>
+            <CardDescription>
                 Recent transactions from your store.
               </CardDescription>
-            </div>
-            <Button asChild size="sm" className="ml-auto gap-1">
-              <Link href="/store/analytics">
-                View All
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
-            </Button>
           </CardHeader>
           <CardContent>
             <Table>
