@@ -100,7 +100,7 @@ const getTopCustomers = ai.defineTool(
 
 // Define Chat History Schema
 const ChatMessageSchema = z.object({
-  role: z.enum(['user', 'bot', 'system']),
+  role: z.enum(['user', 'model', 'system', 'tool']),
   content: z.string(),
 });
 export type ChatMessage = z.infer<typeof ChatMessageSchema>;
@@ -112,7 +112,7 @@ export type ChatHistory = z.infer<typeof ChatHistorySchema>;
 // Define the main chat function to be called from the client
 export async function chatWithStoreBot(history: ChatHistory): Promise<ChatMessage> {
   const result = await storeAnalystFlow(history);
-  return { role: 'bot', content: result };
+  return { role: 'model', content: result };
 }
 
 // Define the Genkit Flow
@@ -123,6 +123,7 @@ const storeAnalystFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (history) => {
+
     const systemPrompt = `
       You are Navya, an AI business analyst for a local shop owner.
       Your goal is to answer questions about the store's performance based on the data available through the provided tools.
@@ -133,16 +134,10 @@ const storeAnalystFlow = ai.defineFlow(
       Do not make up any information. Only use the information provided by the tools.
     `;
 
-    // The model doesn't support a 'system' role, so we prepend the instructions to the history.
-    const fullHistory: ChatMessage[] = [
-      { role: 'user', content: systemPrompt },
-      { role: 'bot', content: 'OK.' },
-      ...history, // Use the full history from the client
-    ];
-
     const llmResponse = await ai.generate({
       model: 'googleai/gemini-2.5-flash',
-      history: fullHistory,
+      system: systemPrompt,
+      history: history,
       tools: [getMonthlySales, getTopProducts, getSalesByDay, getRecentSales, getTopCustomers],
     });
 

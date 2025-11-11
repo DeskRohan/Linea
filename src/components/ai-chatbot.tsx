@@ -11,11 +11,17 @@ import { cn } from "@/lib/utils";
 import { type ChatMessage, chatWithStoreBot } from "@/ai/flows/store-chat-flow";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
+// Redefine ChatMessage to match the new flow (role 'model' instead of 'bot')
+type DisplayMessage = {
+    role: 'user' | 'model';
+    content: string;
+}
+
 export default function AiChatbot() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState<DisplayMessage[]>([
     {
-      role: "bot",
+      role: "model",
       content: "Hello! I'm Navya, your personal AI business analyst. How can I help you with your store's performance today?",
     },
   ]);
@@ -23,24 +29,39 @@ export default function AiChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
+  const scrollToBottom = () => {
+    if (scrollAreaRef.current) {
+        const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+        if (viewport) {
+            setTimeout(() => {
+                viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+            }, 100);
+        }
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!input || isLoading) return;
 
     setIsLoading(true);
-    const userMessage: ChatMessage = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    const userMessage: DisplayMessage = { role: "user", content: input };
+    const newMessages: DisplayMessage[] = [...messages, userMessage];
+    setMessages(newMessages);
     setInput("");
+    scrollToBottom();
 
-    const chatHistory = [...messages, userMessage];
+    // The AI flow expects the specific 'user' | 'model' | 'system' | 'tool' roles
+    const flowHistory = newMessages.map(m => ({...m, role: m.role as 'user' | 'model'}));
 
     try {
-      const botResponse = await chatWithStoreBot(chatHistory);
-      setMessages((prev) => [...prev, botResponse]);
+      // We only send the history, not the initial greeting
+      const botResponse = await chatWithStoreBot(flowHistory.slice(1));
+      setMessages((prev) => [...prev, {role: 'model', content: botResponse.content}]);
     } catch (error) {
       console.error("Error chatting with bot:", error);
-      const errorMessage: ChatMessage = {
-        role: "bot",
+      const errorMessage: DisplayMessage = {
+        role: "model",
         content: "Sorry, I encountered an error. Please try again.",
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -50,20 +71,10 @@ export default function AiChatbot() {
   };
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-        setTimeout(() => {
-            if(scrollAreaRef.current) {
-                const scrollableNode = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
-                if (scrollableNode) {
-                    scrollableNode.scrollTo({
-                        top: scrollableNode.scrollHeight,
-                        behavior: 'smooth',
-                    });
-                }
-            }
-        }, 100);
+    if (isOpen) {
+        scrollToBottom();
     }
-}, [messages, isOpen]);
+  }, [messages, isOpen]);
 
 
   return (
@@ -79,8 +90,8 @@ export default function AiChatbot() {
       </div>
 
       {isOpen && (
-        <div className="fixed bottom-24 right-4 z-50">
-          <Card className="w-[calc(100vw-2rem)] max-w-md h-[70vh] max-h-[600px] flex flex-col shadow-2xl rounded-2xl border-2 border-primary/10">
+        <div className="fixed bottom-24 right-4 z-50 w-[calc(100vw-2rem)] sm:w-full max-w-md">
+          <Card className="h-[70vh] max-h-[600px] flex flex-col shadow-2xl rounded-2xl border-2 border-primary/10">
             <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10 border-2 border-primary">
@@ -112,7 +123,7 @@ export default function AiChatbot() {
                           message.role === "user" ? "justify-end" : "justify-start"
                       )}
                       >
-                      {message.role === "bot" && (
+                      {message.role === "model" && (
                           <Avatar className="h-8 w-8 bg-background border">
                             <AvatarFallback className="text-primary"><Bot size={18} /></AvatarFallback>
                           </Avatar>
