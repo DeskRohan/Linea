@@ -82,7 +82,7 @@ export default function ShopSettingsPage() {
           <RadioGroupItem value={id} id={`template-radio-${id}`} />
           <Label htmlFor={`template-radio-${id}`} className="text-base font-medium cursor-pointer">{name}</Label>
         </div>
-        <div className="h-40 bg-white rounded-md shadow-inner p-2 border">
+        <div className="h-64 bg-white rounded-md shadow-inner p-2 border">
             {id === 'classic' && (
                 <div className="w-full h-full text-[6px] leading-tight text-gray-600 font-mono">
                     <p className="text-center font-bold text-[7px] mb-2">Your Store</p>
@@ -94,15 +94,47 @@ export default function ShopSettingsPage() {
                 </div>
             )}
             {id === 'modern' && (
-                <div className="w-full h-full text-[6px] leading-tight text-gray-700 font-sans">
-                    <div className="flex justify-between items-center mb-2 pb-1 border-b">
-                        <p className="font-bold text-[8px]">INVOICE</p>
-                        <p className="text-[7px]">Your Store</p>
+                <div className="w-full h-full text-[5px] leading-snug text-gray-800 font-sans bg-gray-50 p-2 rounded-sm">
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <p className="font-bold text-[7px]">The Corner Collection</p>
+                            <p className="text-gray-500">#123 Main Road, Mumbai</p>
+                            <p className="text-gray-500">GSTIN: 29AT...</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="font-bold text-[8px]">INVOICE</p>
+                            <p className="text-gray-500">#TCC-1762...</p>
+                        </div>
                     </div>
-                    <div className="flex justify-between"><p>Item 1</p><p>$10.00</p></div>
-                    <div className="flex justify-between"><p>Item 2</p><p>$15.00</p></div>
-                    <div className="flex justify-between"><p>Item 3</p><p>$5.00</p></div>
-                    <div className="border-t mt-2 pt-1 flex justify-between font-bold"><p>Total</p><p>$30.00</p></div>
+                     <div className="flex justify-between items-start mb-3 text-gray-600">
+                        <div>
+                            <p className="text-[6px] font-semibold">BILLED TO</p>
+                            <p>Kavya Joshi</p>
+                        </div>
+                        <div className="text-right">
+                            <p>Invoice Date: 12/11/2025</p>
+                        </div>
+                    </div>
+                    <div className="bg-gray-100 rounded-t-sm px-1 py-0.5 flex justify-between font-bold">
+                        <p className="w-[40%]">Product</p><p>Price</p><p>Qty</p><p>Total</p>
+                    </div>
+                    <div className="bg-white px-1 py-1 flex justify-between text-gray-700">
+                        <p className="w-[40%]">Levi's Jacket</p><p>₹2999</p><p>1</p><p>₹2999</p>
+                    </div>
+                    <div className="flex justify-end mt-2 text-right">
+                        <div className="w-1/2">
+                            <div className="flex justify-between"><p>Subtotal</p><p>₹2999.00</p></div>
+                            <div className="flex justify-between"><p>Discount</p><p className="text-red-500">-₹299.90</p></div>
+                            <div className="flex justify-between font-bold mt-1 pt-1 border-t"><p>Grand Total</p><p>₹2699.10</p></div>
+                        </div>
+                    </div>
+                    <div className="bg-gray-800 text-white p-2 mt-3 rounded-md text-[4.5px] leading-relaxed">
+                        <div className="flex justify-between items-center">
+                            <p className="font-bold text-[6px]">WARRANTY CARD</p>
+                            <p className="bg-gray-600 px-1 py-0.5 rounded-full text-[4px]">2 Years</p>
+                        </div>
+                        <p className="mt-1">This certifies the product(s) are covered under warranty.</p>
+                    </div>
                 </div>
             )}
             {id === 'compact' && (
@@ -255,5 +287,3 @@ export default function ShopSettingsPage() {
     </>
   );
 }
-
-    
