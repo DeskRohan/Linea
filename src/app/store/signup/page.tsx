@@ -34,14 +34,6 @@ export default function StoreSignupPage() {
 
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
-    if(email === 'root.linea@gmail.com') {
-      toast({
-        variant: "destructive",
-        title: "Sign-up Failed",
-        description: "This email is already registered as a root user.",
-      });
-      return;
-    }
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: storeName });
