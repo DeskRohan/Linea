@@ -30,20 +30,8 @@ export default function RoleSelectionPage() {
         }
     }, [user, loading, router]);
     
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <p>Loading...</p>
-            </div>
-        );
-    }
-
-    if (user) {
-         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <p>Redirecting...</p>
-            </div>
-        );
+    if (loading || (!loading && user)) {
+        return null;
     }
 
   return (

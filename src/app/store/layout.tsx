@@ -54,11 +54,7 @@ export default function StoreLayout({
   };
   
   if (loading || !user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Loading...</p>
-      </div>
-    );
+    return null;
   }
 
   return (
