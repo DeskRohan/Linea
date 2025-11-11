@@ -1,10 +1,10 @@
 // The value of firebaseConfig is replaced at build time.
 const firebaseConfig = {
-  apiKey: "SET_YOUR_API_KEY",
-  authDomain: "SET_YOUR_AUTH_DOMAIN",
-  projectId: "SET_YOUR_PROJECT_ID",
-  storageBucket: "SET_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "SET_YOUR_MESSAGING_SENDER_ID",
-  appId: "SET_YOUR_APP_ID",
+  apiKey: "AIzaSyCqC64Kd2e-9sWw4Rxma1gvGnDRIzs0YsQ",
+  authDomain: "studio-565758863-40022.firebaseapp.com",
+  projectId: "studio-565758863-40022",
+  storageBucket: "studio-565758863-40022.firebasestorage.app",
+  messagingSenderId: "1064597487227",
+  appId: "1:1064597487227:web:a43a77d1d4a08a45a2ecde"
 };
 export { firebaseConfig };
