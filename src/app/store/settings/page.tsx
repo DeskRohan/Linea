@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Check } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { cn } from "@/lib/utils";
 
 interface StoreSettings {
   shopName: string;
@@ -25,6 +27,7 @@ interface StoreSettings {
   whatsapp: string;
   gstin: string;
   terms: string;
+  receiptTemplate: string;
 }
 
 export default function ShopSettingsPage() {
@@ -38,6 +41,7 @@ export default function ShopSettingsPage() {
     whatsapp: "9876543210",
     gstin: "29AABCU9603R1ZM",
     terms: "1. All sales are final. 2. No returns or exchanges.",
+    receiptTemplate: "classic",
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -45,6 +49,10 @@ export default function ShopSettingsPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setSettings((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleTemplateChange = (value: string) => {
+    setSettings((prev) => ({ ...prev, receiptTemplate: value }));
   };
   
   const handleSave = async () => {
@@ -60,6 +68,58 @@ export default function ShopSettingsPage() {
     }, 1000);
   };
 
+  const TemplatePreview = ({ name, id }: { name: string, id: string }) => {
+    const isSelected = settings.receiptTemplate === id;
+    return (
+      <div
+        className={cn(
+          "rounded-lg border-2 p-4 cursor-pointer transition-all",
+          isSelected ? "border-primary ring-2 ring-primary" : "border-muted"
+        )}
+        onClick={() => handleTemplateChange(id)}
+      >
+        <div className="flex items-center space-x-4 mb-4">
+          <RadioGroupItem value={id} id={`template-radio-${id}`} />
+          <Label htmlFor={`template-radio-${id}`} className="text-base font-medium cursor-pointer">{name}</Label>
+        </div>
+        <div className="h-40 bg-white rounded-md shadow-inner p-2 border">
+            {id === 'classic' && (
+                <div className="w-full h-full text-[6px] leading-tight text-gray-600 font-mono">
+                    <p className="text-center font-bold text-[7px] mb-2">Your Store</p>
+                    <p>Item 1...........$10.00</p>
+                    <p>Item 2...........$15.00</p>
+                    <p>Item 3...........$5.00</p>
+                    <div className="border-t border-dashed my-2"></div>
+                    <p className="font-bold">Total............$30.00</p>
+                </div>
+            )}
+            {id === 'modern' && (
+                <div className="w-full h-full text-[6px] leading-tight text-gray-700 font-sans">
+                    <div className="flex justify-between items-center mb-2 pb-1 border-b">
+                        <p className="font-bold text-[8px]">INVOICE</p>
+                        <p className="text-[7px]">Your Store</p>
+                    </div>
+                    <div className="flex justify-between"><p>Item 1</p><p>$10.00</p></div>
+                    <div className="flex justify-between"><p>Item 2</p><p>$15.00</p></div>
+                    <div className="flex justify-between"><p>Item 3</p><p>$5.00</p></div>
+                    <div className="border-t mt-2 pt-1 flex justify-between font-bold"><p>Total</p><p>$30.00</p></div>
+                </div>
+            )}
+            {id === 'compact' && (
+                <div className="w-full h-full text-[5.5px] leading-tight text-gray-500 font-mono">
+                    <p className="text-center font-bold mb-1">Your Store</p>
+                    <p>Item 1......$10.00</p>
+                    <p>Item 2......$15.00</p>
+                    <p>Item 3.......$5.00</p>
+                    <p>-----------------</p>
+                    <p>TOTAL:.....$30.00</p>
+                </div>
+            )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="flex items-center mb-4">
@@ -67,7 +127,7 @@ export default function ShopSettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 grid gap-8">
+        <div className="md:col-span-2 grid gap-8 auto-rows-min">
           <Card>
             <CardHeader>
               <CardTitle>Shop Details</CardTitle>
@@ -89,6 +149,22 @@ export default function ShopSettingsPage() {
                   className="min-h-24"
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Receipt Template</CardTitle>
+              <CardDescription>
+                Choose the design for customer receipts.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup value={settings.receiptTemplate} onValueChange={handleTemplateChange} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <TemplatePreview name="Classic" id="classic" />
+                  <TemplatePreview name="Modern" id="modern" />
+                  <TemplatePreview name="Compact" id="compact" />
+              </RadioGroup>
             </CardContent>
           </Card>
 
@@ -116,6 +192,7 @@ export default function ShopSettingsPage() {
               </div>
             </CardContent>
           </Card>
+
         </div>
 
         <div className="md:col-span-1 grid gap-8 auto-rows-min">
@@ -178,3 +255,5 @@ export default function ShopSettingsPage() {
     </>
   );
 }
+
+    
