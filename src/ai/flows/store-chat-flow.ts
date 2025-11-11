@@ -131,8 +131,11 @@ const storeAnalystFlow = ai.defineFlow(
 
     const llmResponse = await ai.generate({
       model: 'google/gemini-pro',
-      system: systemPrompt,
-      history: history,
+      history: [
+        { role: 'user', content: systemPrompt },
+        { role: 'model', content: 'Understood. I am ready to help.' },
+        ...history,
+      ],
       tools: [getMonthlySales, getTopProducts, getSalesByDay, getRecentSales, getTopCustomers],
     });
 
@@ -142,7 +145,9 @@ const storeAnalystFlow = ai.defineFlow(
       // If there's no direct text but there are tool calls, let the user know.
       const toolCalls = llmResponse.toolCalls;
       if (toolCalls?.length) {
-        return `I'm analyzing the data using my tools...`;
+        // In a real app you might want to show which tool is being called.
+        // For now, a generic message is fine.
+        return `I'm accessing my tools to find that information for you...`;
       }
       return 'I’m here, but I couldn’t generate a response at the moment. Please try rephrasing your question.';
     }
