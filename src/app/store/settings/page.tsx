@@ -84,13 +84,23 @@ export default function ShopSettingsPage() {
         </div>
         <div className="h-64 bg-white rounded-md shadow-inner p-2 border">
             {id === 'classic' && (
-                <div className="w-full h-full text-[6px] leading-tight text-gray-600 font-mono">
-                    <p className="text-center font-bold text-[7px] mb-2">Your Store</p>
-                    <p>Item 1...........$10.00</p>
-                    <p>Item 2...........$15.00</p>
-                    <p>Item 3...........$5.00</p>
-                    <div className="border-t border-dashed my-2"></div>
-                    <p className="font-bold">Total............$30.00</p>
+                <div className="w-full h-full text-[6px] leading-tight text-gray-800 font-mono bg-white p-2">
+                  <div className="text-center mb-2">
+                      <p className="font-bold text-[7px]">YOUR AWESOME STORE</p>
+                      <p>123 Main Street, Anytown</p>
+                      <p>GSTIN: 29AABCU9603R1ZM</p>
+                      <p>--------------------------</p>
+                  </div>
+                  <div className="flex justify-between"><p>Instant Noodles</p><p>104.00</p></div>
+                  <div className="flex justify-between"><p>Green Tea</p><p>208.00</p></div>
+                  <div className="flex justify-between"><p>Crispy Crackers</p><p>312.00</p></div>
+                  <p className="my-1">--------------------------</p>
+                  <div className="flex justify-between"><p>Subtotal</p><p>624.00</p></div>
+                  <div className="flex justify-between"><p>GST @ 5%</p><p>31.20</p></div>
+                  <p className="my-1">--------------------------</p>
+                  <div className="flex justify-between font-bold text-[7px]"><p>TOTAL</p><p>655.20</p></div>
+                  <p className="my-1">--------------------------</p>
+                  <p className="text-center mt-4">Thank you for shopping!</p>
                 </div>
             )}
             {id === 'modern' && (
@@ -138,14 +148,22 @@ export default function ShopSettingsPage() {
                 </div>
             )}
             {id === 'compact' && (
-                <div className="w-full h-full text-[5.5px] leading-tight text-gray-500 font-mono">
-                    <p className="text-center font-bold mb-1">Your Store</p>
-                    <p>Item 1......$10.00</p>
-                    <p>Item 2......$15.00</p>
-                    <p>Item 3.......$5.00</p>
-                    <p>-----------------</p>
-                    <p>TOTAL:.....$30.00</p>
-                </div>
+              <div className="w-full h-full text-[6px] leading-tight text-gray-800 font-mono bg-white p-2 flex flex-col">
+                  <p className="text-center text-[8px] font-bold">SwiftMart</p>
+                  <p className="text-center text-gray-600">INV# 88372</p>
+                  <div className="border-t border-dashed my-2"></div>
+                  <div className="flex-grow space-y-1">
+                      <p>Noodles...........1 x 104.00</p>
+                      <p>Green Tea.........1 x 208.00</p>
+                      <p>Crackers..........1 x 312.00</p>
+                  </div>
+                  <div className="border-t border-dashed my-2"></div>
+                  <div className="flex justify-between font-bold text-[7px]">
+                      <p>TOTAL</p>
+                      <p>₹624.00</p>
+                  </div>
+                  <p className="text-center text-gray-600 mt-2">Thanks for your visit!</p>
+              </div>
             )}
         </div>
       </div>
