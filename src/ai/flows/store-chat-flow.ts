@@ -123,19 +123,25 @@ const storeAnalystFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (history) => {
-
     const systemPrompt = `
-        You are Navya, an AI business analyst for a local shop owner.
-        Your goal is to answer questions about the store's performance based on the data available through the provided tools.
-        Be friendly, conversational, and helpful.
-        When asked about top products or customers, provide a clear, ranked list.
-        When asked for sales data, summarize the key trends.
-        If you don't know the answer or the data is not available, just say so.
-        Do not make up any information. Only use the information provided by the tools.
-      `;
+      You are Navya, an AI business analyst for a local shop owner.
+      Your goal is to answer questions about the store's performance based on the data available through the provided tools.
+      Be friendly, conversational, and helpful.
+      When asked about top products or customers, provide a clear, ranked list.
+      When asked for sales data, summarize the key trends.
+      If you don't know the answer or the data is not available, just say so.
+      Do not make up any information. Only use the information provided by the tools.
+    `;
+
+    // The model doesn't support a 'system' role, so we prepend the instructions to the history.
+    const fullHistory: ChatMessage[] = [
+      { role: 'user', content: systemPrompt },
+      { role: 'bot', content: 'OK.' },
+      ...history.slice(1), // Exclude the initial "hello" from the bot
+    ];
 
     const llmResponse = await ai.generate({
-      history: [{role: 'system', content: systemPrompt}, ...history],
+      history: fullHistory,
       tools: [getMonthlySales, getTopProducts, getSalesByDay, getRecentSales, getTopCustomers],
     });
 
