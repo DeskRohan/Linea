@@ -112,7 +112,6 @@ export default function StoreLayout({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push('/store/settings')}>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
@@ -134,6 +133,7 @@ const NavLinks = ({ mobile }: { mobile?: boolean }) => {
     { href: "/store/inventory", text: "Inventory" },
     { href: "/store/analytics", text: "Analytics" },
     { href: "/store/customers", text: "Customers" },
+    { href: "/store/settings", text: "Settings" },
   ];
 
   const mobileClasses = "text-muted-foreground hover:text-foreground";
@@ -142,7 +142,7 @@ const NavLinks = ({ mobile }: { mobile?: boolean }) => {
   return (
     <>
       {links.map(link => {
-        const isActive = pathname === link.href;
+        const isActive = pathname.startsWith(link.href);
         return (
           <Link
             key={link.href}
