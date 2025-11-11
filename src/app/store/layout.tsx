@@ -13,11 +13,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarInset,
 } from "@/components/ui/sidebar"
 import {
   Boxes,
@@ -27,17 +22,14 @@ import {
   Settings,
   LogOut,
   Store,
-  FileText,
-  Landmark,
-  Gavel,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useUser } from "@/firebase/auth/use-user";
 import { getAuth, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SidebarInset } from "@/components/ui/sidebar";
 
 
 export default function StoreLayout({
@@ -113,32 +105,14 @@ export default function StoreLayout({
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarGroup>
-                <Collapsible>
-                  <CollapsibleTrigger asChild>
-                     <SidebarMenuButton>
-                        <Settings />
-                        Shop Settings
-                      </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubButton asChild>
-                        <Link href="#"><Store className="w-4 h-4" />Shop Address</Link>
-                      </SidebarMenuSubButton>
-                      <SidebarMenuSubButton asChild>
-                        <Link href="#"><Landmark className="w-4 h-4" />GST Details</Link>
-                      </SidebarMenuSubButton>
-                       <SidebarMenuSubButton asChild>
-                        <Link href="#"><Gavel className="w-4 h-4" />Terms & Conditions</Link>
-                      </SidebarMenuSubButton>
-                       <SidebarMenuSubButton asChild>
-                        <Link href="#"><FileText className="w-4 h-4" />Receipt Templates</Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </Collapsible>
-              </SidebarGroup>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/store/settings">
+                    <Settings />
+                    Shop Settings
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
