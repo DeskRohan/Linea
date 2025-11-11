@@ -100,7 +100,7 @@ const getTopCustomers = ai.defineTool(
 
 // Define Chat History Schema
 const ChatMessageSchema = z.object({
-  role: z.enum(['user', 'model', 'system', 'tool']),
+  role: z.enum(['user', 'model']),
   content: z.string(),
 });
 export type ChatMessage = z.infer<typeof ChatMessageSchema>;
@@ -123,7 +123,7 @@ const storeAnalystFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (history) => {
-
+    
     const systemPrompt = `
       You are Navya, an AI business analyst for a local shop owner.
       Your goal is to answer questions about the store's performance based on the data available through the provided tools.

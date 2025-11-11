@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { type ChatMessage, chatWithStoreBot } from "@/ai/flows/store-chat-flow";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
-// Redefine ChatMessage to match the new flow (role 'model' instead of 'bot')
+// The message type for the UI state
 type DisplayMessage = {
     role: 'user' | 'model';
     content: string;
@@ -50,13 +50,13 @@ export default function AiChatbot() {
     setMessages(newMessages);
     setInput("");
     scrollToBottom();
-
-    // The AI flow expects the specific 'user' | 'model' | 'system' | 'tool' roles
-    const flowHistory = newMessages.map(m => ({...m, role: m.role as 'user' | 'model'}));
+    
+    // The AI flow expects the specific `user` or `model` roles.
+    // We send the whole history, excluding the initial greeting from the bot.
+    const flowHistory = newMessages.slice(1).map(m => ({ ...m, role: m.role as 'user' | 'model'}));
 
     try {
-      // We only send the history, not the initial greeting
-      const botResponse = await chatWithStoreBot(flowHistory.slice(1));
+      const botResponse = await chatWithStoreBot(flowHistory);
       setMessages((prev) => [...prev, {role: 'model', content: botResponse.content}]);
     } catch (error) {
       console.error("Error chatting with bot:", error);
