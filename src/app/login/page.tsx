@@ -115,7 +115,7 @@ export default function LoginPage() {
             Google
           </Button>
         </CardContent>
-        <CardFooter className="text-center text-sm text-muted-foreground">
+        <CardFooter className="flex justify-center text-center text-sm text-muted-foreground">
             <p>
                 Don't have an account?{" "}
                 <a href="#" className="text-primary hover:underline">
