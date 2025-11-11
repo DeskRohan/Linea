@@ -99,9 +99,6 @@ export default function StoreLayout({
           </SheetContent>
         </Sheet>
         <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
-          <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Product
-          </Button>
            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
@@ -163,5 +160,3 @@ const NavLinks = ({ mobile }: { mobile?: boolean }) => {
     </>
   )
 }
-
-    

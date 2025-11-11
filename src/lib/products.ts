@@ -1,15 +1,18 @@
+
 export interface Product {
   id: string; // This is the barcode
   name: string;
   price: number;
+  quantity: number;
 }
 
 export interface CartItem extends Product {
   quantity: number;
 }
 
-// Prices converted from USD to INR (approx. 1 USD = 83 INR)
-export const mockProducts: Product[] = [
+// This mock data is now only used on the customer-facing scanner page.
+// The store inventory is managed in Firestore.
+export const mockProducts: Omit<Product, 'quantity'>[] = [
   { id: '8851934005615', name: 'Instant Noodles', price: 104 },
   { id: '4902102072615', name: 'Green Tea (Bottle)', price: 208 },
   { id: '9556072002361', name: 'Crispy Crackers', price: 312 },
@@ -21,6 +24,6 @@ export const mockProducts: Product[] = [
   { id: '725999230588', name: 'Organic Apples (Bag)', price: 415 },
 ];
 
-export const findProductByBarcode = (barcode: string): Product | undefined => {
+export const findProductByBarcode = (barcode: string): Omit<Product, 'quantity'> | undefined => {
   return mockProducts.find(p => p.id === barcode);
 };
