@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Chrome } from "lucide-react";
 import { useUser } from "@/firebase/auth/use-user";
 
-export default function LoginPage() {
+export default function StoreLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -33,18 +33,29 @@ export default function LoginPage() {
     if (!loading && user) {
       handleLoginSuccess(user);
     }
-  }, [user, loading]);
+  }, [user, loading, router]);
 
   const handleLoginSuccess = async (user: FirebaseUser) => {
-    // This login is only for customers
-    router.push("/shopping");
+    if (user.email === 'root.linea@gmail.com') {
+      router.push("/store/dashboard");
+      return;
+    }
+    const idTokenResult = await user.getIdTokenResult();
+    if (idTokenResult.claims.admin) {
+      router.push("/admin");
+    } else if (idTokenResult.claims.shop_owner) {
+      router.push("/store/dashboard");
+    }
+    else {
+      // Not a shop owner, maybe redirect to an error page or main login
+      router.push("/");
+    }
   };
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // The useEffect will handle the redirect on user state change
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -82,8 +93,8 @@ export default function LoginPage() {
             <div className="flex justify-center mb-4">
               <SwiftPayLogo className="h-16 w-16" />
             </div>
-            <CardTitle className="text-2xl">Customer Login</CardTitle>
-            <CardDescription>Sign in to start your shopping session.</CardDescription>
+            <CardTitle className="text-2xl">Shop Owner Login</CardTitle>
+            <CardDescription>Sign in to manage your store.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -92,7 +103,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="store@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -129,9 +140,9 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex flex-col gap-4 justify-center text-center text-sm text-muted-foreground">
               <p>
-                  Don't have an account?{" "}
-                  <Link href="/signup" className="text-primary hover:underline">
-                      Sign up
+                  Don't have a store yet?{" "}
+                  <Link href="/store/signup" className="text-primary hover:underline">
+                      Create your store
                   </Link>
               </p>
               <Link href="/" className="text-primary hover:underline">

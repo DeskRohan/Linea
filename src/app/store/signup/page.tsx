@@ -4,7 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, updateProfile } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,12 +18,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SwiftPayLogo } from "@/components/icons/logo";
 import { useToast } from "@/hooks/use-toast";
-import { Chrome } from "lucide-react";
+
+const VALID_ACTIVATION_KEY = "rhlinea2k25";
 
 export default function StoreSignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [storeName, setStoreName] = useState("");
+  const [activationKey, setActivationKey] = useState("");
   const router = useRouter();
   const auth = getAuth();
   const { toast } = useToast();
@@ -34,28 +36,26 @@ export default function StoreSignupPage() {
 
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (activationKey !== VALID_ACTIVATION_KEY) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Activation Key",
+        description: "Please enter the correct activation key to create a store.",
+      });
+      return;
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: storeName });
-      // In a real app, you'd set a custom claim here to mark as 'shop_owner'
+      // In a real app, you'd call a backend function here to set a custom claim 'shop_owner'
+      // This is crucial for securing your store dashboard
       handleSignupSuccess();
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Sign-up Failed",
-        description: error.message,
-      });
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithRedirect(auth, provider);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
         description: error.message,
       });
     }
@@ -85,7 +85,7 @@ export default function StoreSignupPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Business Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -105,32 +105,32 @@ export default function StoreSignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+             <div className="space-y-2">
+              <Label htmlFor="activationKey">Activation Key</Label>
+              <Input 
+                id="activationKey" 
+                type="password"
+                placeholder="Enter your activation key"
+                required 
+                value={activationKey}
+                onChange={(e) => setActivationKey(e.target.value)}
+              />
+            </div>
             <Button type="submit" className="w-full">
               Create Store
             </Button>
           </form>
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or sign up with
-              </span>
-            </div>
-          </div>
-          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-            <Chrome className="mr-2 h-4 w-4" />
-            Google
-          </Button>
         </CardContent>
-        <CardFooter className="flex justify-center text-center text-sm text-muted-foreground">
+        <CardFooter className="flex flex-col gap-4 justify-center text-center text-sm text-muted-foreground">
             <p>
                 Already have an account?{" "}
-                <Link href="/login" className="text-primary hover:underline">
+                <Link href="/store/login" className="text-primary hover:underline">
                     Sign in
                 </Link>
             </p>
+             <Link href="/" className="text-primary hover:underline">
+                  Back to role selection
+              </Link>
         </CardFooter>
       </Card>
     </main>
