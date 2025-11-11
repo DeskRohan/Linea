@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
   ScanLine,
   CreditCard,
   CheckCircle2,
   Package,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,8 +26,12 @@ import { SwiftPayLogo } from "@/components/icons/logo";
 import Scanner from "@/components/scanner";
 import { findProductByBarcode, type CartItem } from "@/lib/products";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/firebase/auth/use-user";
+import { getAuth, signOut } from "firebase/auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
-type AppState = "start" | "shopping" | "completed";
+type AppState = "shopping" | "completed";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -35,9 +41,20 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function Home() {
-  const [appState, setAppState] = useState<AppState>("start");
+  const { user, loading } = useUser();
+  const router = useRouter();
+  const auth = getAuth();
+
+  const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [lastScannedId, setLastScannedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
+
 
   const handleScanSuccess = (decodedText: string) => {
     const product = findProductByBarcode(decodedText);
@@ -62,7 +79,12 @@ export default function Home() {
 
   const handleNewSession = () => {
     setCartItems([]);
-    setAppState("start");
+    setAppState("shopping");
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push("/login");
   };
 
   const total = useMemo(() => {
@@ -78,11 +100,24 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [lastScannedId]);
+  
+  if (loading || !user) {
+    return (
+       <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center space-x-4">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-[250px]" />
+            <Skeleton className="h-4 w-[200px]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   const renderContent = () => {
     switch (appState) {
-      case "start":
-        return <StartScreen onStart={() => setAppState("shopping")} />;
       case "shopping":
         return (
           <ShoppingScreen
@@ -91,12 +126,24 @@ export default function Home() {
             onScanSuccess={handleScanSuccess}
             onCheckout={() => setAppState("completed")}
             lastScannedId={lastScannedId}
+            user={user}
+            onLogout={handleLogout}
           />
         );
       case "completed":
         return <CompletionScreen onNewSession={handleNewSession} />;
       default:
-        return <StartScreen onStart={() => setAppState("shopping")} />;
+        return (
+           <ShoppingScreen
+            cartItems={cartItems}
+            total={total}
+            onScanSuccess={handleScanSuccess}
+            onCheckout={() => setAppState("completed")}
+            lastScannedId={lastScannedId}
+            user={user}
+            onLogout={handleLogout}
+          />
+        );
     }
   };
 
@@ -107,36 +154,22 @@ export default function Home() {
   );
 }
 
-const StartScreen = ({ onStart }: { onStart: () => void }) => (
-  <Card className="w-full max-w-md shadow-2xl">
-    <CardContent className="p-10 flex flex-col items-center text-center">
-      <SwiftPayLogo className="h-20 w-20 mb-4" />
-      <h1 className="text-3xl font-bold font-headline text-primary">
-        SwiftPay Mobile
-      </h1>
-      <p className="text-muted-foreground mt-2 mb-8">
-        Scan as you go. Pay and be on your way.
-      </p>
-      <Button onClick={onStart} size="lg" className="w-full">
-        <ScanLine className="mr-2 h-5 w-5" />
-        Start Shopping
-      </Button>
-    </CardContent>
-  </Card>
-);
-
 const ShoppingScreen = ({
   cartItems,
   total,
   onScanSuccess,
   onCheckout,
   lastScannedId,
+  user,
+  onLogout,
 }: {
   cartItems: CartItem[];
   total: number;
   onScanSuccess: (decodedText: string) => void;
   onCheckout: () => void;
   lastScannedId: string | null;
+  user: any;
+  onLogout: () => void;
 }) => (
   <div className="w-full h-screen md:h-auto max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
     <Card className="shadow-xl flex flex-col">
@@ -157,14 +190,25 @@ const ShoppingScreen = ({
     </Card>
 
     <Card className="shadow-xl flex flex-col max-h-[calc(100vh-2rem)] md:max-h-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <ShoppingCart className="mr-2 text-primary" />
-          Your Cart
-        </CardTitle>
-        <CardDescription>
-          Items you have scanned will appear here.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="flex items-center">
+            <ShoppingCart className="mr-2 text-primary" />
+            Your Cart
+          </CardTitle>
+          <CardDescription>
+            Items you have scanned will appear here.
+          </CardDescription>
+        </div>
+         <div className="flex items-center gap-4">
+            <Avatar>
+              <AvatarImage src={user.photoURL} />
+              <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <Button variant="ghost" size="icon" onClick={onLogout}>
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
         <ScrollArea className="h-full">
@@ -181,7 +225,7 @@ const ShoppingScreen = ({
                   key={item.id}
                   className={cn(
                     "flex items-center justify-between p-3 rounded-lg transition-all",
-                    item.id === lastScannedId && "animate-scan-pulse"
+                    item.id === lastScannedId && "bg-blue-50"
                   )}
                 >
                   <div>
@@ -236,3 +280,5 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </CardContent>
   </Card>
 );
+
+    

@@ -4,6 +4,8 @@ import { type Firestore, getFirestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 
 export * from './provider';
+export * from './auth/use-user';
+
 
 let firebaseApp: FirebaseApp;
 let auth: Auth;
@@ -18,3 +20,5 @@ export const initializeFirebase = () => {
   }
   return { firebaseApp, auth, firestore };
 };
+
+    
