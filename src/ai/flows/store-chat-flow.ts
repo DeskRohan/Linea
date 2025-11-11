@@ -141,6 +141,7 @@ const storeAnalystFlow = ai.defineFlow(
     ];
 
     const llmResponse = await ai.generate({
+      model: 'googleai/gemini-2.5-flash',
       history: fullHistory,
       tools: [getMonthlySales, getTopProducts, getSalesByDay, getRecentSales, getTopCustomers],
     });
