@@ -37,10 +37,10 @@ export default function StoreSignupPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       router.push("/store/dashboard");
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();

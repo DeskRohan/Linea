@@ -28,7 +28,6 @@ import Scanner from "@/components/scanner";
 import { findProductByBarcode, type CartItem } from "@/lib/products";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth, useUser } from "@/firebase";
 
 type AppState = "shopping" | "completed";

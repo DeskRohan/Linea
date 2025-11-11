@@ -35,10 +35,10 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       router.push("/shopping");
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -81,7 +81,8 @@ export default function LoginPage() {
     );
   }
 
-  // Don't render anything if the user is already logged in and redirecting
+  // If user is logged in, useEffect will redirect.
+  // We return null to avoid flashing the login page.
   if (user) {
     return null;
   }

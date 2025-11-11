@@ -37,10 +37,10 @@ export default function SignupPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       router.push("/shopping");
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
 
   const handleEmailSignUp = async (event: React.FormEvent) => {

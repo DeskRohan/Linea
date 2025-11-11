@@ -23,7 +23,7 @@ export default function RoleSelectionPage() {
   // This effect will redirect the user if they are already logged in.
   // It's a simple example; a more robust solution might check for a specific role claim.
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       // Simple heuristic: if email contains 'store', redirect to store dashboard.
       // In a real app, you'd use custom claims or a user profile document.
       if (user.email?.includes('store')) {
@@ -32,7 +32,7 @@ export default function RoleSelectionPage() {
         router.push("/shopping");
       }
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
 
   if (loading) {

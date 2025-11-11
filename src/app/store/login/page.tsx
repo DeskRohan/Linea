@@ -35,10 +35,10 @@ export default function StoreLoginPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       router.push("/store/dashboard");
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -81,7 +81,8 @@ export default function StoreLoginPage() {
     );
   }
 
-  // If user is logged in, show loading while redirecting
+  // If user is logged in, useEffect will redirect.
+  // We return null to avoid flashing the login page.
   if (user) {
     return null;
   }
