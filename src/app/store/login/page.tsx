@@ -78,10 +78,18 @@ export default function StoreLoginPage() {
     }
   };
   
-  if (loading || user) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Redirecting...</p>
       </div>
     );
   }
