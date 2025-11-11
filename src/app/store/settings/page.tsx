@@ -1,6 +1,7 @@
 
 "use client";
 
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -33,7 +34,9 @@ export default function ShopSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button>Edit Address</Button>
+              <Button asChild>
+                <Link href="/store/settings/address">Edit Address</Link>
+              </Button>
             </CardContent>
           </Card>
 
@@ -48,7 +51,9 @@ export default function ShopSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button>Update GSTIN</Button>
+              <Button asChild>
+                <Link href="/store/settings/gst">Update GSTIN</Link>
+              </Button>
             </CardContent>
           </Card>
 
@@ -63,7 +68,9 @@ export default function ShopSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button>Edit Terms</Button>
+              <Button asChild>
+                <Link href="/store/settings/terms">Edit Terms</Link>
+              </Button>
             </CardContent>
           </Card>
 
@@ -78,7 +85,9 @@ export default function ShopSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button>Manage Templates</Button>
+               <Button asChild>
+                <Link href="/store/settings/receipts">Manage Templates</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
