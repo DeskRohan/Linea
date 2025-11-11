@@ -30,10 +30,10 @@ export default function LoginPage() {
   const { user, loading } = useUser();
 
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       handleLoginSuccess(user);
     }
-  }, [user]);
+  }, [user, loading]);
 
   const handleLoginSuccess = async (user: any) => {
     const idTokenResult = await user.getIdTokenResult();
@@ -47,7 +47,7 @@ export default function LoginPage() {
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
       // The useEffect will handle the redirect on user state change
     } catch (error: any) {
       toast({
@@ -144,5 +144,3 @@ export default function LoginPage() {
     </main>
   );
 }
-
-    

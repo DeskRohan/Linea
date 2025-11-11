@@ -102,6 +102,18 @@ export default function Home() {
     }
   }, [lastScannedId]);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return null; // or a loading spinner, or a redirect component
+  }
+
   const renderContent = () => {
     switch (appState) {
       case "shopping":
@@ -274,5 +286,3 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </CardContent>
   </Card>
 );
-
-    
