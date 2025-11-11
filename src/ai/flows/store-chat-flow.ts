@@ -1,15 +1,8 @@
-
 'use server';
-/**
- * @fileOverview A store analyst AI agent that can answer questions about store performance.
- *
- * - chatWithStoreBot - A function that handles the chat interaction.
- * - ChatMessage - The type for a single chat message.
- */
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-// Mock Data - In a real app, this would come from a database or API.
+// --- Mock Data (same as before) ---
 const monthlySalesData = [
   { month: 'January', sales: 4000 },
   { month: 'February', sales: 3000 },
@@ -27,32 +20,31 @@ const topProductsData = [
 ];
 
 const salesByDayData = [
-    { day: 'Mon', sales: 1200 },
-    { day: 'Tue', sales: 1500 },
-    { day: 'Wed', sales: 1800 },
-    { day: 'Thu', sales: 1700 },
-    { day: 'Fri', sales: 2500 },
-    { day: 'Sat', sales: 3200 },
-    { day: 'Sun', sales: 3000 },
+  { day: 'Mon', sales: 1200 },
+  { day: 'Tue', sales: 1500 },
+  { day: 'Wed', sales: 1800 },
+  { day: 'Thu', sales: 1700 },
+  { day: 'Fri', sales: 2500 },
+  { day: 'Sat', sales: 3200 },
+  { day: 'Sun', sales: 3000 },
 ];
 
 const recentSales = [
-    { customer: 'Liam Johnson', email: 'liam@example.com', amount: '₹20,800.00' },
-    { customer: 'Olivia Smith', email: 'olivia@example.com', amount: '₹12,500.00' },
-    { customer: 'Noah Williams', email: 'noah@example.com', amount: '₹29,100.00' },
-    { customer: 'Emma Brown', email: 'emma@example.com', amount: '₹37,450.00' },
+  { customer: 'Liam Johnson', email: 'liam@example.com', amount: '₹20,800.00' },
+  { customer: 'Olivia Smith', email: 'olivia@example.com', amount: '₹12,500.00' },
+  { customer: 'Noah Williams', email: 'noah@example.com', amount: '₹29,100.00' },
+  { customer: 'Emma Brown', email: 'emma@example.com', amount: '₹37,450.00' },
 ];
 
 const mockCustomers = [
-  { name: "Olivia Martin", email: "olivia.martin@email.com", spent: 2580.50, },
-  { name: "Jackson Lee", email: "jackson.lee@email.com", spent: 1750.00, },
-  { name: "Isabella Nguyen", email: "isabella.nguyen@email.com", spent: 3205.75, },
-  { name: "William Kim", email: "will@email.com", spent: 980.25, },
-  { name: "Sofia Davis", email: "sofia.davis@email.com", spent: 4100.00, },
+  { name: 'Olivia Martin', email: 'olivia.martin@email.com', spent: 2580.5 },
+  { name: 'Jackson Lee', email: 'jackson.lee@email.com', spent: 1750.0 },
+  { name: 'Isabella Nguyen', email: 'isabella.nguyen@email.com', spent: 3205.75 },
+  { name: 'William Kim', email: 'will@email.com', spent: 980.25 },
+  { name: 'Sofia Davis', email: 'sofia.davis@email.com', spent: 4100.0 },
 ];
 
-
-// Define Tools
+// --- Define Tools ---
 const getMonthlySales = ai.defineTool(
   {
     name: 'getMonthlySales',
@@ -72,33 +64,33 @@ const getTopProducts = ai.defineTool(
 );
 
 const getSalesByDay = ai.defineTool(
-    {
-      name: 'getSalesByDay',
-      description: 'Returns the sales data for each day of the week.',
-      outputSchema: z.any(),
-    },
-    async () => salesByDayData
+  {
+    name: 'getSalesByDay',
+    description: 'Returns the sales data for each day of the week.',
+    outputSchema: z.any(),
+  },
+  async () => salesByDayData
 );
 
 const getRecentSales = ai.defineTool(
-    {
-        name: 'getRecentSales',
-        description: 'Returns a list of the most recent sales transactions.',
-        outputSchema: z.any(),
-    },
-    async () => recentSales
+  {
+    name: 'getRecentSales',
+    description: 'Returns a list of the most recent sales transactions.',
+    outputSchema: z.any(),
+  },
+  async () => recentSales
 );
 
 const getTopCustomers = ai.defineTool(
-    {
-        name: 'getTopCustomers',
-        description: 'Returns a list of customers, which can be sorted to find top customers by spending.',
-        outputSchema: z.any(),
-    },
-    async () => mockCustomers
+  {
+    name: 'getTopCustomers',
+    description: 'Returns a list of customers and their total spending.',
+    outputSchema: z.any(),
+  },
+  async () => mockCustomers
 );
 
-// Define Chat History Schema
+// --- Schemas ---
 const ChatMessageSchema = z.object({
   role: z.enum(['user', 'model']),
   content: z.string(),
@@ -108,14 +100,18 @@ export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 const ChatHistorySchema = z.array(ChatMessageSchema);
 export type ChatHistory = z.infer<typeof ChatHistorySchema>;
 
-
-// Define the main chat function to be called from the client
+// --- Main Chat Function ---
 export async function chatWithStoreBot(history: ChatHistory): Promise<ChatMessage> {
-  const result = await storeAnalystFlow(history);
-  return { role: 'model', content: result };
+  try {
+    const result = await storeAnalystFlow(history);
+    return { role: 'model', content: result };
+  } catch (error: any) {
+    console.error('💥 chatWithStoreBot failed:', error);
+    return { role: 'model', content: 'Sorry, I encountered an internal error while analyzing the data. Please check the server logs for details.' };
+  }
 }
 
-// Define the Genkit Flow
+// --- The Flow Definition ---
 const storeAnalystFlow = ai.defineFlow(
   {
     name: 'storeAnalystFlow',
@@ -123,7 +119,6 @@ const storeAnalystFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (history) => {
-    
     const systemPrompt = `
       You are Navya, an AI business analyst for a local shop owner.
       Your goal is to answer questions about the store's performance based on the data available through the provided tools.
@@ -135,12 +130,23 @@ const storeAnalystFlow = ai.defineFlow(
     `;
 
     const llmResponse = await ai.generate({
-      model: 'googleai/gemini-2.5-flash',
+      model: 'google/gemini-pro',
       system: systemPrompt,
       history: history,
       tools: [getMonthlySales, getTopProducts, getSalesByDay, getRecentSales, getTopCustomers],
     });
 
-    return llmResponse.text;
+    const text = llmResponse.text;
+
+    if (!text) {
+      // If there's no direct text but there are tool calls, let the user know.
+      const toolCalls = llmResponse.toolCalls;
+      if (toolCalls?.length) {
+        return `I'm analyzing the data using my tools...`;
+      }
+      return 'I’m here, but I couldn’t generate a response at the moment. Please try rephrasing your question.';
+    }
+
+    return text;
   }
 );
