@@ -126,15 +126,18 @@ export default function InventoryPage() {
     try {
       const storeDocRef = doc(firestore, "stores", user.email);
       
-      // Ensure the store document exists before adding to the subcollection.
-      // This can be helpful on the first product add.
       const storeDoc = await getDoc(storeDocRef);
       if (!storeDoc.exists()) {
         await setDoc(storeDocRef, { owner: user.email, createdAt: new Date() });
       }
 
-      const productsCollectionRef = collection(storeDocRef, "products");
-      await addDoc(productsCollectionRef, { ...data, id: data.barcode });
+      const productDocRef = doc(storeDocRef, "products", data.barcode);
+      await setDoc(productDocRef, { 
+        name: data.name,
+        price: data.price,
+        quantity: data.quantity,
+        barcode: data.barcode,
+      });
       
       toast({
         title: "Product Added",
@@ -285,3 +288,5 @@ export default function InventoryPage() {
     </>
   );
 }
+
+    
