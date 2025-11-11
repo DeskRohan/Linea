@@ -1,10 +1,12 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { collection, doc, setDoc, onSnapshot, query } from "firebase/firestore";
+import { useFirestore, useUser } from "@/firebase";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,9 +51,11 @@ type ProductFormValues = z.infer<typeof productSchema>;
 
 export default function InventoryPage() {
   const { toast } = useToast();
+  const firestore = useFirestore();
+  const { user } = useUser();
 
   const [inventory, setInventory] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const form = useForm<ProductFormValues>({
@@ -64,17 +68,65 @@ export default function InventoryPage() {
     },
   });
 
+  useEffect(() => {
+    if (user) {
+      setIsLoading(true);
+      const productsQuery = query(collection(firestore, "stores", user.email!, "products"));
+      const unsubscribe = onSnapshot(productsQuery, (snapshot) => {
+        const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        setInventory(products);
+        setIsLoading(false);
+      }, (error) => {
+        console.error("Error fetching inventory:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not fetch inventory.",
+        });
+        setIsLoading(false);
+      });
+
+      return () => unsubscribe();
+    } else {
+      setIsLoading(false);
+      setInventory([]);
+    }
+  }, [user, firestore, toast]);
+
   const onSubmit: SubmitHandler<ProductFormValues> = async (data) => {
-    // This is a mock implementation
-    const newProduct: Product = { ...data, id: data.barcode };
-    setInventory(prev => [...prev, newProduct]);
-    
-    toast({
-      title: "Product Added",
-      description: `${data.name} has been added to your inventory.`,
-    });
-    form.reset();
-    setIsDialogOpen(false);
+    if (!user) {
+      toast({ variant: "destructive", title: "Not Authenticated" });
+      return;
+    }
+
+    try {
+      const storeDocRef = doc(firestore, "stores", user.email!);
+      const productDocRef = doc(collection(storeDocRef, "products"), data.barcode);
+
+      await setDoc(productDocRef, {
+        name: data.name,
+        price: data.price,
+        quantity: data.quantity,
+        barcode: data.barcode,
+      }, { merge: true });
+
+      // Also ensure the parent store document exists
+      await setDoc(storeDocRef, { owner: user.email }, { merge: true });
+
+      toast({
+        title: "Product Added",
+        description: `${data.name} has been added to your inventory.`,
+      });
+      form.reset();
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error adding product:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add product. Check console for details.",
+      });
+    }
   };
 
   const formatCurrency = (amount: number) => {
