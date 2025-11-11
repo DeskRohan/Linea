@@ -45,12 +45,6 @@ const salesByDayData = [
     { day: "Sun", sales: 3000 },
 ];
 
-const paymentMethodsData = [
-    { name: "UPI", value: 55, fill: "var(--color-upi)" },
-    { name: "Card", value: 30, fill: "var(--color-card)" },
-    { name: "Cash", value: 15, fill: "var(--color-cash)" },
-];
-
 const chartConfig = {
   sales: {
     label: "Sales (INR)",
@@ -70,18 +64,6 @@ const chartConfig = {
   chocolate: {
     label: "Chocolate Bar",
     color: "hsl(var(--chart-4))",
-  },
-  upi: {
-      label: "UPI",
-      color: "hsl(var(--chart-1))",
-  },
-  card: {
-      label: "Card",
-      color: "hsl(var(--chart-2))",
-  },
-  cash: {
-      label: "Cash",
-      color: "hsl(var(--chart-3))",
   }
 };
 
@@ -211,31 +193,6 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Payment Methods</CardTitle>
-            <CardDescription>Customer payment preferences.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-              <PieChart>
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent hideLabel />}
-                />
-                <Pie data={paymentMethodsData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5}>
-                   {paymentMethodsData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <ChartLegend
-                  content={<ChartLegendContent nameKey="name" />}
-                  className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-                />
-              </PieChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
       </div>
     </>
   );
