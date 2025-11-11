@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, updateProfile } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -49,8 +50,9 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      handleSignupSuccess();
+      await signInWithRedirect(auth, provider);
+      // Firebase will handle the redirect and the result will be picked up
+      // by onAuthStateChanged when the user returns to the app.
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -135,5 +137,3 @@ export default function SignupPage() {
     </main>
   );
 }
-
-    

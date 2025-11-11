@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,7 +33,7 @@ export default function LoginPage() {
     if (!loading && user) {
       handleLoginSuccess(user);
     }
-  }, [user, loading]);
+  }, [user, loading, router]);
 
   const handleLoginSuccess = async (user: any) => {
     const idTokenResult = await user.getIdTokenResult();
@@ -61,9 +61,11 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      // The useEffect will handle the redirect on user state change
-    } catch (error: any) {
+      await signInWithRedirect(auth, provider);
+      // Firebase will handle the redirect and the result will be picked up
+      // by onAuthStateChanged when the user returns to the app.
+    } catch (error: any)
+      {
       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
