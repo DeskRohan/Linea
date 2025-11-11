@@ -56,7 +56,7 @@ export default function StoreDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
+            <div className="text-2xl font-bold">₹3,764,231.89</div>
             <p className="text-xs text-muted-foreground">
               +20.1% from last month
             </p>
@@ -135,7 +135,7 @@ export default function StoreDashboard() {
                       liam@example.com
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">$250.00</TableCell>
+                  <TableCell className="text-right">₹20,800.00</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
@@ -144,7 +144,7 @@ export default function StoreDashboard() {
                       olivia@example.com
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">$150.00</TableCell>
+                  <TableCell className="text-right">₹12,500.00</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
@@ -153,7 +153,7 @@ export default function StoreDashboard() {
                       noah@example.com
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">$350.00</TableCell>
+                  <TableCell className="text-right">₹29,100.00</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
@@ -162,7 +162,7 @@ export default function StoreDashboard() {
                       emma@example.com
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">$450.00</TableCell>
+                  <TableCell className="text-right">₹37,450.00</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
@@ -171,7 +171,7 @@ export default function StoreDashboard() {
                       liam@example.com
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">$250.00</TableCell>
+                  <TableCell className="text-right">₹20,800.00</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -195,7 +195,7 @@ export default function StoreDashboard() {
                   olivia.martin@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+$1,999.00</div>
+              <div className="ml-auto font-medium">+₹166,417.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -210,7 +210,7 @@ export default function StoreDashboard() {
                   jackson.lee@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+$39.00</div>
+              <div className="ml-auto font-medium">+₹3,245.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -225,7 +225,7 @@ export default function StoreDashboard() {
                   isabella.nguyen@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+$299.00</div>
+              <div className="ml-auto font-medium">+₹24,887.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -240,7 +240,7 @@ export default function StoreDashboard() {
                   will@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+$99.00</div>
+              <div className="ml-auto font-medium">+₹8,241.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -255,7 +255,7 @@ export default function StoreDashboard() {
                   sofia.davis@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+$39.00</div>
+              <div className="ml-auto font-medium">+₹3,245.00</div>
             </div>
           </CardContent>
         </Card>
@@ -263,5 +263,3 @@ export default function StoreDashboard() {
     </>
   );
 }
-
-    
