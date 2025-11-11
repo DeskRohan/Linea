@@ -1,24 +1,10 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  doc,
-  getDoc,
-  setDoc,
-  onSnapshot,
-} from "firebase/firestore";
-
-import { useUser } from "@/firebase/auth/use-user";
-import { useFirestore } from "@/firebase/provider";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,7 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Product } from "@/lib/products";
+import { type Product } from "@/lib/products";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
@@ -62,12 +48,10 @@ const productSchema = z.object({
 type ProductFormValues = z.infer<typeof productSchema>;
 
 export default function InventoryPage() {
-  const { user } = useUser();
-  const firestore = useFirestore();
   const { toast } = useToast();
 
   const [inventory, setInventory] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const form = useForm<ProductFormValues>({
@@ -80,79 +64,17 @@ export default function InventoryPage() {
     },
   });
 
-  useEffect(() => {
-    if (!user?.email) {
-      setIsLoading(false);
-      return;
-    };
-
-    setIsLoading(true);
-    const productsCollectionRef = collection(firestore, "stores", user.email, "products");
-
-    const unsubscribe = onSnapshot(
-      productsCollectionRef,
-      (snapshot) => {
-        const productsList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Product[];
-        setInventory(productsList);
-        setIsLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching inventory: ", error);
-        toast({
-          variant: "destructive",
-          title: "Error fetching products",
-          description: "Could not load inventory from the database. Check console for details.",
-        });
-        setIsLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user, firestore, toast]);
-
   const onSubmit: SubmitHandler<ProductFormValues> = async (data) => {
-    if (!user?.email) {
-      toast({
-        variant: "destructive",
-        title: "Not authenticated",
-        description: "You must be logged in to add a product.",
-      });
-      return;
-    }
-
-    try {
-      const storeDocRef = doc(firestore, "stores", user.email);
-      
-      const storeDoc = await getDoc(storeDocRef);
-      if (!storeDoc.exists()) {
-        await setDoc(storeDocRef, { owner: user.email, createdAt: new Date() });
-      }
-
-      const productDocRef = doc(storeDocRef, "products", data.barcode);
-      await setDoc(productDocRef, { 
-        name: data.name,
-        price: data.price,
-        quantity: data.quantity,
-        barcode: data.barcode,
-      });
-      
-      toast({
-        title: "Product Added",
-        description: `${data.name} has been added to your inventory.`,
-      });
-      form.reset();
-      setIsDialogOpen(false);
-    } catch (error: any) {
-      console.error("Error adding document: ", error);
-      toast({
-        variant: "destructive",
-        title: "Error adding product",
-        description: "An error occurred. Please check security rules and console for details.",
-      });
-    }
+    // This is a mock implementation
+    const newProduct: Product = { ...data, id: data.barcode };
+    setInventory(prev => [...prev, newProduct]);
+    
+    toast({
+      title: "Product Added",
+      description: `${data.name} has been added to your inventory.`,
+    });
+    form.reset();
+    setIsDialogOpen(false);
   };
 
   const formatCurrency = (amount: number) => {
@@ -288,5 +210,3 @@ export default function InventoryPage() {
     </>
   );
 }
-
-    

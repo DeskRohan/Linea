@@ -4,12 +4,8 @@
 import {
   Activity,
   ArrowUpRight,
-  CircleUser,
   CreditCard,
   DollarSign,
-  Menu,
-  Package2,
-  Search,
   Users,
 } from "lucide-react"
 
@@ -18,7 +14,6 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -36,16 +31,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import Link from "next/link";
-import { useUser } from "@/firebase/auth/use-user";
 
 
 export default function StoreDashboard() {
-  const { user } = useUser();
-
   return (
     <>
       <div className="flex items-center mb-4">
-        <h1 className="text-lg font-semibold md:text-2xl">Welcome, {user?.displayName || "Store Owner"}!</h1>
+        <h1 className="text-lg font-semibold md:text-2xl">Welcome, Store Owner!</h1>
       </div>
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <Card>

@@ -4,7 +4,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,14 +26,9 @@ export default function StoreSignupPage() {
   const [storeName, setStoreName] = useState("");
   const [activationKey, setActivationKey] = useState("");
   const router = useRouter();
-  const auth = getAuth();
   const { toast } = useToast();
 
-  const handleSignupSuccess = () => {
-    router.push("/store/dashboard");
-  };
-
-  const handleEmailSignUp = async (event: React.FormEvent) => {
+  const handleEmailSignUp = (event: React.FormEvent) => {
     event.preventDefault();
 
     if (activationKey !== VALID_ACTIVATION_KEY) {
@@ -45,20 +39,11 @@ export default function StoreSignupPage() {
       });
       return;
     }
-
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName: storeName });
-      // In a real app, you'd call a backend function here to set a custom claim 'shop_owner'
-      // This is crucial for securing your store dashboard
-      handleSignupSuccess();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Sign-up Failed",
-        description: error.message,
-      });
-    }
+    toast({
+        title: "Store Created",
+        description: "You can now log in to your store dashboard.",
+    });
+    router.push("/store/dashboard");
   };
 
   return (

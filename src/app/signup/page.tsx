@@ -4,7 +4,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, updateProfile } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,41 +24,19 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const router = useRouter();
-  const auth = getAuth();
   const { toast } = useToast();
 
-  const handleSignupSuccess = () => {
-    router.push("/");
-  };
-
-  const handleEmailSignUp = async (event: React.FormEvent) => {
+  const handleEmailSignUp = (event: React.FormEvent) => {
     event.preventDefault();
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName });
-      handleSignupSuccess();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Sign-up Failed",
-        description: error.message,
-      });
-    }
+    toast({
+        title: "Signup Successful",
+        description: "You can now log in.",
+    });
+    router.push("/login");
   };
 
-  const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithRedirect(auth, provider);
-      // Firebase will handle the redirect and the result will be picked up
-      // by onAuthStateChanged when the user returns to the app.
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: error.message,
-      });
-    }
+  const handleGoogleSignIn = () => {
+    router.push("/shopping");
   };
 
   return (

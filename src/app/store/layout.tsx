@@ -15,8 +15,6 @@ import {
   PlusCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@/firebase/auth/use-user";
-import { getAuth, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -37,25 +35,11 @@ export default function StoreLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useUser();
   const router = useRouter();
-  const auth = getAuth();
-
-  React.useEffect(() => {
-    if (!loading && !user) {
-      router.push("/store/login");
-    }
-  }, [user, loading, router]);
-
 
   const handleLogout = async () => {
-    await signOut(auth);
     router.push("/");
   };
-  
-  if (loading || !user) {
-    return null;
-  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -66,7 +50,7 @@ export default function StoreLayout({
             className="flex items-center gap-2 text-lg font-semibold md:text-base"
           >
             <Store className="h-6 w-6" />
-            <span className="sr-only">{user?.displayName || "My Store"}</span>
+            <span className="sr-only">My Store</span>
           </Link>
           <NavLinks />
         </nav>
@@ -88,7 +72,7 @@ export default function StoreLayout({
                 className="flex items-center gap-2 text-lg font-semibold"
               >
                 <Store className="h-6 w-6" />
-                <span className="">{user?.displayName || "My Store"}</span>
+                <span className="">My Store</span>
               </Link>
               <NavLinks mobile />
             </nav>
@@ -99,8 +83,8 @@ export default function StoreLayout({
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
                 <Avatar>
-                    <AvatarImage src={user?.photoURL ?? ''} />
-                    <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={''} />
+                    <AvatarFallback>S</AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
               </Button>

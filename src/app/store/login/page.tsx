@@ -1,10 +1,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, User as FirebaseUser } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,70 +16,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SwiftPayLogo } from "@/components/icons/logo";
-import { useToast } from "@/hooks/use-toast";
 import { Chrome } from "lucide-react";
-import { useUser } from "@/firebase/auth/use-user";
 
 export default function StoreLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-  const auth = getAuth();
-  const { toast } = useToast();
-  const { user, loading } = useUser();
 
-  useEffect(() => {
-    if (!loading && user) {
-      handleLoginSuccess(user);
-    }
-  }, [user, loading, router]);
-
-  const handleLoginSuccess = async (user: FirebaseUser) => {
-    if (user.email === 'root.linea@gmail.com') {
-      router.push("/store/dashboard");
-      return;
-    }
-    const idTokenResult = await user.getIdTokenResult();
-    if (idTokenResult.claims.admin) {
-      router.push("/admin");
-    } else if (idTokenResult.claims.shop_owner) {
-      router.push("/store/dashboard");
-    }
-    else {
-      // Not a shop owner, maybe redirect to an error page or main login
-      router.push("/");
-    }
-  };
-
-  const handleLogin = async (event: React.FormEvent) => {
+  const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: error.message,
-      });
-    }
+    router.push("/store/dashboard");
   };
-
-  const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithRedirect(auth, provider);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: error.message,
-      });
-    }
-  };
-  
-  if (loading || user) {
-    return null;
-  }
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
@@ -129,7 +75,7 @@ export default function StoreLoginPage() {
                 </span>
               </div>
             </div>
-            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+            <Button variant="outline" className="w-full" onClick={() => router.push('/store/dashboard')}>
               <Chrome className="mr-2 h-4 w-4" />
               Google
             </Button>

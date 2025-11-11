@@ -6,34 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SwiftPayLogo } from "@/components/icons/logo";
 import { User, Store } from "lucide-react";
-import { useUser } from "@/firebase/auth/use-user";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export default function RoleSelectionPage() {
-    const { user, loading } = useUser();
-    const router = useRouter();
-
-    useEffect(() => {
-        if (!loading && user) {
-            // User is already logged in, decide where to send them
-            const idTokenResult = user.getIdTokenResult();
-            idTokenResult.then(token => {
-                if (token.claims.admin) {
-                    router.push("/admin");
-                } else if (token.claims.shop_owner) {
-                    router.push("/store/dashboard");
-                } else {
-                    router.push("/shopping");
-                }
-            });
-        }
-    }, [user, loading, router]);
-    
-    if (loading || user) {
-        return null;
-    }
-
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md shadow-2xl">

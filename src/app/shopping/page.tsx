@@ -26,8 +26,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Scanner from "@/components/scanner";
 import { findProductByBarcode, type CartItem } from "@/lib/products";
 import { cn } from "@/lib/utils";
-import { useUser } from "@/firebase/auth/use-user";
-import { getAuth, signOut } from "firebase/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -41,20 +39,11 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function ShoppingPage() {
-  const { user, loading } = useUser();
   const router = useRouter();
-  const auth = getAuth();
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [lastScannedId, setLastScannedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
-
 
   const handleScanSuccess = (decodedText: string) => {
     const product = findProductByBarcode(decodedText);
@@ -83,7 +72,6 @@ export default function ShoppingPage() {
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
     router.push("/");
   };
 
@@ -101,9 +89,6 @@ export default function ShoppingPage() {
     }
   }, [lastScannedId]);
 
-  if (loading || !user) {
-    return null;
-  }
   
   const renderContent = () => {
     switch (appState) {
@@ -115,8 +100,6 @@ export default function ShoppingPage() {
             onScanSuccess={handleScanSuccess}
             onCheckout={() => setAppState("completed")}
             lastScannedId={lastScannedId}
-            user={user}
-            loading={loading}
             onLogout={handleLogout}
           />
         );
@@ -130,8 +113,6 @@ export default function ShoppingPage() {
             onScanSuccess={handleScanSuccess}
             onCheckout={() => setAppState("completed")}
             lastScannedId={lastScannedId}
-            user={user}
-            loading={loading}
             onLogout={handleLogout}
           />
         );
@@ -151,8 +132,6 @@ const ShoppingScreen = ({
   onScanSuccess,
   onCheckout,
   lastScannedId,
-  user,
-  loading,
   onLogout,
 }: {
   cartItems: CartItem[];
@@ -160,8 +139,6 @@ const ShoppingScreen = ({
   onScanSuccess: (decodedText: string) => void;
   onCheckout: () => void;
   lastScannedId: string | null;
-  user: any;
-  loading: boolean;
   onLogout: () => void;
 }) => (
   <div className="w-full h-screen md:h-auto max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -194,15 +171,11 @@ const ShoppingScreen = ({
           </CardDescription>
         </div>
          <div className="flex items-center gap-4">
-            {loading ? (
-              <Skeleton className="h-10 w-10 rounded-full" />
-            ) : user ? (
-              <Avatar>
-                <AvatarImage src={user.photoURL} />
-                <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
-              </Avatar>
-            ) : null}
-            <Button variant="ghost" size="icon" onClick={onLogout} disabled={loading}>
+            <Avatar>
+              <AvatarImage src={undefined} />
+              <AvatarFallback>U</AvatarFallback>
+            </Avatar>
+            <Button variant="ghost" size="icon" onClick={onLogout}>
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
