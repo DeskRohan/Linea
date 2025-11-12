@@ -18,16 +18,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LineaLogo } from "@/components/icons/linea-logo";
 import { Chrome } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
-    // Navigate directly without authentication
-    router.push("/shopping");
+    if (email === "rohangodakhindi@gmail.com" && password === "RohanG01!") {
+      router.push("/shopping");
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Invalid Credentials",
+        description: "Please check your email and password.",
+      });
+    }
   };
 
   const handleGoogleSignIn = () => {
