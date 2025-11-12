@@ -14,6 +14,8 @@ import {
   XCircle,
   Bell,
   Loader2,
+  Trophy,
+  Phone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,10 +39,12 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetFooter
+  SheetFooter,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import { useAuth, useUser } from "@/firebase";
 import { signOut } from "firebase/auth";
+import { Separator } from "@/components/ui/separator";
 
 type AppState = "shopping" | "completed";
 
@@ -195,22 +199,50 @@ const ShoppingScreen = ({
     <div className="flex flex-col lg:w-1/2 lg:h-full">
       <header className="flex items-center justify-between p-4 border-b lg:border-b-0 lg:border-r">
         <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 border-2 border-primary/50">
-            <AvatarImage src={user.photoURL || ""} />
-            <AvatarFallback className="bg-secondary text-secondary-foreground">
-               {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-bold text-lg">{user.displayName || user.email}</p>
-          </div>
+          <Sheet>
+            <SheetTrigger asChild>
+                <Avatar className="h-10 w-10 border-2 border-primary/50 cursor-pointer">
+                    <AvatarImage src={user.photoURL || ""} />
+                    <AvatarFallback className="bg-secondary text-secondary-foreground">
+                    {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                </Avatar>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                <SheetHeader className="text-left mt-8">
+                    <div className="flex flex-col items-center gap-4">
+                        <Avatar className="h-24 w-24 border-4 border-primary/50">
+                            <AvatarImage src={user.photoURL || ""} />
+                            <AvatarFallback className="bg-secondary text-secondary-foreground text-4xl">
+                            {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="text-center">
+                            <SheetTitle className="text-2xl">{user.displayName || "User"}</SheetTitle>
+                            <SheetDescription>{user.email}</SheetDescription>
+                        </div>
+                    </div>
+                </SheetHeader>
+                <div className="py-8 flex flex-col gap-4">
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                        <Phone className="h-5 w-5"/>
+                        <span className="text-sm">Phone number not set</span>
+                    </div>
+                    <Separator/>
+                    <Button variant="outline" className="w-full" onClick={onLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                    </Button>
+                </div>
+            </SheetContent>
+          </Sheet>
+          <Button variant="ghost" size="icon">
+            <Trophy className="h-6 w-6 text-primary" />
+          </Button>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon">
             <Bell className="h-6 w-6" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onLogout}>
-            <LogOut className="h-6 w-6" />
           </Button>
         </div>
       </header>
@@ -231,7 +263,6 @@ const ShoppingScreen = ({
 
     {/* Right Side: Cart - Hidden on mobile, visible on desktop */}
     <aside className="hidden lg:flex lg:flex-col lg:w-1/2 lg:h-full bg-card border-l">
-      {/* Desktop Cart Content */}
       <div className="text-left p-4 pb-0">
         <h2 className="text-2xl font-semibold text-card-foreground">Your Cart</h2>
       </div>
@@ -258,7 +289,6 @@ const ShoppingScreen = ({
           </Button>
         </SheetTrigger>
         <SheetContent side="bottom" className="h-[90vh] flex flex-col bg-card rounded-t-3xl p-0">
-           {/* Mobile Cart Content */}
           <SheetHeader className="text-left p-4 pb-0">
             <SheetTitle className="text-2xl">Your Cart</SheetTitle>
           </SheetHeader>
@@ -376,3 +406,5 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
+
+    
