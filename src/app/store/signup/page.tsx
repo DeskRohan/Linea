@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SwiftPayLogo } from "@/components/icons/logo";
+import { LineaLogo } from "@/components/icons/linea-logo";
 import { useToast } from "@/hooks/use-toast";
 
 const VALID_ACTIVATION_KEY = "rhlinea2k25";
@@ -54,11 +54,11 @@ export default function StoreSignupPage() {
       <Card className="w-full max-w-sm shadow-2xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <SwiftPayLogo className="h-16 w-16" />
+            <LineaLogo className="h-16 w-16" />
           </div>
           <CardTitle className="text-2xl">Create Your Store</CardTitle>
           <CardDescription>
-            Join SwiftPay and start selling today.
+            Join Linea and start selling today.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SwiftPayLogo } from "@/components/icons/logo";
+import { LineaLogo } from "@/components/icons/linea-logo";
 
 export default function StoreLoginPage() {
   const [email, setEmail] = useState("");
@@ -33,7 +33,7 @@ export default function StoreLoginPage() {
       <Card className="w-full max-w-sm shadow-2xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <SwiftPayLogo className="h-16 w-16" />
+            <LineaLogo className="h-16 w-16" />
           </div>
           <CardTitle className="text-2xl">Shop Owner Login</CardTitle>
           <CardDescription>Sign in to manage your store.</CardDescription>

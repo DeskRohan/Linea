@@ -1,3 +1,7 @@
+// This file is no longer used and can be deleted.
+// It is kept to prevent breaking changes if it was referenced somewhere unexpectedly.
+// The new logo is in /src/components/icons/linea-logo.tsx
+
 import type { SVGProps } from "react";
 import { cn } from "@/lib/utils";
 

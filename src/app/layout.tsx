@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 // This is a client component because it contains the FirebaseClientProvider.
 // However, the metadata object is still used for static rendering.
 // export const metadata: Metadata = {
-//   title: 'SwiftPay Mobile',
+//   title: 'Linea Mobile',
 //   description: 'A contactless scan-as-you-go shopping experience.',
 // };
 
@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>SwiftPay Mobile</title>
+        <title>Linea Mobile</title>
         <meta name="description" content="A contactless scan-as-you-go shopping experience." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link

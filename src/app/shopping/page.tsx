@@ -239,7 +239,7 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
         Payment Complete!
       </h1>
       <p className="text-muted-foreground mt-2 mb-8">
-        Thank you for shopping with SwiftPay. Your receipt has been sent to
+        Thank you for shopping with Linea. Your receipt has been sent to
         your email.
       </p>
       <Button onClick={onNewSession} size="lg" className="w-full" variant="outline">

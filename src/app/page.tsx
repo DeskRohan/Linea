@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { SwiftPayLogo } from "@/components/icons/logo";
+import { LineaLogo } from "@/components/icons/linea-logo";
 import { User, Store } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -21,9 +21,9 @@ export default function RoleSelectionPage() {
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <SwiftPayLogo className="h-16 w-16" />
+            <LineaLogo className="h-16 w-16" />
           </div>
-          <CardTitle className="text-2xl">Welcome to SwiftPay</CardTitle>
+          <CardTitle className="text-2xl">Welcome to Linea</CardTitle>
           <CardDescription>How would you like to log in?</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">

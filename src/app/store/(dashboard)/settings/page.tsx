@@ -150,7 +150,7 @@ export default function ShopSettingsPage() {
             )}
             {id === 'compact' && (
               <div className="w-full h-full text-[6px] leading-tight text-gray-800 font-mono bg-white p-2 flex flex-col">
-                  <p className="text-center text-[8px] font-bold">SwiftMart</p>
+                  <p className="text-center text-[8px] font-bold">LineaMart</p>
                   <p className="text-center text-gray-600">INV# 88372</p>
                   <div className="border-t border-dashed my-2"></div>
                   <div className="flex-grow space-y-1">
