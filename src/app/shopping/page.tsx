@@ -236,7 +236,7 @@ const ShoppingScreen = ({
         </div>
       </header>
 
-      <main className="flex-grow flex flex-col items-center justify-center p-4 text-center bg-background">
+      <main className="flex-grow flex flex-col items-center justify-center p-4 text-center">
         <div className="relative w-full max-w-[300px] sm:max-w-[400px] aspect-square rounded-3xl bg-background p-2 overflow-hidden">
             <div className="w-full h-full rounded-2xl overflow-hidden relative">
                 <Scanner onScanSuccess={onScanSuccess} />
@@ -248,8 +248,8 @@ const ShoppingScreen = ({
                 </div>
             </div>
         </div>
-        <h2 className="mt-6 text-xl font-semibold">Scan & Go</h2>
-        <p className="text-foreground/80 mt-1">Add items to your cart by scanning their barcodes.</p>
+        <h2 className="mt-6 text-xl font-semibold">Scan an item to begin</h2>
+        <p className="text-foreground/80 mt-1">Point your camera at a product's barcode.</p>
       </main>
     </div>
 
@@ -398,3 +398,5 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
+
+    
