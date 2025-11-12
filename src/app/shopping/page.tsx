@@ -237,13 +237,16 @@ const ShoppingScreen = ({
       </header>
 
       <main className="flex-grow flex flex-col items-center justify-center p-4 text-center bg-background">
-        <div className="relative w-full max-w-[300px] sm:max-w-[400px] aspect-square rounded-3xl bg-black/5 p-2 overflow-hidden border">
-          <div className="w-full h-full rounded-2xl overflow-hidden border-4 border-dashed border-primary/50">
-            <Scanner onScanSuccess={onScanSuccess} />
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-full h-1 bg-primary/70 animate-scan-beam"></div>
+        <div className="relative w-full max-w-[300px] sm:max-w-[400px] aspect-square rounded-3xl bg-background p-2 overflow-hidden">
+            <div className="w-full h-full rounded-2xl overflow-hidden relative">
+                <Scanner onScanSuccess={onScanSuccess} />
+                <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-xl animate-pulse"></div>
+                    <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-xl animate-pulse"></div>
+                    <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-xl animate-pulse"></div>
+                    <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-xl animate-pulse"></div>
+                </div>
             </div>
-          </div>
         </div>
         <h2 className="mt-6 text-xl font-semibold">Scan & Go</h2>
         <p className="text-foreground/80 mt-1">Add items to your cart by scanning their barcodes.</p>

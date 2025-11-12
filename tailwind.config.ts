@@ -93,16 +93,11 @@ export default {
           '50%': { transform: 'scale(1.02)', boxShadow: '0 0 0 10px rgba(74, 222, 128, 0.3)' },
           '100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(74, 222, 128, 0)' },
         },
-        'scan-beam': {
-          '0%, 100%': { transform: 'translateY(-150px)' },
-          '50%': { transform: 'translateY(150px)' },
-        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'scan-pulse': 'scan-pulse 1.2s cubic-bezier(0, 0, 0.2, 1)',
-        'scan-beam': 'scan-beam 3s ease-in-out infinite',
       },
     },
   },
