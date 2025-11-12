@@ -4,6 +4,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { useAuth } from "@/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,31 +19,51 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LineaLogo } from "@/components/icons/linea-logo";
-import { Chrome } from "lucide-react";
+import { Chrome, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("rohangodakhindi@gmail.com");
+  const [password, setPassword] = useState("RohanG01!");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
 
-  const handleLogin = (event: React.FormEvent) => {
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (email === "rohangodakhindi@gmail.com" && password === "RohanG01!") {
+    setIsLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       router.push("/shopping");
-    } else {
+    } catch (error: any) {
+      console.error("Login failed:", error);
       toast({
         variant: "destructive",
-        title: "Invalid Credentials",
-        description: "Please check your email and password.",
+        title: "Login Failed",
+        description: error.message || "Please check your email and password.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleGoogleSignIn = () => {
-    // Navigate directly without authentication
-    router.push("/shopping");
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        router.push("/shopping");
+    } catch (error: any) {
+        console.error("Google Sign-In failed:", error);
+        toast({
+            variant: "destructive",
+            title: "Google Sign-In Failed",
+            description: error.message || "Could not sign in with Google.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -67,6 +89,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -77,9 +100,11 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
           </form>
@@ -97,6 +122,7 @@ export default function LoginPage() {
             variant="outline"
             className="w-full"
             onClick={handleGoogleSignIn}
+            disabled={isLoading}
           >
             <Chrome className="mr-2 h-4 w-4" />
             Google

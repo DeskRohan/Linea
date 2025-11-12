@@ -1,11 +1,10 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
-  ScanLine,
   CreditCard,
   CheckCircle2,
   Package,
@@ -14,7 +13,7 @@ import {
   MinusCircle,
   XCircle,
   Bell,
-  User,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +28,6 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Scanner from "@/components/scanner";
 import { findProductByBarcode, type CartItem } from "@/lib/products";
-import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +41,8 @@ import {
   SheetFooter
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { useAuth, useUser } from "@/firebase";
+import { signOut } from "firebase/auth";
 
 type AppState = "shopping" | "completed";
 
@@ -56,10 +56,19 @@ const formatCurrency = (amount: number) => {
 export default function ShoppingPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+  const { user, loading } = useUser();
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [user, loading, router]);
+
 
   const handleScanSuccess = (decodedText: string) => {
     const product = findProductByBarcode(decodedText);
@@ -106,6 +115,7 @@ export default function ShoppingPage() {
   };
 
   const handleLogout = async () => {
+    await signOut(auth);
     router.push("/");
   };
 
@@ -120,11 +130,22 @@ export default function ShoppingPage() {
      return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
+  if (loading || !user) {
+    return (
+      <MobileLayout>
+        <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+      </MobileLayout>
+    );
+  }
+
   const renderContent = () => {
     switch (appState) {
       case "shopping":
         return (
           <ShoppingScreen
+            user={user}
             cartItems={cartItems}
             total={total}
             totalItems={totalItems}
@@ -141,6 +162,7 @@ export default function ShoppingPage() {
       default:
         return (
            <ShoppingScreen
+            user={user}
             cartItems={cartItems}
             total={total}
             totalItems={totalItems}
@@ -165,6 +187,7 @@ export default function ShoppingPage() {
 }
 
 const ShoppingScreen = ({
+  user,
   cartItems,
   total,
   totalItems,
@@ -175,6 +198,7 @@ const ShoppingScreen = ({
   isCartOpen,
   setIsCartOpen
 }: {
+  user: any;
   cartItems: CartItem[];
   total: number;
   totalItems: number;
@@ -189,11 +213,13 @@ const ShoppingScreen = ({
     <header className="flex items-center justify-between p-4">
       <div className="flex items-center gap-3">
         <Avatar className="h-10 w-10 border-2 border-primary/50">
-          <AvatarImage src="" />
-          <AvatarFallback className="bg-secondary text-secondary-foreground">TU</AvatarFallback>
+          <AvatarImage src={user.photoURL || ""} />
+          <AvatarFallback className="bg-secondary text-secondary-foreground">
+             {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+          </AvatarFallback>
         </Avatar>
         <div>
-          <p className="font-bold text-lg">Test User</p>
+          <p className="font-bold text-lg">{user.displayName || user.email}</p>
         </div>
       </div>
       <div className="flex items-center gap-2">
