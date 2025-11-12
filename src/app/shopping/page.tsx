@@ -39,7 +39,6 @@ import {
   SheetTrigger,
   SheetFooter
 } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
 import { useAuth, useUser } from "@/firebase";
 import { signOut } from "firebase/auth";
 
@@ -232,12 +231,21 @@ const ShoppingScreen = ({
 
     {/* Right Side: Cart - Hidden on mobile, visible on desktop */}
     <aside className="hidden lg:flex lg:flex-col lg:w-1/2 lg:h-full bg-card border-l">
-      <CartSheetContent 
-        cartItems={cartItems} 
-        total={total} 
-        onQuantityChange={onQuantityChange} 
-        onCheckout={onCheckout}
-      />
+      {/* Desktop Cart Content */}
+      <div className="text-left p-4 pb-0">
+        <h2 className="text-2xl font-semibold text-card-foreground">Your Cart</h2>
+      </div>
+      <div className="flex-grow overflow-hidden">
+        <ScrollArea className="h-full px-4">
+          <CartContent
+            cartItems={cartItems}
+            onQuantityChange={onQuantityChange}
+          />
+        </ScrollArea>
+      </div>
+      <footer className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t">
+        <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} />
+      </footer>
     </aside>
 
     {/* Mobile Only: "View Cart" button that triggers a sheet */}
@@ -250,90 +258,101 @@ const ShoppingScreen = ({
           </Button>
         </SheetTrigger>
         <SheetContent side="bottom" className="h-[90vh] flex flex-col bg-card rounded-t-3xl p-0">
-          <CartSheetContent
-            cartItems={cartItems} 
-            total={total} 
-            onQuantityChange={onQuantityChange} 
-            onCheckout={onCheckout}
-          />
+           {/* Mobile Cart Content */}
+          <SheetHeader className="text-left p-4 pb-0">
+            <SheetTitle className="text-2xl">Your Cart</SheetTitle>
+          </SheetHeader>
+          <div className="flex-grow overflow-hidden">
+            <ScrollArea className="h-full px-4">
+              <CartContent
+                cartItems={cartItems}
+                onQuantityChange={onQuantityChange}
+              />
+            </ScrollArea>
+          </div>
+          <SheetFooter className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t">
+             <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} />
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </footer>
   </div>
 );
 
-const CartSheetContent = ({
+
+const CartContent = ({
   cartItems,
-  total,
   onQuantityChange,
-  onCheckout,
 }: {
   cartItems: CartItem[];
-  total: number;
   onQuantityChange: (productId: string, newQuantity: number) => void;
-  onCheckout: () => void;
 }) => (
   <>
-    <SheetHeader className="text-left p-4 pb-0">
-      <SheetTitle className="text-2xl">Your Cart</SheetTitle>
-    </SheetHeader>
-    <div className="flex-grow overflow-hidden">
-       <ScrollArea className="h-full px-4">
-          {cartItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-10">
-              <Package size={48} className="mb-4 text-primary/50" />
-              <p className="font-semibold text-lg">Your cart is empty</p>
-              <p className="text-sm">Start scanning to add items.</p>
+    {cartItems.length === 0 ? (
+      <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-10">
+        <Package size={48} className="mb-4 text-primary/50" />
+        <p className="font-semibold text-lg">Your cart is empty</p>
+        <p className="text-sm">Start scanning to add items.</p>
+      </div>
+    ) : (
+      <div className="flex flex-col gap-4 py-4">
+        {cartItems.map((item) => (
+          <div
+            key={item.id}
+            className="flex items-center gap-4 p-3 rounded-lg"
+          >
+            <Image src={item.imageUrl} alt={item.name} width={64} height={64} className="rounded-md object-cover border-2 border-secondary" data-ai-hint={item.imageHint}/>
+            <div className="flex-grow">
+              <p className="font-medium">{item.name}</p>
+              <p className="text-sm text-muted-foreground">
+                {formatCurrency(item.price)}
+              </p>
             </div>
-          ) : (
-            <div className="flex flex-col gap-4 py-4">
-              {cartItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-4 p-3 rounded-lg"
-                >
-                  <Image src={item.imageUrl} alt={item.name} width={64} height={64} className="rounded-md object-cover border-2 border-secondary" data-ai-hint={item.imageHint}/>
-                  <div className="flex-grow">
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatCurrency(item.price)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" className="rounded-full" onClick={() => onQuantityChange(item.id, item.quantity - 1)}>
-                        <MinusCircle className="h-5 w-5 text-destructive"/>
-                    </Button>
-                    <Badge variant="secondary" className="text-lg px-3">
-                        {item.quantity}
-                    </Badge>
-                    <Button variant="ghost" size="icon" className="rounded-full" onClick={() => onQuantityChange(item.id, item.quantity + 1)}>
-                        <PlusCircle className="h-5 w-5 text-primary"/>
-                    </Button>
-                  </div>
-                   <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-destructive" onClick={() => onQuantityChange(item.id, 0)}>
-                        <XCircle className="h-5 w-5"/>
-                   </Button>
-                </div>
-              ))}
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => onQuantityChange(item.id, item.quantity - 1)}>
+                  <MinusCircle className="h-5 w-5 text-destructive"/>
+              </Button>
+              <Badge variant="secondary" className="text-lg px-3">
+                  {item.quantity}
+              </Badge>
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => onQuantityChange(item.id, item.quantity + 1)}>
+                  <PlusCircle className="h-5 w-5 text-primary"/>
+              </Button>
             </div>
-          )}
-        </ScrollArea>
+              <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-destructive" onClick={() => onQuantityChange(item.id, 0)}>
+                  <XCircle className="h-5 w-5"/>
+              </Button>
+          </div>
+        ))}
+      </div>
+    )}
+  </>
+);
+
+
+const CartFooterActions = ({
+  total,
+  onCheckout,
+  cartItems,
+}: {
+  total: number;
+  onCheckout: () => void;
+  cartItems: CartItem[];
+}) => (
+  <>
+    <div className="flex justify-between w-full text-2xl font-bold pt-4">
+      <span>Total</span>
+      <span>{formatCurrency(total)}</span>
     </div>
-    <SheetFooter className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t">
-       <div className="flex justify-between w-full text-2xl font-bold pt-4">
-          <span>Total</span>
-          <span>{formatCurrency(total)}</span>
-        </div>
-        <Button
-          onClick={onCheckout}
-          size="lg"
-          className="w-full text-lg h-14 rounded-2xl"
-          disabled={cartItems.length === 0}
-        >
-          <CreditCard className="mr-3 h-6 w-6" />
-          Proceed to Payment
-        </Button>
-    </SheetFooter>
+    <Button
+      onClick={onCheckout}
+      size="lg"
+      className="w-full text-lg h-14 rounded-2xl"
+      disabled={cartItems.length === 0}
+    >
+      <CreditCard className="mr-3 h-6 w-6" />
+      Proceed to Payment
+    </Button>
   </>
 );
 
