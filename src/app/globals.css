@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 100 20% 96%;
+    --background: 100 20% 98%;
     --foreground: 120 10% 20%;
     --card: 100 20% 100%;
     --card-foreground: 120 10% 20%;
@@ -37,6 +37,8 @@
     --sidebar-accent-foreground: 120 10% 20%;
     --sidebar-border: 110 20% 85%;
     --sidebar-ring: 130 40% 60%;
+    --gradient-from: 100 20% 92%; /* Light sage green */
+    --gradient-to: 100 20% 98%; /* Lighter, almost white sage */
   }
   .dark {
     --background: 250 80% 15%;
@@ -71,6 +73,8 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 250 50% 35%;
     --sidebar-ring: 78 96% 54%;
+    --gradient-from: 250 80% 10%;
+    --gradient-to: 250 80% 15%;
   }
 }
 

@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -177,7 +176,7 @@ export default function ShoppingPage() {
     }
   };
 
-  return <div className="min-h-screen bg-muted/40">{renderContent()}</div>;
+  return <div className="min-h-screen bg-gradient-background">{renderContent()}</div>;
 }
 
 const ShoppingScreen = ({
@@ -202,7 +201,7 @@ const ShoppingScreen = ({
   <div className="flex flex-col lg:flex-row h-screen">
     {/* Left Side: Scanner and User Info */}
     <div className="flex flex-col lg:w-1/2 lg:h-full">
-      <header className="flex items-center justify-between p-4 border-b lg:border-b-0 lg:border-r">
+      <header className="flex items-center justify-between p-4 border-b lg:border-b-0 lg:border-r bg-transparent">
         <div className="flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -237,7 +236,7 @@ const ShoppingScreen = ({
       </header>
 
       <main className="flex-grow flex flex-col items-center justify-center p-4 text-center">
-        <div className="relative w-full max-w-[300px] sm:max-w-[400px] aspect-square rounded-3xl bg-background p-2 overflow-hidden">
+        <div className="relative w-full max-w-[300px] sm:max-w-[400px] aspect-square rounded-3xl bg-background shadow-lg p-2 overflow-hidden">
             <div className="w-full h-full rounded-2xl overflow-hidden relative">
                 <Scanner onScanSuccess={onScanSuccess} />
                 <div className="absolute inset-0 pointer-events-none">
@@ -254,7 +253,7 @@ const ShoppingScreen = ({
     </div>
 
     {/* Right Side: Cart - Hidden on mobile, visible on desktop */}
-    <aside className="hidden lg:flex lg:flex-col lg:w-1/2 lg:h-full bg-card border-l">
+    <aside className="hidden lg:flex lg:flex-col lg:w-1/2 lg:h-full bg-card border-l rounded-l-3xl shadow-2xl">
       <div className="text-left p-4 pb-0">
         <h2 className="text-2xl font-semibold text-card-foreground">Your Cart</h2>
       </div>
@@ -266,13 +265,13 @@ const ShoppingScreen = ({
           />
         </ScrollArea>
       </div>
-      <footer className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t">
+      <footer className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t rounded-bl-3xl">
         <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} />
       </footer>
     </aside>
 
     {/* Mobile Only: "View Cart" button that triggers a sheet */}
-    <footer className="p-4 border-t bg-background lg:hidden">
+    <footer className="p-4 border-t bg-transparent lg:hidden">
       <Sheet>
         <SheetTrigger asChild>
           <Button size="lg" className="w-full h-14 text-lg rounded-2xl" disabled={cartItems.length === 0}>
@@ -381,7 +380,7 @@ const CartFooterActions = ({
 
 const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
   <div className="w-full h-screen flex flex-col items-center justify-center text-center bg-transparent p-4">
-    <Card className="max-w-md w-full">
+    <Card className="max-w-md w-full shadow-xl">
       <CardContent className="p-10">
         <CheckCircle2 className="h-20 w-20 text-green-500 mb-6 mx-auto" />
         <h1 className="text-3xl font-bold text-primary">
@@ -398,5 +397,3 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
-
-    
