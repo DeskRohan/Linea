@@ -92,15 +92,14 @@ export default {
           },
         },
         'scan-pulse': {
-          '0%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(74, 222, 128, 0)' },
-          '50%': { transform: 'scale(1.02)', boxShadow: '0 0 0 10px rgba(74, 222, 128, 0.3)' },
-          '100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(74, 222, 128, 0)' },
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.5' },
         },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'scan-pulse': 'scan-pulse 1.2s cubic-bezier(0, 0, 0.2, 1)',
+        'scan-pulse': 'scan-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },

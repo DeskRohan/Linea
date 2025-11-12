@@ -262,7 +262,7 @@ const ShoppingScreen = ({
   <div className="w-full h-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:h-[90vh]">
     
     {/* Left Side: Scanner and User Info */}
-    <Card className="flex flex-col h-full overflow-hidden">
+    <Card className="flex flex-col h-full overflow-hidden shadow-xl rounded-2xl">
       <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
         <div className="flex items-center gap-3">
           <DropdownMenu>
@@ -287,12 +287,12 @@ const ShoppingScreen = ({
             </DropdownMenuContent>
           </DropdownMenu>
           <Button variant="ghost" size="icon">
-            <Trophy className="h-6 w-6 text-primary" />
+            <Trophy className="h-6 w-6 text-yellow-500" />
           </Button>
         </div>
         <div className="flex items-center gap-2">
             <Select value={selectedStore} onValueChange={onStoreChange}>
-              <SelectTrigger className="w-[180px] sm:w-[220px] bg-background border-2 rounded-full">
+              <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
                 <MapPin className="h-4 w-4 mr-2 text-primary" />
                 <SelectValue placeholder="Select a store" />
               </SelectTrigger>
@@ -343,7 +343,7 @@ const ShoppingScreen = ({
       <CardFooter className="p-4 border-t lg:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button size="lg" className="w-full h-14 text-lg rounded-2xl" disabled={cartItems.length === 0}>
+            <Button size="lg" className="w-full h-14 text-lg rounded-2xl shadow-lg" disabled={cartItems.length === 0}>
               <ShoppingCart className="mr-3 h-6 w-6" />
               View Cart ({totalItems} items)
             </Button>
@@ -369,7 +369,7 @@ const ShoppingScreen = ({
     </Card>
 
     {/* Right Side: Cart - Hidden on mobile, visible on desktop */}
-    <Card className="hidden lg:flex flex-col h-full overflow-hidden">
+    <Card className="hidden lg:flex flex-col h-full overflow-hidden shadow-xl rounded-2xl">
       <CardHeader>
         <CardTitle className="text-2xl font-semibold text-card-foreground">Your Cart</CardTitle>
       </CardHeader>
@@ -409,7 +409,7 @@ const CartContent = ({
         {cartItems.map((item) => (
           <div
             key={item.id}
-            className="flex items-center gap-4 p-3 rounded-lg"
+            className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
           >
             <Image src={item.imageUrl} alt={item.name} width={64} height={64} className="rounded-md object-cover border-2 border-secondary" data-ai-hint={item.imageHint}/>
             <div className="flex-grow">
@@ -457,7 +457,7 @@ const CartFooterActions = ({
     <Button
       onClick={onCheckout}
       size="lg"
-      className="w-full text-lg h-14 rounded-2xl"
+      className="w-full text-lg h-14 rounded-2xl shadow-lg"
       disabled={cartItems.length === 0}
     >
       <CreditCard className="mr-3 h-6 w-6" />
@@ -469,7 +469,7 @@ const CartFooterActions = ({
 
 const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
   <div className="w-full h-screen flex flex-col items-center justify-center text-center p-4">
-    <Card className="max-w-md w-full shadow-xl">
+    <Card className="max-w-md w-full shadow-xl rounded-2xl">
       <CardContent className="p-10">
         <CheckCircle2 className="h-20 w-20 text-green-500 mb-6 mx-auto" />
         <h1 className="text-3xl font-bold text-primary">
@@ -479,17 +479,10 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
           Thank you for shopping with Linea. Your receipt has been sent to
           your email.
         </p>
-        <Button onClick={onNewSession} size="lg" className="w-full h-14 rounded-2xl">
+        <Button onClick={onNewSession} size="lg" className="w-full h-14 rounded-2xl shadow-lg">
           Start a New Session
         </Button>
       </CardContent>
     </Card>
   </div>
 );
-
-
-    
-
-    
-
-    

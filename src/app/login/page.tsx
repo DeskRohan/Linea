@@ -67,12 +67,12 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-      <Card className="w-full max-w-sm shadow-2xl">
+    <main className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-emerald-100 p-4">
+      <div className="absolute top-8">
+          <LineaLogo className="h-20 w-20" />
+      </div>
+      <Card className="w-full max-w-sm shadow-xl rounded-2xl">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <LineaLogo className="h-16 w-16" />
-          </div>
           <CardTitle className="text-2xl">Customer Login</CardTitle>
           <CardDescription>
             Sign in to start your shopping session.
@@ -113,7 +113,7 @@ export default function LoginPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
+              <span className="bg-card px-2 text-muted-foreground">
                 Or continue with
               </span>
             </div>
@@ -124,6 +124,7 @@ export default function LoginPage() {
             onClick={handleGoogleSignIn}
             disabled={isLoading}
           >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             <Chrome className="mr-2 h-4 w-4" />
             Google
           </Button>
