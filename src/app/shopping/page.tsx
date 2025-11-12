@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
@@ -15,6 +15,7 @@ import {
   Loader2,
   Trophy,
   MapPin,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,16 +85,43 @@ export default function ShoppingPage() {
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedStore, setSelectedStore] = useState(stores[0].id);
+  const [isScanning, setIsScanning] = useState(false);
+  const scannerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/login");
     }
   }, [user, loading, router]);
+  
+  useEffect(() => {
+    if (isScanning) {
+      scannerTimeoutRef.current = setTimeout(() => {
+        setIsScanning(false);
+        toast({
+          variant: "destructive",
+          title: "Scanner Timed Out",
+          description: "No barcode was detected in time.",
+        });
+      }, 10000); // 10 seconds
+    } else {
+      if (scannerTimeoutRef.current) {
+        clearTimeout(scannerTimeoutRef.current);
+      }
+    }
+
+    return () => {
+      if (scannerTimeoutRef.current) {
+        clearTimeout(scannerTimeoutRef.current);
+      }
+    };
+  }, [isScanning, toast]);
 
 
   const handleScanSuccess = (decodedText: string) => {
+    setIsScanning(false); // Stop scanning immediately
     const product = findProductByBarcode(decodedText);
+
     if (product) {
       if (typeof window.navigator.vibrate === "function") {
         window.navigator.vibrate(100);
@@ -170,6 +198,8 @@ export default function ShoppingPage() {
             total={total}
             totalItems={totalItems}
             selectedStore={selectedStore}
+            isScanning={isScanning}
+            onSetIsScanning={setIsScanning}
             onStoreChange={setSelectedStore}
             onScanSuccess={handleScanSuccess}
             onCheckout={() => setAppState("completed")}
@@ -187,6 +217,8 @@ export default function ShoppingPage() {
             total={total}
             totalItems={totalItems}
             selectedStore={selectedStore}
+            isScanning={isScanning}
+            onSetIsScanning={setIsScanning}
             onStoreChange={setSelectedStore}
             onScanSuccess={handleScanSuccess}
             onCheckout={() => setAppState("completed")}
@@ -206,6 +238,8 @@ const ShoppingScreen = ({
   total,
   totalItems,
   selectedStore,
+  isScanning,
+  onSetIsScanning,
   onStoreChange,
   onScanSuccess,
   onCheckout,
@@ -217,6 +251,8 @@ const ShoppingScreen = ({
   total: number;
   totalItems: number;
   selectedStore: string;
+  isScanning: boolean;
+  onSetIsScanning: (isScanning: boolean) => void;
   onStoreChange: (storeId: string) => void;
   onScanSuccess: (decodedText: string) => void;
   onCheckout: () => void;
@@ -276,18 +312,32 @@ const ShoppingScreen = ({
 
       <CardContent className="flex-grow flex flex-col items-center justify-center p-4 text-center">
         <div className="relative w-full max-w-[300px] sm:max-w-[400px] aspect-square rounded-3xl bg-background shadow-lg p-2 overflow-hidden">
-            <div className="w-full h-full rounded-2xl overflow-hidden relative">
-                <Scanner onScanSuccess={onScanSuccess} />
-                <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-xl animate-pulse"></div>
-                    <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-xl animate-pulse"></div>
-                    <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-xl animate-pulse"></div>
-                    <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-xl animate-pulse"></div>
-                </div>
+            <div className="w-full h-full rounded-2xl overflow-hidden relative flex items-center justify-center">
+                {isScanning ? (
+                    <>
+                        <Scanner onScanSuccess={onScanSuccess} />
+                        <div className="absolute inset-0 pointer-events-none">
+                            <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-xl animate-pulse"></div>
+                            <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-xl animate-pulse"></div>
+                            <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-xl animate-pulse"></div>
+                            <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-xl animate-pulse"></div>
+                        </div>
+                    </>
+                ) : (
+                    <div className="flex flex-col items-center justify-center gap-4">
+                        <Button
+                            variant="ghost"
+                            className="h-48 w-48 rounded-full border-4 border-dashed border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all animate-pulse"
+                            onClick={() => onSetIsScanning(true)}
+                        >
+                            <Camera className="h-20 w-20 text-primary/50" />
+                        </Button>
+                         <h2 className="text-xl font-semibold">Tap to Scan</h2>
+                        <p className="text-foreground/80 mt-1 max-w-xs">Click the button to activate the scanner and add items to your cart.</p>
+                    </div>
+                )}
             </div>
         </div>
-        <h2 className="mt-6 text-xl font-semibold">Scan an item to begin</h2>
-        <p className="text-foreground/80 mt-1">Point your camera at a product's barcode.</p>
       </CardContent>
 
       <CardFooter className="p-4 border-t lg:hidden">
