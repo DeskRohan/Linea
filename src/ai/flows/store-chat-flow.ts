@@ -105,9 +105,11 @@ export type ChatHistory = z.infer<typeof ChatHistorySchema>;
 export async function chatWithStoreBot(history: ChatHistory): Promise<ChatMessage> {
   try {
     const result = await storeAnalystFlow(history);
+    // The result from the flow is just a string, so we wrap it
     return { role: 'model', content: result };
   } catch (error: any) {
     console.error('💥 chatWithStoreBot failed:', error);
+    // Provide a more user-friendly error message
     return { role: 'model', content: 'Sorry, I encountered an internal error while analyzing the data. Please check the server logs for details.' };
   }
 }
@@ -137,20 +139,8 @@ const storeAnalystFlow = ai.defineFlow(
       tools: [getMonthlySales, getTopProducts, getSalesByDay, getRecentSales, getTopCustomers],
     });
 
-    const text = llmResponse.text;
-
-    if (!text) {
-      const toolCalls = llmResponse.toolCalls;
-      if (toolCalls?.length) {
-        // The model decided to call a tool. We need to handle this.
-        // Genkit automatically calls the tool and continues the flow.
-        // We can return an intermediary message to the user.
-        const toolResponse = await llmResponse.continue();
-        return toolResponse.text;
-      }
-      return 'I’m here, but I couldn’t generate a response at the moment. Please try rephrasing your question.';
-    }
-
-    return text;
+    // The Genkit `generate` call with tools will automatically handle the tool-calling loop.
+    // We can directly return the final text response.
+    return llmResponse.text;
   }
 );
