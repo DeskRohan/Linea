@@ -1,3 +1,4 @@
+
 'use server';
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
@@ -139,12 +140,13 @@ const storeAnalystFlow = ai.defineFlow(
     const text = llmResponse.text;
 
     if (!text) {
-      // If there's no direct text but there are tool calls, let the user know.
       const toolCalls = llmResponse.toolCalls;
       if (toolCalls?.length) {
-        // In a real app you might want to show which tool is being called.
-        // For now, a generic message is fine.
-        return `I'm accessing my tools to find that information for you...`;
+        // The model decided to call a tool. We need to handle this.
+        // Genkit automatically calls the tool and continues the flow.
+        // We can return an intermediary message to the user.
+        const toolResponse = await llmResponse.continue();
+        return toolResponse.text;
       }
       return 'I’m here, but I couldn’t generate a response at the moment. Please try rephrasing your question.';
     }
