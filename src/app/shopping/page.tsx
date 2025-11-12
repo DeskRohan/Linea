@@ -12,9 +12,9 @@ import {
   PlusCircle,
   MinusCircle,
   XCircle,
-  Bell,
   Loader2,
   Trophy,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +32,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Scanner from "@/components/scanner";
@@ -59,6 +66,15 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
+const stores = [
+  { id: "1", name: "The Corner Collection", address: "Pawai, Mumbai" },
+  { id: "2", name: "GreenMart", address: "Koramangala, Bangalore" },
+  { id: "3", name: "FreshFinds Superette", address: "Tilakwadi, Belagavi" },
+  { id: "4", name: "Hubli Central Grocers", address: "Vidyanagar, Hubli" },
+  { id: "5", name: "Pune Pantry", address: "Koregaon Park, Pune" },
+  { id: "6", name: "Orange City Provisions", address: "Civil Lines, Nagpur" },
+];
+
 export default function ShoppingPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -67,6 +83,7 @@ export default function ShoppingPage() {
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [selectedStore, setSelectedStore] = useState(stores[0].id);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -152,6 +169,8 @@ export default function ShoppingPage() {
             cartItems={cartItems}
             total={total}
             totalItems={totalItems}
+            selectedStore={selectedStore}
+            onStoreChange={setSelectedStore}
             onScanSuccess={handleScanSuccess}
             onCheckout={() => setAppState("completed")}
             onLogout={handleLogout}
@@ -167,6 +186,8 @@ export default function ShoppingPage() {
             cartItems={cartItems}
             total={total}
             totalItems={totalItems}
+            selectedStore={selectedStore}
+            onStoreChange={setSelectedStore}
             onScanSuccess={handleScanSuccess}
             onCheckout={() => setAppState("completed")}
             onLogout={handleLogout}
@@ -184,6 +205,8 @@ const ShoppingScreen = ({
   cartItems,
   total,
   totalItems,
+  selectedStore,
+  onStoreChange,
   onScanSuccess,
   onCheckout,
   onLogout,
@@ -193,6 +216,8 @@ const ShoppingScreen = ({
   cartItems: CartItem[];
   total: number;
   totalItems: number;
+  selectedStore: string;
+  onStoreChange: (storeId: string) => void;
   onScanSuccess: (decodedText: string) => void;
   onCheckout: () => void;
   onLogout: () => void;
@@ -230,9 +255,22 @@ const ShoppingScreen = ({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <Bell className="h-6 w-6" />
-          </Button>
+            <Select value={selectedStore} onValueChange={onStoreChange}>
+              <SelectTrigger className="w-[180px] sm:w-[220px] bg-background border-2 rounded-full">
+                <MapPin className="h-4 w-4 mr-2 text-primary" />
+                <SelectValue placeholder="Select a store" />
+              </SelectTrigger>
+              <SelectContent>
+                {stores.map((store) => (
+                  <SelectItem key={store.id} value={store.id}>
+                    <div className="flex flex-col">
+                      <span className="font-semibold">{store.name}</span>
+                      <span className="text-xs text-muted-foreground">{store.address}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
         </div>
       </CardHeader>
 
@@ -399,5 +437,7 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
   </div>
 );
 
+
+    
 
     
