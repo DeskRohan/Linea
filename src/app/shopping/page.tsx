@@ -31,7 +31,6 @@ import { findProductByBarcode, type CartItem } from "@/lib/products";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-import MobileLayout from "@/components/mobile-layout";
 import {
   Sheet,
   SheetContent,
@@ -61,7 +60,6 @@ export default function ShoppingPage() {
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -132,11 +130,9 @@ export default function ShoppingPage() {
 
   if (loading || !user) {
     return (
-      <MobileLayout>
-        <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        </div>
-      </MobileLayout>
+      <div className="flex items-center justify-center min-h-screen bg-muted/40">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
     );
   }
 
@@ -153,8 +149,6 @@ export default function ShoppingPage() {
             onCheckout={() => setAppState("completed")}
             onLogout={handleLogout}
             onQuantityChange={handleQuantityChange}
-            isCartOpen={isCartOpen}
-            setIsCartOpen={setIsCartOpen}
           />
         );
       case "completed":
@@ -170,20 +164,12 @@ export default function ShoppingPage() {
             onCheckout={() => setAppState("completed")}
             onLogout={handleLogout}
             onQuantityChange={handleQuantityChange}
-            isCartOpen={isCartOpen}
-            setIsCartOpen={setIsCartOpen}
           />
         );
     }
   };
 
-  return (
-    <MobileLayout>
-      <div className="flex flex-col h-full w-full">
-          {renderContent()}
-      </div>
-    </MobileLayout>
-  );
+  return <div className="min-h-screen bg-muted/40">{renderContent()}</div>;
 }
 
 const ShoppingScreen = ({
@@ -195,8 +181,6 @@ const ShoppingScreen = ({
   onCheckout,
   onLogout,
   onQuantityChange,
-  isCartOpen,
-  setIsCartOpen
 }: {
   user: any;
   cartItems: CartItem[];
@@ -206,55 +190,67 @@ const ShoppingScreen = ({
   onCheckout: () => void;
   onLogout: () => void;
   onQuantityChange: (productId: string, newQuantity: number) => void;
-  isCartOpen: boolean;
-  setIsCartOpen: (isOpen: boolean) => void;
 }) => (
-  <div className="flex flex-col h-full w-full">
-    <header className="flex items-center justify-between p-4">
-      <div className="flex items-center gap-3">
-        <Avatar className="h-10 w-10 border-2 border-primary/50">
-          <AvatarImage src={user.photoURL || ""} />
-          <AvatarFallback className="bg-secondary text-secondary-foreground">
-             {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="font-bold text-lg">{user.displayName || user.email}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon">
-          <Bell className="h-6 w-6" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={onLogout}>
-          <LogOut className="h-6 w-6" />
-        </Button>
-      </div>
-    </header>
-
-    <main className="flex-grow flex flex-col items-center justify-start p-4 pt-8 text-center">
-      <div className="relative w-full max-w-[300px] aspect-square rounded-3xl bg-black/20 p-2 overflow-hidden">
-        <div className="w-full h-full rounded-2xl overflow-hidden border-4 border-dashed border-primary/50">
-          <Scanner onScanSuccess={onScanSuccess} />
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-full h-1 bg-primary/70 animate-scan-beam"></div>
+  <div className="flex flex-col lg:flex-row h-screen">
+    {/* Left Side: Scanner and User Info */}
+    <div className="flex flex-col lg:w-1/2 lg:h-full">
+      <header className="flex items-center justify-between p-4 border-b lg:border-b-0 lg:border-r">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10 border-2 border-primary/50">
+            <AvatarImage src={user.photoURL || ""} />
+            <AvatarFallback className="bg-secondary text-secondary-foreground">
+               {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="font-bold text-lg">{user.displayName || user.email}</p>
           </div>
         </div>
-      </div>
-      <h2 className="mt-6 text-xl font-semibold">Scan & Go</h2>
-      <p className="text-foreground/80 mt-1">Add items to your cart by scanning their barcodes.</p>
-    </main>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon">
+            <Bell className="h-6 w-6" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onLogout}>
+            <LogOut className="h-6 w-6" />
+          </Button>
+        </div>
+      </header>
 
-    <footer className="p-4">
-      <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+      <main className="flex-grow flex flex-col items-center justify-center p-4 text-center bg-background">
+        <div className="relative w-full max-w-[300px] sm:max-w-[400px] aspect-square rounded-3xl bg-black/5 p-2 overflow-hidden border">
+          <div className="w-full h-full rounded-2xl overflow-hidden border-4 border-dashed border-primary/50">
+            <Scanner onScanSuccess={onScanSuccess} />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-full h-1 bg-primary/70 animate-scan-beam"></div>
+            </div>
+          </div>
+        </div>
+        <h2 className="mt-6 text-xl font-semibold">Scan & Go</h2>
+        <p className="text-foreground/80 mt-1">Add items to your cart by scanning their barcodes.</p>
+      </main>
+    </div>
+
+    {/* Right Side: Cart - Hidden on mobile, visible on desktop */}
+    <aside className="hidden lg:flex lg:flex-col lg:w-1/2 lg:h-full bg-card border-l">
+      <CartSheetContent 
+        cartItems={cartItems} 
+        total={total} 
+        onQuantityChange={onQuantityChange} 
+        onCheckout={onCheckout}
+      />
+    </aside>
+
+    {/* Mobile Only: "View Cart" button that triggers a sheet */}
+    <footer className="p-4 border-t bg-background lg:hidden">
+      <Sheet>
         <SheetTrigger asChild>
           <Button size="lg" className="w-full h-14 text-lg rounded-2xl" disabled={cartItems.length === 0}>
              <ShoppingCart className="mr-3 h-6 w-6" />
             View Cart ({totalItems} items)
           </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="h-[90vh] flex flex-col bg-card rounded-t-3xl">
-          <CartSheet 
+        <SheetContent side="bottom" className="h-[90vh] flex flex-col bg-card rounded-t-3xl p-0">
+          <CartSheetContent
             cartItems={cartItems} 
             total={total} 
             onQuantityChange={onQuantityChange} 
@@ -266,7 +262,7 @@ const ShoppingScreen = ({
   </div>
 );
 
-const CartSheet = ({
+const CartSheetContent = ({
   cartItems,
   total,
   onQuantityChange,
@@ -278,7 +274,7 @@ const CartSheet = ({
   onCheckout: () => void;
 }) => (
   <>
-    <SheetHeader className="text-left p-4">
+    <SheetHeader className="text-left p-4 pb-0">
       <SheetTitle className="text-2xl">Your Cart</SheetTitle>
     </SheetHeader>
     <div className="flex-grow overflow-hidden">
@@ -323,8 +319,7 @@ const CartSheet = ({
           )}
         </ScrollArea>
     </div>
-    <SheetFooter className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0">
-       <Separator />
+    <SheetFooter className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t">
        <div className="flex justify-between w-full text-2xl font-bold pt-4">
           <span>Total</span>
           <span>{formatCurrency(total)}</span>
@@ -344,19 +339,21 @@ const CartSheet = ({
 
 
 const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
-  <Card className="w-full h-full border-none shadow-none rounded-none flex flex-col items-center justify-center text-center bg-transparent">
-    <CardContent className="p-10">
-      <CheckCircle2 className="h-20 w-20 text-green-500 mb-6 mx-auto" />
-      <h1 className="text-3xl font-bold text-primary">
-        Payment Complete!
-      </h1>
-      <p className="text-foreground/80 mt-2 mb-8">
-        Thank you for shopping with Linea. Your receipt has been sent to
-        your email.
-      </p>
-      <Button onClick={onNewSession} size="lg" className="w-full h-14 rounded-2xl">
-        Start a New Session
-      </Button>
-    </CardContent>
-  </Card>
+  <div className="w-full h-screen flex flex-col items-center justify-center text-center bg-transparent p-4">
+    <Card className="max-w-md w-full">
+      <CardContent className="p-10">
+        <CheckCircle2 className="h-20 w-20 text-green-500 mb-6 mx-auto" />
+        <h1 className="text-3xl font-bold text-primary">
+          Payment Complete!
+        </h1>
+        <p className="text-foreground/80 mt-2 mb-8">
+          Thank you for shopping with Linea. Your receipt has been sent to
+          your email.
+        </p>
+        <Button onClick={onNewSession} size="lg" className="w-full h-14 rounded-2xl">
+          Start a New Session
+        </Button>
+      </CardContent>
+    </Card>
+  </div>
 );
