@@ -15,7 +15,6 @@ import {
   Bell,
   Loader2,
   Trophy,
-  Phone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +25,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Scanner from "@/components/scanner";
@@ -40,11 +47,9 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetFooter,
-  SheetDescription,
 } from "@/components/ui/sheet";
 import { useAuth, useUser } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { Separator } from "@/components/ui/separator";
 
 type AppState = "shopping" | "completed";
 
@@ -199,43 +204,27 @@ const ShoppingScreen = ({
     <div className="flex flex-col lg:w-1/2 lg:h-full">
       <header className="flex items-center justify-between p-4 border-b lg:border-b-0 lg:border-r">
         <div className="flex items-center gap-3">
-          <Sheet>
-            <SheetTrigger asChild>
-                <Avatar className="h-10 w-10 border-2 border-primary/50 cursor-pointer">
-                    <AvatarImage src={user.photoURL || ""} />
-                    <AvatarFallback className="bg-secondary text-secondary-foreground">
-                    {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                </Avatar>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-                <SheetHeader className="text-left mt-8">
-                    <div className="flex flex-col items-center gap-4">
-                        <Avatar className="h-24 w-24 border-4 border-primary/50">
-                            <AvatarImage src={user.photoURL || ""} />
-                            <AvatarFallback className="bg-secondary text-secondary-foreground text-4xl">
-                            {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div className="text-center">
-                            <SheetTitle className="text-2xl">{user.displayName || "User"}</SheetTitle>
-                            <SheetDescription>{user.email}</SheetDescription>
-                        </div>
-                    </div>
-                </SheetHeader>
-                <div className="py-8 flex flex-col gap-4">
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                        <Phone className="h-5 w-5"/>
-                        <span className="text-sm">Phone number not set</span>
-                    </div>
-                    <Separator/>
-                    <Button variant="outline" className="w-full" onClick={onLogout}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Logout
-                    </Button>
-                </div>
-            </SheetContent>
-          </Sheet>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar className="h-10 w-10 border-2 border-primary/50 cursor-pointer">
+                <AvatarImage src={user.photoURL || ""} alt={user.displayName || "User"} />
+                <AvatarFallback className="bg-secondary text-secondary-foreground">
+                  {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuLabel>
+                <div className="font-bold">{user.displayName || "User"}</div>
+                <div className="text-xs text-muted-foreground font-normal">{user.email}</div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="ghost" size="icon">
             <Trophy className="h-6 w-6 text-primary" />
           </Button>
@@ -406,5 +395,3 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
-
-    
