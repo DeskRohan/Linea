@@ -13,6 +13,8 @@ import {
   PlusCircle,
   MinusCircle,
   XCircle,
+  Bell,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +26,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Scanner from "@/components/scanner";
 import { findProductByBarcode, type CartItem } from "@/lib/products";
@@ -32,6 +33,16 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import MobileLayout from "@/components/mobile-layout";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter
+} from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
 
 type AppState = "shopping" | "completed";
 
@@ -48,16 +59,16 @@ export default function ShoppingPage() {
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [lastScannedId, setLastScannedId] = useState<string | null>(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const handleScanSuccess = (decodedText: string) => {
     const product = findProductByBarcode(decodedText);
     if (product) {
       if (typeof window.navigator.vibrate === "function") {
-        window.navigator.vibrate(200);
+        window.navigator.vibrate(100);
       }
       toast({
-        title: `${product.name} added`,
+        title: `${product.name} added to cart!`,
         description: `Price: ${formatCurrency(product.price)}`,
       });
       setCartItems((prevItems) => {
@@ -71,7 +82,6 @@ export default function ShoppingPage() {
         }
         return [{ ...product, quantity: 1 }, ...prevItems];
       });
-      setLastScannedId(product.id);
     } else {
         toast({
             variant: "destructive",
@@ -106,12 +116,9 @@ export default function ShoppingPage() {
     );
   }, [cartItems]);
 
-  useEffect(() => {
-    if (lastScannedId) {
-      const timer = setTimeout(() => setLastScannedId(null), 1200);
-      return () => clearTimeout(timer);
-    }
-  }, [lastScannedId]);
+  const totalItems = useMemo(() => {
+     return cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  }, [cartItems]);
 
   const renderContent = () => {
     switch (appState) {
@@ -120,11 +127,13 @@ export default function ShoppingPage() {
           <ShoppingScreen
             cartItems={cartItems}
             total={total}
+            totalItems={totalItems}
             onScanSuccess={handleScanSuccess}
             onCheckout={() => setAppState("completed")}
-            lastScannedId={lastScannedId}
             onLogout={handleLogout}
             onQuantityChange={handleQuantityChange}
+            isCartOpen={isCartOpen}
+            setIsCartOpen={setIsCartOpen}
           />
         );
       case "completed":
@@ -134,85 +143,120 @@ export default function ShoppingPage() {
            <ShoppingScreen
             cartItems={cartItems}
             total={total}
+            totalItems={totalItems}
             onScanSuccess={handleScanSuccess}
             onCheckout={() => setAppState("completed")}
-            lastScannedId={lastScannedId}
             onLogout={handleLogout}
             onQuantityChange={handleQuantityChange}
+            isCartOpen={isCartOpen}
+            setIsCartOpen={setIsCartOpen}
           />
         );
     }
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-background">
-      {renderContent()}
-    </main>
+    <MobileLayout>
+      <div className="flex flex-col h-full w-full">
+          {renderContent()}
+      </div>
+    </MobileLayout>
   );
 }
 
 const ShoppingScreen = ({
   cartItems,
   total,
+  totalItems,
   onScanSuccess,
   onCheckout,
-  lastScannedId,
   onLogout,
   onQuantityChange,
+  isCartOpen,
+  setIsCartOpen
 }: {
   cartItems: CartItem[];
   total: number;
+  totalItems: number;
   onScanSuccess: (decodedText: string) => void;
   onCheckout: () => void;
-  lastScannedId: string | null;
   onLogout: () => void;
   onQuantityChange: (productId: string, newQuantity: number) => void;
+  isCartOpen: boolean;
+  setIsCartOpen: (isOpen: boolean) => void;
 }) => (
-  <div className="w-full h-screen md:h-auto max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 md:grid-cols-5 gap-8">
-    <Card className="shadow-xl flex flex-col md:col-span-2">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <ScanLine className="mr-2 text-primary" />
-          Scan Products
-        </CardTitle>
-        <CardDescription>
-          Align a product's barcode with the scanner.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex-grow min-h-[300px] md:min-h-0">
-        <div className="aspect-video w-full h-full rounded-lg overflow-hidden border">
-           <Scanner onScanSuccess={onScanSuccess} />
-        </div>
-      </CardContent>
-    </Card>
-
-    <Card className="shadow-xl flex flex-col max-h-[calc(100vh-2rem)] md:max-h-auto md:col-span-3">
-      <CardHeader className="flex flex-row items-start justify-between">
+  <div className="flex flex-col h-full w-full">
+    <header className="flex items-center justify-between p-4">
+      <div className="flex items-center gap-3">
+        <Avatar className="h-10 w-10 border-2 border-primary/50">
+          <AvatarImage src="" />
+          <AvatarFallback className="bg-secondary text-secondary-foreground">TU</AvatarFallback>
+        </Avatar>
         <div>
-          <CardTitle className="flex items-center">
-            <ShoppingCart className="mr-2 text-primary" />
-            Your Cart
-          </CardTitle>
-          <CardDescription>
-            Items you have scanned will appear here.
-          </CardDescription>
+          <p className="font-bold text-lg">Test User</p>
         </div>
-         <div className="flex items-center gap-4">
-            <div className="text-right">
-                <p className="font-semibold">Test User</p>
-                <p className="text-xs text-muted-foreground">test@example.com</p>
-            </div>
-            <Avatar className="h-12 w-12 border-2 border-primary/50">
-              <AvatarImage src="" />
-              <AvatarFallback>TU</AvatarFallback>
-            </Avatar>
-            <Button variant="ghost" size="icon" onClick={onLogout} className="self-start">
-              <LogOut className="h-5 w-5" />
-            </Button>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon">
+          <Bell className="h-6 w-6" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={onLogout}>
+          <LogOut className="h-6 w-6" />
+        </Button>
+      </div>
+    </header>
+
+    <main className="flex-grow flex flex-col items-center justify-start p-4 pt-8 text-center">
+      <div className="relative w-full max-w-[300px] aspect-square rounded-3xl bg-black/20 p-2 overflow-hidden">
+        <div className="w-full h-full rounded-2xl overflow-hidden border-4 border-dashed border-primary/50">
+          <Scanner onScanSuccess={onScanSuccess} />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-full h-1 bg-primary/70 animate-scan-beam"></div>
           </div>
-      </CardHeader>
-      <CardContent className="flex-grow overflow-hidden">
-        <ScrollArea className="h-full">
+        </div>
+      </div>
+      <h2 className="mt-6 text-xl font-semibold">Scan & Go</h2>
+      <p className="text-foreground/80 mt-1">Add items to your cart by scanning their barcodes.</p>
+    </main>
+
+    <footer className="p-4">
+      <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+        <SheetTrigger asChild>
+          <Button size="lg" className="w-full h-14 text-lg rounded-2xl" disabled={cartItems.length === 0}>
+             <ShoppingCart className="mr-3 h-6 w-6" />
+            View Cart ({totalItems} items)
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="bottom" className="h-[90vh] flex flex-col bg-card rounded-t-3xl">
+          <CartSheet 
+            cartItems={cartItems} 
+            total={total} 
+            onQuantityChange={onQuantityChange} 
+            onCheckout={onCheckout}
+          />
+        </SheetContent>
+      </Sheet>
+    </footer>
+  </div>
+);
+
+const CartSheet = ({
+  cartItems,
+  total,
+  onQuantityChange,
+  onCheckout,
+}: {
+  cartItems: CartItem[];
+  total: number;
+  onQuantityChange: (productId: string, newQuantity: number) => void;
+  onCheckout: () => void;
+}) => (
+  <>
+    <SheetHeader className="text-left p-4">
+      <SheetTitle className="text-2xl">Your Cart</SheetTitle>
+    </SheetHeader>
+    <div className="flex-grow overflow-hidden">
+       <ScrollArea className="h-full px-4">
           {cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-10">
               <Package size={48} className="mb-4 text-primary/50" />
@@ -220,16 +264,13 @@ const ShoppingScreen = ({
               <p className="text-sm">Start scanning to add items.</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-4 pr-4">
+            <div className="flex flex-col gap-4 py-4">
               {cartItems.map((item) => (
                 <div
                   key={item.id}
-                  className={cn(
-                    "flex items-center gap-4 p-3 rounded-lg transition-all duration-500",
-                    item.id === lastScannedId && "bg-green-100 dark:bg-green-900/30 animate-scan-pulse"
-                  )}
+                  className="flex items-center gap-4 p-3 rounded-lg"
                 >
-                  <Image src={item.imageUrl} alt={item.name} width={64} height={64} className="rounded-md object-cover border" data-ai-hint={item.imageHint}/>
+                  <Image src={item.imageUrl} alt={item.name} width={64} height={64} className="rounded-md object-cover border-2 border-secondary" data-ai-hint={item.imageHint}/>
                   <div className="flex-grow">
                     <p className="font-medium">{item.name}</p>
                     <p className="text-sm text-muted-foreground">
@@ -247,9 +288,6 @@ const ShoppingScreen = ({
                         <PlusCircle className="h-5 w-5 text-primary"/>
                     </Button>
                   </div>
-                  <div className="font-semibold w-24 text-right">
-                    {formatCurrency(item.price * item.quantity)}
-                  </div>
                    <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-destructive" onClick={() => onQuantityChange(item.id, 0)}>
                         <XCircle className="h-5 w-5"/>
                    </Button>
@@ -258,42 +296,41 @@ const ShoppingScreen = ({
             </div>
           )}
         </ScrollArea>
-      </CardContent>
-      <Separator />
-      <CardFooter className="flex flex-col !p-6 bg-muted/50 rounded-b-lg">
-        <div className="flex justify-between w-full text-2xl font-bold mb-4">
+    </div>
+    <SheetFooter className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0">
+       <Separator />
+       <div className="flex justify-between w-full text-2xl font-bold pt-4">
           <span>Total</span>
           <span>{formatCurrency(total)}</span>
         </div>
         <Button
           onClick={onCheckout}
           size="lg"
-          className="w-full text-lg"
+          className="w-full text-lg h-14 rounded-2xl"
           disabled={cartItems.length === 0}
         >
           <CreditCard className="mr-3 h-6 w-6" />
           Proceed to Payment
         </Button>
-      </CardFooter>
-    </Card>
-  </div>
+    </SheetFooter>
+  </>
 );
 
+
 const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
-  <Card className="w-full max-w-md shadow-2xl">
-    <CardContent className="p-10 flex flex-col items-center text-center">
-      <CheckCircle2 className="h-20 w-20 text-green-500 mb-4" />
-      <h1 className="text-3xl font-bold font-headline text-primary">
+  <Card className="w-full h-full border-none shadow-none rounded-none flex flex-col items-center justify-center text-center bg-transparent">
+    <CardContent className="p-10">
+      <CheckCircle2 className="h-20 w-20 text-green-500 mb-6 mx-auto" />
+      <h1 className="text-3xl font-bold text-primary">
         Payment Complete!
       </h1>
-      <p className="text-muted-foreground mt-2 mb-8">
+      <p className="text-foreground/80 mt-2 mb-8">
         Thank you for shopping with Linea. Your receipt has been sent to
         your email.
       </p>
-      <Button onClick={onNewSession} size="lg" className="w-full" variant="outline">
+      <Button onClick={onNewSession} size="lg" className="w-full h-14 rounded-2xl">
         Start a New Session
       </Button>
     </CardContent>
   </Card>
 );
-
