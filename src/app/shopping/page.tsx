@@ -44,8 +44,8 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
   SheetFooter,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { useAuth, useUser } from "@/firebase";
 import { signOut } from "firebase/auth";
@@ -176,7 +176,7 @@ export default function ShoppingPage() {
     }
   };
 
-  return <div className="min-h-screen bg-gradient-background">{renderContent()}</div>;
+  return <div className="min-h-screen bg-gradient-background flex items-center justify-center p-4">{renderContent()}</div>;
 }
 
 const ShoppingScreen = ({
@@ -198,10 +198,11 @@ const ShoppingScreen = ({
   onLogout: () => void;
   onQuantityChange: (productId: string, newQuantity: number) => void;
 }) => (
-  <div className="flex flex-col lg:flex-row h-screen">
+  <div className="w-full h-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:h-[90vh]">
+    
     {/* Left Side: Scanner and User Info */}
-    <div className="flex flex-col lg:w-1/2 lg:h-full">
-      <header className="flex items-center justify-between p-4 border-b lg:border-b-0 lg:border-r bg-transparent">
+    <Card className="flex flex-col h-full overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
         <div className="flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -233,9 +234,9 @@ const ShoppingScreen = ({
             <Bell className="h-6 w-6" />
           </Button>
         </div>
-      </header>
+      </CardHeader>
 
-      <main className="flex-grow flex flex-col items-center justify-center p-4 text-center">
+      <CardContent className="flex-grow flex flex-col items-center justify-center p-4 text-center">
         <div className="relative w-full max-w-[300px] sm:max-w-[400px] aspect-square rounded-3xl bg-background shadow-lg p-2 overflow-hidden">
             <div className="w-full h-full rounded-2xl overflow-hidden relative">
                 <Scanner onScanSuccess={onScanSuccess} />
@@ -249,54 +250,54 @@ const ShoppingScreen = ({
         </div>
         <h2 className="mt-6 text-xl font-semibold">Scan an item to begin</h2>
         <p className="text-foreground/80 mt-1">Point your camera at a product's barcode.</p>
-      </main>
-    </div>
+      </CardContent>
+
+      <CardFooter className="p-4 border-t lg:hidden">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button size="lg" className="w-full h-14 text-lg rounded-2xl" disabled={cartItems.length === 0}>
+              <ShoppingCart className="mr-3 h-6 w-6" />
+              View Cart ({totalItems} items)
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[90vh] flex flex-col bg-card rounded-t-3xl p-0">
+            <SheetHeader className="text-left p-4 pb-0">
+              <SheetTitle className="text-2xl">Your Cart</SheetTitle>
+            </SheetHeader>
+            <div className="flex-grow overflow-hidden">
+              <ScrollArea className="h-full px-4">
+                <CartContent
+                  cartItems={cartItems}
+                  onQuantityChange={onQuantityChange}
+                />
+              </ScrollArea>
+            </div>
+            <SheetFooter className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t">
+              <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} />
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      </CardFooter>
+    </Card>
 
     {/* Right Side: Cart - Hidden on mobile, visible on desktop */}
-    <aside className="hidden lg:flex lg:flex-col lg:w-1/2 lg:h-full bg-card border-l rounded-l-3xl shadow-2xl">
-      <div className="text-left p-4 pb-0">
-        <h2 className="text-2xl font-semibold text-card-foreground">Your Cart</h2>
-      </div>
-      <div className="flex-grow overflow-hidden">
-        <ScrollArea className="h-full px-4">
+    <Card className="hidden lg:flex flex-col h-full overflow-hidden">
+      <CardHeader>
+        <CardTitle className="text-2xl font-semibold text-card-foreground">Your Cart</CardTitle>
+      </CardHeader>
+      <CardContent className="flex-grow overflow-hidden p-0">
+        <ScrollArea className="h-full px-6">
           <CartContent
             cartItems={cartItems}
             onQuantityChange={onQuantityChange}
           />
         </ScrollArea>
-      </div>
-      <footer className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t rounded-bl-3xl">
+      </CardContent>
+      <CardFooter className="p-4 !flex-col gap-4 border-t">
         <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} />
-      </footer>
-    </aside>
+      </CardFooter>
+    </Card>
 
-    {/* Mobile Only: "View Cart" button that triggers a sheet */}
-    <footer className="p-4 border-t bg-transparent lg:hidden">
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button size="lg" className="w-full h-14 text-lg rounded-2xl" disabled={cartItems.length === 0}>
-             <ShoppingCart className="mr-3 h-6 w-6" />
-            View Cart ({totalItems} items)
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="bottom" className="h-[90vh] flex flex-col bg-card rounded-t-3xl p-0">
-          <SheetHeader className="text-left p-4 pb-0">
-            <SheetTitle className="text-2xl">Your Cart</SheetTitle>
-          </SheetHeader>
-          <div className="flex-grow overflow-hidden">
-            <ScrollArea className="h-full px-4">
-              <CartContent
-                cartItems={cartItems}
-                onQuantityChange={onQuantityChange}
-              />
-            </ScrollArea>
-          </div>
-          <SheetFooter className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t">
-             <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} />
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-    </footer>
   </div>
 );
 
@@ -379,7 +380,7 @@ const CartFooterActions = ({
 
 
 const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
-  <div className="w-full h-screen flex flex-col items-center justify-center text-center bg-transparent p-4">
+  <div className="w-full h-screen flex flex-col items-center justify-center text-center p-4">
     <Card className="max-w-md w-full shadow-xl">
       <CardContent className="p-10">
         <CheckCircle2 className="h-20 w-20 text-green-500 mb-6 mx-auto" />
@@ -397,3 +398,6 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
+
+
+    
