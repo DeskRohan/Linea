@@ -130,12 +130,9 @@ const storeAnalystFlow = ai.defineFlow(
     `;
 
     const llmResponse = await ai.generate({
-      model: 'google/gemini-pro',
-      history: [
-        { role: 'user', content: systemPrompt },
-        { role: 'model', content: 'Understood. I am ready to help.' },
-        ...history,
-      ],
+      model: 'google/gemini-2.5-flash',
+      system: systemPrompt,
+      history: history,
       tools: [getMonthlySales, getTopProducts, getSalesByDay, getRecentSales, getTopCustomers],
     });
 
