@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -63,7 +62,7 @@ export default function InventoryPage() {
   useEffect(() => {
     if (!user) return;
 
-    const storeId = user.email!;
+    const storeId = user.uid; // Use UID instead of email
     const productsCollection = collection(firestore, "stores", storeId, "products");
     
     const unsubscribe = onSnapshot(productsCollection, (snapshot) => {
@@ -73,10 +72,18 @@ export default function InventoryPage() {
       });
       setInventory(products);
       setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching inventory:", error);
+      toast({
+        variant: "destructive",
+        title: "Error Fetching Inventory",
+        description: "Could not load products. Please check your connection and permissions."
+      });
+      setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [user, firestore]);
+  }, [user, firestore, toast]);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -93,7 +100,7 @@ export default function InventoryPage() {
         toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to add products." });
         return;
     }
-    const storeId = user.email!;
+    const storeId = user.uid; // Use UID instead of email
     const productsCollection = collection(firestore, "stores", storeId, "products");
 
     try {
@@ -110,6 +117,7 @@ export default function InventoryPage() {
         form.reset();
         setIsDialogOpen(false);
     } catch (error: any) {
+        console.error("Error adding product: ", error);
         toast({
             variant: "destructive",
             title: "Error adding product",

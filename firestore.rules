@@ -6,11 +6,12 @@ service cloud.firestore {
     // A store owner can read and write their own store document
     // and manage products within their store's subcollection.
     match /stores/{storeId} {
-      allow read, write: if request.auth != null && request.auth.token.email == storeId;
+      allow read, write: if request.auth != null && request.auth.uid == storeId;
 
       // This rule allows a store owner to manage products in their own store.
+      // It checks that the user is authenticated and their UID matches the storeId in the path.
       match /products/{productId} {
-        allow read, create, update, delete: if request.auth != null && get(/databases/$(database)/documents/stores/$(request.auth.token.email)).id == storeId;
+        allow read, create, update, delete: if request.auth != null && request.auth.uid == storeId;
       }
     }
   }
