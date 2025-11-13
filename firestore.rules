@@ -3,6 +3,7 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Rule for the 'stores' collection
     match /stores/{storeId} {
       // Allow anyone to read the list of stores for the dropdown
       allow read: if true;
@@ -20,7 +21,11 @@ service cloud.firestore {
         allow read, create, update, delete: if request.auth != null && request.auth.uid == storeId;
       }
     }
+
+    // Rule for the 'customers' collection
+    match /customers/{customerId} {
+      // A customer can only read or write to their own document
+      allow read, write: if request.auth != null && request.auth.uid == customerId;
+    }
   }
 }
-
-    

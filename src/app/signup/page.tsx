@@ -4,8 +4,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider, User } from "firebase/auth";
+import { useAuth, useFirestore } from "@/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,20 @@ export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
+
+  // Function to create a customer document in Firestore
+  const createCustomerDocument = async (user: User) => {
+    if (!user) return;
+    const customerRef = doc(firestore, "customers", user.uid);
+    await setDoc(customerRef, {
+      uid: user.uid,
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL,
+      createdAt: serverTimestamp(),
+    }, { merge: true });
+  };
 
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -37,6 +52,10 @@ export default function SignupPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName });
+      
+      // Create customer document
+      await createCustomerDocument(userCredential.user);
+
       toast({
         title: "Signup Successful",
         description: "You can now log in.",
@@ -58,7 +77,11 @@ export default function SignupPage() {
     setIsLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      
+      // Create customer document
+      await createCustomerDocument(result.user);
+
       toast({ title: "Sign-up Successful" });
       router.push("/shopping");
     } catch (error: any) {
