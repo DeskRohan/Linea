@@ -1,28 +1,20 @@
 
-
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Activity,
-  ArrowUpRight,
   CreditCard,
   DollarSign,
   Users,
-} from "lucide-react"
-
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+} from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -30,10 +22,38 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import Link from "next/link";
+} from "@/components/ui/table";
+import { useUser, useFirestore } from "@/firebase";
+import { collection, onSnapshot, query, limit, getCountFromServer, orderBy } from "firebase/firestore";
+import { getAuth, type UserRecord } from "firebase-admin/auth";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/lib/utils";
+
+// Note: Most of this data is now static or placeholder as we don't have an "orders" collection yet.
+// This component is ready for dynamic data once order processing is implemented.
 
 export default function StoreDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalRevenue: 3764231.89, // Mock
+    totalSales: 2350, // Mock
+    newCustomers: 120, // Mock
+    pendingOrders: 573, // Mock
+  });
+  const [recentSales, setRecentSales] = useState([ // Mock
+      { customer: "Liam Johnson", email: "liam@example.com", amount: "₹20,800.00" },
+      { customer: "Olivia Smith", email: "olivia@example.com", amount: "₹12,500.00" },
+      { customer: "Noah Williams", email: "noah@example.com", amount: "₹29,100.00" },
+      { customer: "Emma Brown", email: "emma@example.com", amount: "₹37,450.00" },
+      { customer: "Liam Johnson", email: "liam@example.com", amount: "₹20,800.00" },
+  ]);
+
+  useEffect(() => {
+    // In a real application, you would fetch this data from your 'orders' collection in Firestore.
+    // Since we don't have that yet, we'll stick with mock data and set loading to false.
+    setLoading(false);
+  }, []);
+
   return (
     <>
       <div className="flex items-center mb-4">
@@ -42,56 +62,42 @@ export default function StoreDashboard() {
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Revenue
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹3,764,231.89</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
+            {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>}
+            {loading ? <Skeleton className="h-4 w-1/2 mt-1" /> : <p className="text-xs text-muted-foreground">+20.1% from last month</p>}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Sales
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Sales</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+2350</div>
-            <p className="text-xs text-muted-foreground">
-              +180.1% from last month
-            </p>
+            {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">+{stats.totalSales}</div>}
+            {loading ? <Skeleton className="h-4 w-1/2 mt-1" /> : <p className="text-xs text-muted-foreground">+180.1% from last month</p>}
           </CardContent>
         </Card>
-        <Card>
+         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">New Customers</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+120</div>
-            <p className="text-xs text-muted-foreground">
-              +15% from last month
-            </p>
+            {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">+{stats.newCustomers}</div>}
+            {loading ? <Skeleton className="h-4 w-1/2 mt-1" /> : <p className="text-xs text-muted-foreground">+15% from last month</p>}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pending Orders
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+573</div>
-            <p className="text-xs text-muted-foreground">
-              +201 since last hour
-            </p>
+            {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">+{stats.pendingOrders}</div>}
+            {loading ? <Skeleton className="h-4 w-1/2 mt-1" /> : <p className="text-xs text-muted-foreground">+201 since last hour</p>}
           </CardContent>
         </Card>
       </div>
@@ -99,90 +105,39 @@ export default function StoreDashboard() {
         <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle>Recent Customers</CardTitle>
+             <CardDescription>
+                This data is a placeholder until the payment system is live.
+              </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-8">
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="https://picsum.photos/seed/1/50/50" alt="Avatar" />
-                <AvatarFallback>OM</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">
-                  Olivia Martin
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  olivia.martin@email.com
-                </p>
-              </div>
-              <div className="ml-auto font-medium">+₹166,417.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="https://picsum.photos/seed/2/50/50" alt="Avatar" />
-                <AvatarFallback>JL</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">
-                  Jackson Lee
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  jackson.lee@email.com
-                </p>
-              </div>
-              <div className="ml-auto font-medium">+₹3,245.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="https://picsum.photos/seed/3/50/50" alt="Avatar" />
-                <AvatarFallback>IN</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">
-                  Isabella Nguyen
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  isabella.nguyen@email.com
-                </p>
-              </div>
-              <div className="ml-auto font-medium">+₹24,887.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="https://picsum.photos/seed/4/50/50" alt="Avatar" />
-                <AvatarFallback>WK</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">
-                  William Kim
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  will@email.com
-                </p>
-              </div>
-              <div className="ml-auto font-medium">+₹8,241.00</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="https://picsum.photos/seed/5/50/50" alt="Avatar" />
-                <AvatarFallback>SD</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">
-                  Sofia Davis
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  sofia.davis@email.com
-                </p>
-              </div>
-              <div className="ml-auto font-medium">+₹3,245.00</div>
-            </div>
+          <CardContent>
+             <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentSales.map((sale, index) => (
+                    <TableRow key={index}>
+                    <TableCell>
+                        <div className="font-medium">{sale.customer}</div>
+                        <div className="hidden text-sm text-muted-foreground md:inline">
+                        {sale.email}
+                        </div>
+                    </TableCell>
+                    <TableCell className="text-right">{sale.amount}</TableCell>
+                    </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
         <Card className="xl:col-span-1">
           <CardHeader>
             <CardTitle>Recent Sales</CardTitle>
             <CardDescription>
-                Recent transactions from your store.
+                Recent transactions from your store (Placeholder Data).
               </CardDescription>
           </CardHeader>
           <CardContent>
@@ -194,51 +149,17 @@ export default function StoreDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Liam Johnson</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      liam@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">₹20,800.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Olivia Smith</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      olivia@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">₹12,500.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Noah Williams</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      noah@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">₹29,100.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Emma Brown</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      emma@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">₹37,450.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Liam Johnson</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      liam@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">₹20,800.00</TableCell>
-                </TableRow>
+                {recentSales.map((sale, index) => (
+                    <TableRow key={index}>
+                    <TableCell>
+                        <div className="font-medium">{sale.customer}</div>
+                        <div className="hidden text-sm text-muted-foreground md:inline">
+                        {sale.email}
+                        </div>
+                    </TableCell>
+                    <TableCell className="text-right">{sale.amount}</TableCell>
+                    </TableRow>
+                ))}
               </TableBody>
             </Table>
           </CardContent>

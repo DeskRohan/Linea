@@ -43,7 +43,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Scanner from "@/components/scanner";
-import { findProductByBarcode, type CartItem } from "@/lib/products";
+import { type CartItem, type Product } from "@/lib/products";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -55,25 +55,25 @@ import {
   SheetFooter,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useAuth, useUser } from "@/firebase";
+import { useAuth, useUser, useFirestore } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { formatCurrency } from "@/lib/utils";
+import { collection, query, where, getDocs, limit } from "firebase/firestore";
 
 type AppState = "shopping" | "completed";
 
+// This is now static metadata. The actual product fetching is dynamic.
 const stores = [
-  { id: "1", name: "The Corner Collection", address: "Pawai, Mumbai" },
-  { id: "2", name: "GreenMart", address: "Koramangala, Bangalore" },
-  { id: "3", name: "FreshFinds Superette", address: "Tilakwadi, Belagavi" },
-  { id: "4", name: "Hubli Central Grocers", address: "Vidyanagar, Hubli" },
-  { id: "5", name: "Pune Pantry", address: "Koregaon Park, Pune" },
-  { id: "6", name: "Orange City Provisions", address: "Civil Lines, Nagpur" },
+  { id: "1", name: "The Corner Collection", address: "Pawai, Mumbai", ownerUid: "M1bsRzDB85g4YEVN1aWNFa2c5w62" },
+  { id: "2", name: "GreenMart", address: "Koramangala, Bangalore", ownerUid: "some-other-uid" },
+  { id: "3", name: "FreshFinds Superette", address: "Tilakwadi, Belagavi", ownerUid: "some-other-uid-2" },
 ];
 
 export default function ShoppingPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { user, loading } = useUser();
 
   const [appState, setAppState] = useState<AppState>("shopping");
@@ -112,34 +112,60 @@ export default function ShoppingPage() {
   }, [isScanning, toast]);
 
 
-  const handleScanSuccess = (decodedText: string) => {
+  const handleScanSuccess = async (decodedText: string) => {
     setIsScanning(false); // Stop scanning immediately
-    const product = findProductByBarcode(decodedText);
+    
+    const storeOwnerUid = stores.find(s => s.id === selectedStore)?.ownerUid;
+    if (!storeOwnerUid) {
+        toast({ variant: "destructive", title: "Store not found", description: "Selected store is invalid." });
+        return;
+    }
 
-    if (product) {
-      if (typeof window.navigator.vibrate === "function") {
-        window.navigator.vibrate(100);
-      }
-      toast({
-        title: `${product.name} added to cart!`,
-        description: `Price: ${formatCurrency(product.price)}`,
-      });
-      setCartItems((prevItems) => {
-        const existingItem = prevItems.find((item) => item.id === product.id);
-        if (existingItem) {
-          return prevItems.map((item) =>
-            item.id === product.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          );
+    const productsCollection = collection(firestore, `stores/${storeOwnerUid}/products`);
+    const q = query(productsCollection, where("barcode", "==", decodedText), limit(1));
+    
+    try {
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            toast({
+                variant: "destructive",
+                title: "Product Not Found",
+                description: "This barcode is not in the selected store's inventory.",
+            });
+            return;
         }
-        return [{ ...product, quantity: 1 }, ...prevItems];
-      });
-    } else {
+
+        const productDoc = querySnapshot.docs[0];
+        const product = { id: productDoc.id, ...productDoc.data() } as Product;
+
+        if (typeof window.navigator.vibrate === "function") {
+            window.navigator.vibrate(100);
+        }
+        
+        toast({
+            title: `${product.name} added to cart!`,
+            description: `Price: ${formatCurrency(product.price)}`,
+        });
+
+        setCartItems((prevItems) => {
+            const existingItem = prevItems.find((item) => item.id === product.id);
+            if (existingItem) {
+            return prevItems.map((item) =>
+                item.id === product.id
+                ? { ...item, quantity: item.quantity + 1 }
+                : item
+            );
+            }
+            return [{ ...product, quantity: 1 }, ...prevItems];
+        });
+
+    } catch (error) {
+        console.error("Error fetching product:", error);
         toast({
             variant: "destructive",
-            title: "Product Not Found",
-            description: "This barcode is not in our inventory.",
+            title: "Database Error",
+            description: "Could not fetch product from the inventory.",
         });
     }
   };
