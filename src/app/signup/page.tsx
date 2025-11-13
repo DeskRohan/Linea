@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LineaLogo } from "@/components/icons/linea-logo";
 import { useToast } from "@/hooks/use-toast";
-import { Chrome, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -53,7 +53,6 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName });
       
-      // Create customer document
       await createCustomerDocument(userCredential.user);
 
       toast({
@@ -63,10 +62,16 @@ export default function SignupPage() {
       router.push("/login");
     } catch (error: any) {
       console.error("Signup failed:", error);
+      let description = "Could not create your account.";
+       if (error.code === 'auth/operation-not-allowed') {
+        description = "Email/Password sign-up is not enabled. Please enable it in the Firebase console.";
+      } else if (error.message) {
+        description = error.message;
+      }
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: error.message || "Could not create your account.",
+        description: description,
       });
     } finally {
       setIsLoading(false);
@@ -79,13 +84,20 @@ export default function SignupPage() {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
-      // Create customer document
       await createCustomerDocument(result.user);
 
       toast({ title: "Sign-up Successful" });
       router.push("/shopping");
     } catch (error: any) {
-       if (error.code !== 'auth/popup-closed-by-user') {
+       if (error.code === 'auth/popup-closed-by-user') {
+            // User closed the popup, do nothing.
+       } else if (error.code === 'auth/operation-not-allowed') {
+            toast({
+                variant: "destructive",
+                title: "Google Sign-In Disabled",
+                description: "Google Sign-In is not enabled for this project. Please enable it in the Firebase console.",
+            });
+       } else {
             console.error("Google Sign-In failed:", error);
             toast({
                 variant: "destructive",
@@ -149,9 +161,13 @@ export default function SignupPage() {
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign Up
+              Sign Up with Email
             </Button>
           </form>
+           <Button variant="outline" className="w-full mt-4" onClick={handleGoogleSignIn} disabled={isLoading}>
+             <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.1 512 0 401.9 0 265.8 0 129.7 110.1 20 244 20c66.5 0 125.1 24.4 169.6 63.7L373.1 120.1C338.3 89.2 295.6 70 244 70c-78.6 0-142.9 64.3-142.9 142.9s64.3 142.9 142.9 142.9c85.3 0 131.9-58.4 136.8-98.2H244v-73.8h236.1c2.3 12.7 3.9 26.1 3.9 40.8z"></path></svg>
+            Sign up with Google
+          </Button>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 justify-center text-center text-sm text-muted-foreground">
           <p>

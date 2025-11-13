@@ -78,7 +78,7 @@ export default function ShoppingPage() {
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [stores, setStores] = useState<Store[] | null>(null); // Start as null to indicate loading
+  const [stores, setStores] = useState<Store[] | null>(null);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -89,24 +89,27 @@ export default function ShoppingPage() {
       router.replace("/login");
     }
   }, [user, userLoading, router]);
-  
+
   useEffect(() => {
     if (!firestore) return;
+
     const storesCollection = collection(firestore, "stores");
     const unsubscribe = onSnapshot(storesCollection, (snapshot) => {
       const storesData: Store[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        storesData.push({ 
-          id: doc.id, 
+        storesData.push({
+          id: doc.id,
           name: data.shopName || "Unnamed Store",
           address: data.shopAddress || "No address"
         });
       });
       setStores(storesData);
-      // Set default store only if one isn't already selected
+      
       if (storesData.length > 0 && !selectedStoreId) {
         setSelectedStoreId(storesData[0].id);
+      } else if (storesData.length === 0) {
+        setSelectedStoreId(null);
       }
     }, (error) => {
       console.error("Error fetching stores:", error);
@@ -120,7 +123,7 @@ export default function ShoppingPage() {
 
     return () => unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firestore, toast]); // Dependency on selectedStoreId is removed
+  }, [firestore, toast]);
 
 
   useEffect(() => {
@@ -217,8 +220,8 @@ export default function ShoppingPage() {
     const order = {
       customerId: user.uid,
       customerName: user.displayName || user.email,
-      customerEmail: user.email, // Add email for customer page
-      customerPhotoURL: user.photoURL, // Add photoURL for customer page
+      customerEmail: user.email,
+      customerPhotoURL: user.photoURL,
       storeId: selectedStoreId,
       items: cartItems,
       totalAmount: total,
@@ -274,7 +277,7 @@ export default function ShoppingPage() {
      return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
-  if (userLoading || stores === null) {
+  if (userLoading || !user || stores === null) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/40">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -393,7 +396,7 @@ const ShoppingScreen = ({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={stores.length === 0}>
+            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={!stores || stores.length === 0}>
               <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
                 <MapPin className="h-4 w-4 mr-2 text-primary" />
                 <SelectValue placeholder="Select a store" />
