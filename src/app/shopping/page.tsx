@@ -78,8 +78,7 @@ export default function ShoppingPage() {
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
-  const [storesLoading, setStoresLoading] = useState(true);
+  const [stores, setStores] = useState<Store[] | null>(null); // Start as null to indicate loading
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -93,7 +92,6 @@ export default function ShoppingPage() {
   
   useEffect(() => {
     if (!firestore) return;
-    setStoresLoading(true);
     const storesCollection = collection(firestore, "stores");
     const unsubscribe = onSnapshot(storesCollection, (snapshot) => {
       const storesData: Store[] = [];
@@ -106,10 +104,10 @@ export default function ShoppingPage() {
         });
       });
       setStores(storesData);
+      // Set default store only if one isn't already selected
       if (storesData.length > 0 && !selectedStoreId) {
         setSelectedStoreId(storesData[0].id);
       }
-      setStoresLoading(false);
     }, (error) => {
       console.error("Error fetching stores:", error);
       toast({
@@ -117,11 +115,12 @@ export default function ShoppingPage() {
         title: "Could not fetch stores",
         description: "Please check your connection or try again later.",
       });
-      setStoresLoading(false);
+      setStores([]); // Set to empty array on error
     });
 
     return () => unsubscribe();
-  }, [firestore, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firestore, toast]); // Dependency on selectedStoreId is removed
 
 
   useEffect(() => {
@@ -275,7 +274,7 @@ export default function ShoppingPage() {
      return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
-  if (userLoading) {
+  if (userLoading || stores === null) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/40">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -293,7 +292,6 @@ export default function ShoppingPage() {
             total={total}
             totalItems={totalItems}
             stores={stores}
-            storesLoading={storesLoading}
             selectedStoreId={selectedStoreId}
             isScanning={isScanning}
             onSetIsScanning={setIsScanning}
@@ -315,7 +313,6 @@ export default function ShoppingPage() {
             total={total}
             totalItems={totalItems}
             stores={stores}
-            storesLoading={storesLoading}
             selectedStoreId={selectedStoreId}
             isScanning={isScanning}
             onSetIsScanning={setIsScanning}
@@ -339,7 +336,6 @@ const ShoppingScreen = ({
   total,
   totalItems,
   stores,
-  storesLoading,
   selectedStoreId,
   isScanning,
   onSetIsScanning,
@@ -355,7 +351,6 @@ const ShoppingScreen = ({
   total: number;
   totalItems: number;
   stores: Store[];
-  storesLoading: boolean;
   selectedStoreId: string | null;
   isScanning: boolean;
   onSetIsScanning: (isScanning: boolean) => void;
@@ -398,30 +393,26 @@ const ShoppingScreen = ({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-            {storesLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin" />
-            ) : (
-              <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={stores.length === 0}>
-                <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
-                  <MapPin className="h-4 w-4 mr-2 text-primary" />
-                  <SelectValue placeholder="Select a store" />
-                </SelectTrigger>
-                <SelectContent>
-                  {stores.length === 0 ? (
-                    <SelectItem value="no-stores" disabled>No stores available</SelectItem>
-                  ) : (
-                    stores.map((store) => (
-                      <SelectItem key={store.id} value={store.id}>
-                        <div className="flex flex-col">
-                          <span className="font-semibold">{store.name}</span>
-                          <span className="text-xs text-muted-foreground">{store.address}</span>
-                        </div>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            )}
+            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={stores.length === 0}>
+              <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
+                <MapPin className="h-4 w-4 mr-2 text-primary" />
+                <SelectValue placeholder="Select a store" />
+              </SelectTrigger>
+              <SelectContent>
+                {stores.length === 0 ? (
+                  <SelectItem value="no-stores" disabled>No stores available</SelectItem>
+                ) : (
+                  stores.map((store) => (
+                    <SelectItem key={store.id} value={store.id}>
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{store.name}</span>
+                        <span className="text-xs text-muted-foreground">{store.address}</span>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
         </div>
       </CardHeader>
 
