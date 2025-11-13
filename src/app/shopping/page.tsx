@@ -108,8 +108,6 @@ export default function ShoppingPage() {
       
       if (storesData.length > 0 && !selectedStoreId) {
         setSelectedStoreId(storesData[0].id);
-      } else if (storesData.length === 0) {
-        setSelectedStoreId(null);
       }
     }, (error) => {
       console.error("Error fetching stores:", error);
@@ -277,7 +275,7 @@ export default function ShoppingPage() {
      return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
-  if (userLoading || !user || stores === null) {
+  if (userLoading || stores === null) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/40">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -353,7 +351,7 @@ const ShoppingScreen = ({
   cartItems: CartItem[];
   total: number;
   totalItems: number;
-  stores: Store[];
+  stores: Store[] | null;
   selectedStoreId: string | null;
   isScanning: boolean;
   onSetIsScanning: (isScanning: boolean) => void;
@@ -402,7 +400,9 @@ const ShoppingScreen = ({
                 <SelectValue placeholder="Select a store" />
               </SelectTrigger>
               <SelectContent>
-                {stores.length === 0 ? (
+                {stores === null ? (
+                   <SelectItem value="loading" disabled>Loading stores...</SelectItem>
+                ) : stores.length === 0 ? (
                   <SelectItem value="no-stores" disabled>No stores available</SelectItem>
                 ) : (
                   stores.map((store) => (
