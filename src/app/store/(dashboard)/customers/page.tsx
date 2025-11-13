@@ -25,63 +25,17 @@ import { ArrowUpRight, Search, Users, DollarSign, Crown } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 
-const mockCustomers = [
-  {
-    name: "Olivia Martin",
-    email: "olivia.martin@email.com",
-    avatar: "https://picsum.photos/seed/1/50/50",
-    signupDate: "2023-01-15",
-    orders: 12,
-    spent: 2580.50,
-  },
-  {
-    name: "Jackson Lee",
-    email: "jackson.lee@email.com",
-    avatar: "https://picsum.photos/seed/2/50/50",
-    signupDate: "2023-02-20",
-    orders: 8,
-    spent: 1750.00,
-  },
-  {
-    name: "Isabella Nguyen",
-    email: "isabella.nguyen@email.com",
-    avatar: "https://picsum.photos/seed/3/50/50",
-    signupDate: "2023-03-10",
-    orders: 15,
-    spent: 3205.75,
-  },
-  {
-    name: "William Kim",
-    email: "will@email.com",
-    avatar: "https://picsum.photos/seed/4/50/50",
-    signupDate: "2023-04-05",
-    orders: 5,
-    spent: 980.25,
-  },
-  {
-    name: "Sofia Davis",
-    email: "sofia.davis@email.com",
-    avatar: "https://picsum.photos/seed/5/50/50",
-    signupDate: "2023-05-21",
-    orders: 20,
-    spent: 4100.00,
-  },
-  {
-    name: "Liam Johnson",
-    email: "liam@example.com",
-    avatar: "https://picsum.photos/seed/6/50/50",
-    signupDate: "2023-06-18",
-    orders: 2,
-    spent: 350.00,
-  }
-];
+// Mock data has been removed to ensure new store owners start with a clean slate.
+const mockCustomers: any[] = [];
 
 export default function CustomersPage() {
 
   const totalCustomers = mockCustomers.length;
   const totalSpent = mockCustomers.reduce((acc, customer) => acc + customer.spent, 0);
-  const averageLTV = totalSpent / totalCustomers;
-  const topSpender = mockCustomers.reduce((prev, current) => (prev.spent > current.spent) ? prev : current);
+  const averageLTV = totalCustomers > 0 ? totalSpent / totalCustomers : 0;
+  const topSpender = mockCustomers.length > 0
+    ? mockCustomers.reduce((prev, current) => (prev.spent > current.spent) ? prev : current)
+    : null;
 
   return (
     <>
@@ -97,7 +51,7 @@ export default function CustomersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalCustomers}</div>
-            <p className="text-xs text-muted-foreground">+5 since last month</p>
+            <p className="text-xs text-muted-foreground">No customers yet</p>
           </CardContent>
         </Card>
         <Card>
@@ -116,9 +70,9 @@ export default function CustomersPage() {
             <Crown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{topSpender.name}</div>
+            <div className="text-2xl font-bold">{topSpender ? topSpender.name : 'N/A'}</div>
             <p className="text-xs text-muted-foreground">
-              {formatCurrency(topSpender.spent)} total spent
+              {topSpender ? formatCurrency(topSpender.spent) : 'No spending data'}
             </p>
           </CardContent>
         </Card>
@@ -151,33 +105,41 @@ export default function CustomersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockCustomers.map((customer) => (
-                  <TableRow key={customer.email}>
-                    <TableCell>
-                      <div className="flex items-center gap-4">
-                        <Avatar className="hidden h-9 w-9 sm:flex">
-                          <AvatarImage src={customer.avatar} alt="Avatar" />
-                          <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="grid gap-1">
-                          <p className="text-sm font-medium leading-none">
-                            {customer.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {customer.email}
-                          </p>
-                        </div>
-                      </div>
+                {mockCustomers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      No customers yet.
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {customer.signupDate}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-center">
-                      <Badge variant="secondary">{customer.orders}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{formatCurrency(customer.spent)}</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  mockCustomers.map((customer) => (
+                    <TableRow key={customer.email}>
+                      <TableCell>
+                        <div className="flex items-center gap-4">
+                          <Avatar className="hidden h-9 w-9 sm:flex">
+                            <AvatarImage src={customer.avatar} alt="Avatar" />
+                            <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="grid gap-1">
+                            <p className="text-sm font-medium leading-none">
+                              {customer.name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {customer.email}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {customer.signupDate}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-center">
+                        <Badge variant="secondary">{customer.orders}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">{formatCurrency(customer.spent)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
         </CardContent>

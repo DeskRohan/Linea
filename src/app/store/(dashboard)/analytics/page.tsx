@@ -14,62 +14,18 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
 } from "@/components/ui/chart";
-import { DollarSign, Users, CreditCard, Activity } from "lucide-react";
+import { DollarSign, Users, CreditCard, Activity, Package } from "lucide-react";
 
-// Mock data for the charts
-const monthlySalesData = [
-  { month: "January", sales: 4000 },
-  { month: "February", sales: 3000 },
-  { month: "March", sales: 5000 },
-  { month: "April", sales: 4500 },
-  { month: "May", sales: 6000 },
-  { month: "June", sales: 7500 },
-];
-
-const topProductsData = [
-  { name: "Instant Noodles", value: 400, fill: "var(--color-noodles)" },
-  { name: "Green Tea", value: 300, fill: "var(--color-tea)" },
-  { name: "Crackers", value: 300, fill: "var(--color-crackers)" },
-  { name: "Chocolate", value: 200, fill: "var(--color-chocolate)" },
-];
-
-const salesByDayData = [
-    { day: "Mon", sales: 1200 },
-    { day: "Tue", sales: 1500 },
-    { day: "Wed", sales: 1800 },
-    { day: "Thu", sales: 1700 },
-    { day: "Fri", sales: 2500 },
-    { day: "Sat", sales: 3200 },
-    { day: "Sun", sales: 3000 },
-];
-
-const chartConfig = {
-  sales: {
-    label: "Sales (INR)",
-  },
-  noodles: {
-    label: "Instant Noodles",
-    color: "hsl(var(--chart-1))",
-  },
-  tea: {
-    label: "Green Tea",
-    color: "hsl(var(--chart-2))",
-  },
-  crackers: {
-    label: "Crispy Crackers",
-    color: "hsl(var(--chart-3))",
-  },
-  chocolate: {
-    label: "Chocolate Bar",
-    color: "hsl(var(--chart-4))",
-  }
-};
+// Mock data has been removed. The page will be empty until real data is available.
+const monthlySalesData: any[] = [];
+const topProductsData: any[] = [];
+const salesByDayData: any[] = [];
 
 
 export default function AnalyticsPage() {
+  const hasData = monthlySalesData.length > 0 || topProductsData.length > 0 || salesByDayData.length > 0;
+
   return (
     <>
       <div className="flex items-center mb-4">
@@ -83,8 +39,8 @@ export default function AnalyticsPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹3,764,231</div>
-            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+            <div className="text-2xl font-bold">₹0.00</div>
+            <p className="text-xs text-muted-foreground">No sales yet</p>
           </CardContent>
         </Card>
         <Card>
@@ -93,8 +49,8 @@ export default function AnalyticsPage() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+2350</div>
-            <p className="text-xs text-muted-foreground">+180.1% from last month</p>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">No sales yet</p>
           </CardContent>
         </Card>
         <Card>
@@ -103,8 +59,8 @@ export default function AnalyticsPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+120</div>
-            <p className="text-xs text-muted-foreground">+15% from last month</p>
+            <div className="text-2xl font-bold">0</div>
+             <p className="text-xs text-muted-foreground">No customers yet</p>
           </CardContent>
         </Card>
         <Card>
@@ -113,88 +69,93 @@ export default function AnalyticsPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+57</div>
-            <p className="text-xs text-muted-foreground">+2 since last hour</p>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">No active shoppers</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Sales Overview</CardTitle>
-            <CardDescription>January - June 2024</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-              <BarChart accessibilityLayer data={monthlySalesData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  tickMargin={10}
-                  axisLine={false}
-                />
-                <ChartTooltip
-                  content={<ChartTooltipContent />}
-                />
-                <Bar dataKey="sales" fill="hsl(var(--primary))" radius={4} />
-              </BarChart>
-            </ChartContainer>
+      {!hasData ? (
+         <Card className="flex items-center justify-center min-h-[400px]">
+          <CardContent className="text-center">
+            <Package className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-lg font-semibold">No Analytics Data Yet</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your sales and customer analytics will appear here once you start making sales.
+            </p>
           </CardContent>
         </Card>
+      ) : (
+        <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Sales Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="min-h-[300px] w-full">
+                <BarChart accessibilityLayer data={monthlySalesData}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                  />
+                  <ChartTooltip
+                    content={<ChartTooltipContent />}
+                  />
+                  <Bar dataKey="sales" fill="hsl(var(--primary))" radius={4} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Products by Revenue</CardTitle>
-            <CardDescription>January - June 2024</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-              <PieChart>
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent hideLabel />}
-                />
-                <Pie data={topProductsData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5}>
-                   {topProductsData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <ChartLegend
-                  content={<ChartLegendContent nameKey="name" />}
-                  className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-                />
-              </PieChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Products by Revenue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{}} className="min-h-[300px] w-full">
+                <PieChart>
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent hideLabel />}
+                  />
+                  <Pie data={topProductsData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5}>
+                    {topProductsData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Sales by Day of the Week</CardTitle>
-            <CardDescription>Track your busiest days.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-              <BarChart accessibilityLayer data={salesByDayData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="day"
-                  tickLine={false}
-                  tickMargin={10}
-                  axisLine={false}
-                />
-                <ChartTooltip
-                  content={<ChartTooltipContent />}
-                />
-                <Bar dataKey="sales" fill="hsl(var(--primary))" radius={4} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-        
-      </div>
+           <Card>
+            <CardHeader>
+                <CardTitle>Sales by Day of the Week</CardTitle>
+                <CardDescription>Track your busiest days.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ChartContainer config={{}} className="min-h-[300px] w-full">
+                <BarChart accessibilityLayer data={salesByDayData}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                    dataKey="day"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                    />
+                    <ChartTooltip
+                    content={<ChartTooltipContent />}
+                    />
+                    <Bar dataKey="sales" fill="hsl(var(--primary))" radius={4} />
+                </BarChart>
+                </ChartContainer>
+            </CardContent>
+            </Card>
+        </div>
+      )}
     </>
   );
 }
