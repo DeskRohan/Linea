@@ -58,7 +58,7 @@ import {
 import { useAuth, useUser, useFirestore } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { formatCurrency } from "@/lib/utils";
-import { collection, query, where, getDocs, limit } from "firebase/firestore";
+import { collection, query, where, getDocs, limit, addDoc, serverTimestamp } from "firebase/firestore";
 
 type AppState = "shopping" | "completed";
 
@@ -80,6 +80,7 @@ export default function ShoppingPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedStore, setSelectedStore] = useState(stores[0].id);
   const [isScanning, setIsScanning] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const scannerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -170,6 +171,45 @@ export default function ShoppingPage() {
     }
   };
 
+  const handleCheckout = async () => {
+    if (!user || cartItems.length === 0) return;
+    setIsCheckingOut(true);
+
+    const storeOwnerUid = stores.find(s => s.id === selectedStore)?.ownerUid;
+    if (!storeOwnerUid) {
+      toast({ variant: "destructive", title: "Store not found" });
+      setIsCheckingOut(false);
+      return;
+    }
+
+    const order = {
+      customerId: user.uid,
+      customerName: user.displayName || user.email,
+      storeId: storeOwnerUid,
+      items: cartItems,
+      totalAmount: total,
+      totalItems: totalItems,
+      createdAt: serverTimestamp(),
+      status: "completed",
+    };
+
+    try {
+      const ordersCollection = collection(firestore, "stores", storeOwnerUid, "orders");
+      await addDoc(ordersCollection, order);
+      setAppState("completed");
+    } catch (error: any) {
+      console.error("Error creating order: ", error);
+      toast({
+        variant: "destructive",
+        title: "Checkout Error",
+        description: error.message || "Could not process your order.",
+      });
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
+
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     setCartItems((prevItems) => {
         if (newQuantity <= 0) {
@@ -222,9 +262,10 @@ export default function ShoppingPage() {
             onSetIsScanning={setIsScanning}
             onStoreChange={setSelectedStore}
             onScanSuccess={handleScanSuccess}
-            onCheckout={() => setAppState("completed")}
+            onCheckout={handleCheckout}
             onLogout={handleLogout}
             onQuantityChange={handleQuantityChange}
+            isCheckingOut={isCheckingOut}
           />
         );
       case "completed":
@@ -241,9 +282,10 @@ export default function ShoppingPage() {
             onSetIsScanning={setIsScanning}
             onStoreChange={setSelectedStore}
             onScanSuccess={handleScanSuccess}
-            onCheckout={() => setAppState("completed")}
+            onCheckout={handleCheckout}
             onLogout={handleLogout}
             onQuantityChange={handleQuantityChange}
+            isCheckingOut={isCheckingOut}
           />
         );
     }
@@ -265,6 +307,7 @@ const ShoppingScreen = ({
   onCheckout,
   onLogout,
   onQuantityChange,
+  isCheckingOut,
 }: {
   user: any;
   cartItems: CartItem[];
@@ -278,6 +321,7 @@ const ShoppingScreen = ({
   onCheckout: () => void;
   onLogout: () => void;
   onQuantityChange: (productId: string, newQuantity: number) => void;
+  isCheckingOut: boolean;
 }) => (
   <div className="w-full h-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:h-[90vh]">
     
@@ -381,7 +425,7 @@ const ShoppingScreen = ({
               </ScrollArea>
             </div>
             <SheetFooter className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t">
-              <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} />
+              <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} isCheckingOut={isCheckingOut} />
             </SheetFooter>
           </SheetContent>
         </Sheet>
@@ -402,7 +446,7 @@ const ShoppingScreen = ({
         </ScrollArea>
       </CardContent>
       <CardFooter className="p-4 !flex-col gap-4 border-t">
-        <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} />
+        <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} isCheckingOut={isCheckingOut} />
       </CardFooter>
     </Card>
 
@@ -464,10 +508,12 @@ const CartFooterActions = ({
   total,
   onCheckout,
   cartItems,
+  isCheckingOut,
 }: {
   total: number;
   onCheckout: () => void;
   cartItems: CartItem[];
+  isCheckingOut: boolean;
 }) => (
   <>
     <div className="flex justify-between w-full text-2xl font-bold pt-4">
@@ -478,9 +524,13 @@ const CartFooterActions = ({
       onClick={onCheckout}
       size="lg"
       className="w-full text-lg h-14 rounded-2xl shadow-lg"
-      disabled={cartItems.length === 0}
+      disabled={cartItems.length === 0 || isCheckingOut}
     >
-      <CreditCard className="mr-3 h-6 w-6" />
+      {isCheckingOut ? (
+        <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+      ) : (
+        <CreditCard className="mr-3 h-6 w-6" />
+      )}
       Proceed to Payment
     </Button>
   </>

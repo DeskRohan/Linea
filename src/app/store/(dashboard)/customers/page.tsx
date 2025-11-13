@@ -18,87 +18,64 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Users, DollarSign, Crown, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { chatWithStoreBot } from "@/ai/flows/store-chat-flow";
+import { useUser, useFirestore } from "@/firebase";
+import { collection, onSnapshot } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Customer {
     uid: string;
     name: string;
     email: string;
+    photoURL?: string;
     spent: number;
-    avatar?: string;
-    signupDate?: string; // This should be a real date, but we don't have it yet
-    orders?: number; // This would come from an orders collection
+    orderCount: number;
 }
 
 export default function CustomersPage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    async function fetchCustomers() {
-      setLoading(true);
-      try {
-        // The AI flow's `getTopCustomers` tool now fetches real users from Firebase Auth.
-        const response = await chatWithStoreBot([
-          { role: 'user', content: 'get top customers' }
-        ]);
-        
-        // The flow returns a natural language response, but the tool inside it gets real data.
-        // To get the raw data on the client, we would ideally have a separate server action.
-        // For this demo, we'll call the flow again and assume we can get the raw data from the tool's execution.
-        // In a real app, this would be a direct call to a server function that returns the user list.
-        const toolResponse: any = await chatWithStoreBot([
-            { role: 'user', content: 'Give me the raw JSON data for all customers' }
-        ]);
+    if (!user) return;
 
-        let customerData = [];
-        try {
-            // The AI might return a JSON string in the content. This is brittle.
-            const parsed = JSON.parse(toolResponse.content);
-            if (Array.isArray(parsed)) {
-                customerData = parsed;
+    setLoading(true);
+    const storeId = user.uid;
+    const ordersQuery = collection(firestore, "stores", storeId, "orders");
+
+    const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+        const customerData: { [uid: string]: Customer } = {};
+
+        snapshot.forEach(doc => {
+            const order = doc.data();
+            const uid = order.customerId;
+            if (!customerData[uid]) {
+                customerData[uid] = {
+                    uid: uid,
+                    name: order.customerName || "Unknown Customer",
+                    email: order.customerEmail || "No email",
+                    photoURL: order.customerPhotoURL,
+                    spent: 0,
+                    orderCount: 0
+                };
             }
-        } catch {
-            // Fallback: If parsing fails, we'll call the tool 'again' conceptually.
-            // Since we're on the client, we'll assume the AI can give us the list.
-            // This demonstrates the intent, though the architecture could be improved.
-            const result: any = await chatWithStoreBot([{ role: 'user', content: 'list all customers in a raw format' }]);
-            
-            // For now, let's process the real customer list from the AI flow.
-            // The `getTopCustomers` tool in the flow fetches real users.
-             const realCustomers = await chatWithStoreBot([
-                { role: 'user', content: 'get top customers' }
-            ]);
-            // This is still complex. A direct server action is better.
-            // Let's fetch it directly via the flow assuming it returns the array
-             const rawData = await storeAnalystFlow([{role: 'user', content: 'raw customers'}]);
-             
-             // The AI flow is complex to parse here. Let's make this page reflect the REAL data state: empty,
-             // as we are not fetching from Auth on the client. The AI flow does it, but displaying it here is the challenge.
-             // The correct implementation would be a server component or a dedicated API route.
-             // For now, let's show the real state: loading and then empty.
-             customerData = [];
-        }
+            customerData[uid].spent += order.totalAmount;
+            customerData[uid].orderCount += 1;
+        });
 
-        setCustomers(customerData);
-
-      } catch (error) {
-        console.error("Failed to fetch customers:", error);
-        // Set to empty array on error
-        setCustomers([]);
-      } finally {
+        const customerList = Object.values(customerData).sort((a,b) => b.spent - a.spent);
+        setCustomers(customerList);
         setLoading(false);
-      }
-    }
-    fetchCustomers();
-  }, []);
+    });
+
+    return () => unsubscribe();
+  }, [user, firestore]);
 
   const filteredCustomers = customers.filter(
     (customer) =>
@@ -127,7 +104,7 @@ export default function CustomersPage() {
           </CardHeader>
           <CardContent>
             {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{totalCustomers}</div>}
-            <p className="text-xs text-muted-foreground">All-time customers</p>
+            <p className="text-xs text-muted-foreground">Customers with at least one order</p>
           </CardContent>
         </Card>
         <Card>
@@ -137,7 +114,7 @@ export default function CustomersPage() {
           </CardHeader>
           <CardContent>
             {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">{formatCurrency(averageLTV)}</div>}
-            <p className="text-xs text-muted-foreground">No spending data yet</p>
+            <p className="text-xs text-muted-foreground">Average customer spending</p>
           </CardContent>
         </Card>
         <Card>
@@ -148,7 +125,7 @@ export default function CustomersPage() {
           <CardContent>
             {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold truncate">{topSpender ? topSpender.name : 'N/A'}</div>}
             <p className="text-xs text-muted-foreground">
-              No spending data
+              {topSpender ? formatCurrency(topSpender.spent) : 'No spending data'}
             </p>
           </CardContent>
         </Card>
@@ -158,7 +135,7 @@ export default function CustomersPage() {
         <CardHeader>
           <CardTitle>Your Customers</CardTitle>
           <CardDescription>
-            A list of all customers who have signed up will appear here.
+            A list of all customers who have made a purchase, updated in real-time.
           </CardDescription>
            <div className="flex items-center gap-4 pt-4">
             <div className="relative w-full md:w-1/3">
@@ -171,9 +148,6 @@ export default function CustomersPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
-            <Button variant="outline" disabled>
-                Export to CSV
-            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -181,7 +155,6 @@ export default function CustomersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer</TableHead>
-                  <TableHead className="hidden md:table-cell">Sign-up Date</TableHead>
                   <TableHead className="hidden md:table-cell text-center">Orders</TableHead>
                   <TableHead className="text-right">Total Spent</TableHead>
                 </TableRow>
@@ -189,23 +162,23 @@ export default function CustomersPage() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
+                    <TableCell colSpan={3} className="h-40 text-center">
                       <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
                     </TableCell>
                   </TableRow>
                 ) : filteredCustomers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
-                      No customers found.
+                    <TableCell colSpan={3} className="h-40 text-center text-muted-foreground">
+                      No customers have made purchases yet.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredCustomers.map((customer) => (
-                    <TableRow key={customer.email}>
+                    <TableRow key={customer.uid}>
                       <TableCell>
                         <div className="flex items-center gap-4">
                           <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src={customer.avatar} alt="Avatar" />
+                            <AvatarImage src={customer.photoURL} alt={customer.name} />
                             <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div className="grid gap-1">
@@ -218,11 +191,8 @@ export default function CustomersPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {customer.signupDate || "N/A"}
-                      </TableCell>
                       <TableCell className="hidden md:table-cell text-center">
-                        <Badge variant="secondary">{customer.orders || 0}</Badge>
+                        {customer.orderCount}
                       </TableCell>
                       <TableCell className="text-right">{formatCurrency(customer.spent)}</TableCell>
                     </TableRow>
@@ -234,9 +204,4 @@ export default function CustomersPage() {
       </Card>
     </>
   );
-}
-
-// Dummy function to satisfy the type-checker, as the real function is in the flow.
-async function storeAnalystFlow(history: any): Promise<any> {
-    return { content: "[]" };
 }

@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart, Cell, ResponsiveContainer } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart, Cell, ResponsiveContainer, Legend } from "recharts";
 import {
   Card,
   CardContent,
@@ -16,48 +16,114 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { DollarSign, Users, CreditCard, Activity, Package, Loader2 } from "lucide-react";
-import { storeAnalystFlow } from "@/ai/flows/store-chat-flow";
+import { useUser, useFirestore } from "@/firebase";
+import { collection, onSnapshot } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/lib/utils";
+
+interface MonthlySale {
+  month: string;
+  sales: number;
+}
+
+interface TopProduct {
+    name: string;
+    value: number;
+    fill: string;
+}
+
+interface SalesByDay {
+    day: string;
+    sales: number;
+}
 
 interface ChartData {
-  monthlySales: any[];
-  topProducts: any[];
-  salesByDay: any[];
+  monthlySales: MonthlySale[];
+  topProducts: TopProduct[];
+  salesByDay: SalesByDay[];
+}
+
+interface Stats {
+    totalRevenue: number;
+    totalSales: number;
+    activeNow: number;
 }
 
 export default function AnalyticsPage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [chartData, setChartData] = useState<ChartData | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        // The AI flow currently returns mock data. For a true empty state,
-        // we will initialize with empty arrays. When the backend is fully
-        // connected to a real order system, this will populate dynamically.
-        setChartData({
-            monthlySales: [],
-            topProducts: [],
-            salesByDay: [],
-        });
+    if (!user) return;
 
-      } catch (error) {
-        console.error("Failed to fetch analytics data:", error);
-      } finally {
+    const storeId = user.uid;
+    const ordersQuery = collection(firestore, "stores", storeId, "orders");
+
+    const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+      if (snapshot.empty) {
+        setChartData({ monthlySales: [], topProducts: [], salesByDay: [] });
+        setStats({ totalRevenue: 0, totalSales: 0, activeNow: 0 });
         setLoading(false);
+        return;
       }
-    }
 
-    fetchData();
-  }, []);
+      let totalRevenue = 0;
+      const monthlySales: { [key: string]: number } = {};
+      const topProducts: { [key: string]: number } = {};
+      const salesByDay: { [key: string]: number } = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0};
+
+      snapshot.forEach((doc) => {
+        const order = doc.data();
+        totalRevenue += order.totalAmount;
+
+        const date = order.createdAt.toDate();
+        const month = date.toLocaleString('default', { month: 'long' });
+        monthlySales[month] = (monthlySales[month] || 0) + order.totalAmount;
+        
+        const day = date.toLocaleDateString('en-US', { weekday: 'short' });
+        salesByDay[day] = (salesByDay[day] || 0) + order.totalAmount;
+
+        order.items.forEach((item: any) => {
+          topProducts[item.name] = (topProducts[item.name] || 0) + item.price * item.quantity;
+        });
+      });
+
+      const formattedMonthlySales = Object.entries(monthlySales).map(([month, sales]) => ({ month, sales }));
+      
+      const chartColors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+      const formattedTopProducts = Object.entries(topProducts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([name, value], i) => ({ name, value, fill: chartColors[i % chartColors.length] }));
+
+      const formattedSalesByDay = Object.entries(salesByDay).map(([day, sales]) => ({day, sales}));
+
+
+      setChartData({
+        monthlySales: formattedMonthlySales,
+        topProducts: formattedTopProducts,
+        salesByDay: formattedSalesByDay,
+      });
+
+      setStats({
+          totalRevenue: totalRevenue,
+          totalSales: snapshot.size,
+          activeNow: 0, // Placeholder for active users
+      });
+
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, firestore]);
 
   const chartConfig = {
       sales: { label: "Sales", color: "hsl(var(--primary))" },
-      noodles: { label: "Noodles", color: "hsl(var(--chart-1))" },
-      tea: { label: "Green Tea", color: "hsl(var(--chart-2))" },
-      crackers: { label: "Crackers", color: "hsl(var(--chart-3))" },
-      chocolate: { label: "Chocolate", color: "hsl(var(--chart-4))" },
+      // Add dynamic config for products
+      ...chartData?.topProducts.reduce((acc, p) => ({...acc, [p.name]: {label: p.name, color: p.fill}}), {})
   } satisfies import("@/components/ui/chart").ChartConfig;
 
   const renderEmptyChart = (title: string) => (
@@ -74,7 +140,7 @@ export default function AnalyticsPage() {
         <h1 className="text-lg font-semibold md:text-2xl">Store Analytics</h1>
       </div>
       <CardDescription className="mb-4">
-        This dashboard shows live data from your store. Sales and revenue data will populate as you make sales.
+        This dashboard shows live data from your store, updated in real-time.
       </CardDescription>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
@@ -84,8 +150,8 @@ export default function AnalyticsPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">₹0.00</div>}
-            <p className="text-xs text-muted-foreground">No sales data</p>
+            {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">{formatCurrency(stats?.totalRevenue ?? 0)}</div>}
+            <p className="text-xs text-muted-foreground">From {stats?.totalSales ?? 0} sales</p>
           </CardContent>
         </Card>
         <Card>
@@ -94,8 +160,8 @@ export default function AnalyticsPage() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-             {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">+0</div>}
-            <p className="text-xs text-muted-foreground">No sales data</p>
+             {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">+{stats?.totalSales ?? 0}</div>}
+            <p className="text-xs text-muted-foreground">Completed orders</p>
           </CardContent>
         </Card>
         <Card>
@@ -105,7 +171,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
              {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">+0</div>}
-             <p className="text-xs text-muted-foreground">No customer data</p>
+             <p className="text-xs text-muted-foreground">Real-time count coming soon</p>
           </CardContent>
         </Card>
         <Card>
@@ -114,8 +180,8 @@ export default function AnalyticsPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-             {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">0</div>}
-            <p className="text-xs text-muted-foreground">Live Count</p>
+             {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{stats?.activeNow ?? 0}</div>}
+            <p className="text-xs text-muted-foreground">Live shoppers</p>
           </CardContent>
         </Card>
       </div>
@@ -138,7 +204,7 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Monthly Sales Overview</CardTitle>
-              <CardDescription>Sales data will appear here.</CardDescription>
+              <CardDescription>Your total revenue per month.</CardDescription>
             </CardHeader>
             <CardContent className="min-h-[350px] flex items-center justify-center">
               {chartData.monthlySales.length === 0 ? renderEmptyChart("Monthly Sales") : (
@@ -152,7 +218,7 @@ export default function AnalyticsPage() {
                     axisLine={false}
                   />
                   <ChartTooltip
-                    content={<ChartTooltipContent />}
+                    content={<ChartTooltipContent formatter={(value) => formatCurrency(value as number)} />}
                   />
                   <Bar dataKey="sales" fill="hsl(var(--primary))" radius={4} />
                 </BarChart>
@@ -164,7 +230,7 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Top Products by Revenue</CardTitle>
-              <CardDescription>Top selling products will appear here.</CardDescription>
+              <CardDescription>Your best-selling products.</CardDescription>
             </CardHeader>
             <CardContent className="min-h-[350px] flex items-center justify-center">
              {chartData.topProducts.length === 0 ? renderEmptyChart("Top Products") : (
@@ -173,13 +239,14 @@ export default function AnalyticsPage() {
                     <PieChart>
                     <ChartTooltip
                         cursor={false}
-                        content={<ChartTooltipContent hideLabel />}
+                        content={<ChartTooltipContent hideLabel formatter={(value) => formatCurrency(value as number)} />}
                     />
                     <Pie data={chartData.topProducts} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5}>
                         {chartData.topProducts.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))}
                     </Pie>
+                     <Legend content={<ChartLegendContent />} />
                     </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -191,7 +258,7 @@ export default function AnalyticsPage() {
             <CardHeader>
                 <CardTitle>Sales by Day of the Week</CardTitle>
                 <CardDescription>Your busiest days will be shown here.</CardDescription>
-            </Header>
+            </CardHeader>
             <CardContent className="min-h-[350px] flex items-center justify-center">
                 {chartData.salesByDay.length === 0 ? renderEmptyChart("Sales by Day") : (
                 <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
@@ -204,7 +271,7 @@ export default function AnalyticsPage() {
                     axisLine={false}
                     />
                     <ChartTooltip
-                    content={<ChartTooltipContent />}
+                        content={<ChartTooltipContent formatter={(value) => formatCurrency(value as number)} />}
                     />
                     <Bar dataKey="sales" fill="hsl(var(--primary))" radius={4} />
                 </BarChart>
@@ -217,3 +284,19 @@ export default function AnalyticsPage() {
     </>
   );
 }
+
+const ChartLegendContent = (props: any) => {
+  const { payload } = props;
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-4 text-sm text-muted-foreground">
+      {payload.map((entry: any, index: number) => (
+        <div key={`item-${index}`} className="flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span>{entry.payload.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+    
