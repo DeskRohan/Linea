@@ -3,13 +3,14 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // A store owner can read and write their own store document
+    // and manage products within their store's subcollection.
     match /stores/{storeId} {
-      // A store owner can read and write to their own store document.
       allow read, write: if request.auth != null && request.auth.token.email == storeId;
 
-      // A store owner can manage the products in their own store's subcollection.
+      // This rule allows a store owner to manage products in their own store.
       match /products/{productId} {
-        allow create, read, update, delete: if request.auth != null && request.auth.token.email == storeId;
+        allow read, create, update, delete: if request.auth != null && get(/databases/$(database)/documents/stores/$(request.auth.token.email)).id == storeId;
       }
     }
   }
