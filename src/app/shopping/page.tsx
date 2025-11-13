@@ -74,23 +74,25 @@ export default function ShoppingPage() {
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
-  const { user, loading } = useUser();
+  const { user, loading: userLoading } = useUser();
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
+  const [storesLoading, setStoresLoading] = useState(true);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const scannerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!userLoading && !user) {
       router.replace("/login");
     }
-  }, [user, loading, router]);
+  }, [user, userLoading, router]);
   
   useEffect(() => {
+    if (!firestore) return;
     const storesCollection = collection(firestore, "stores");
     const unsubscribe = onSnapshot(storesCollection, (snapshot) => {
       const storesData: Store[] = [];
@@ -106,10 +108,11 @@ export default function ShoppingPage() {
       if (storesData.length > 0 && !selectedStoreId) {
         setSelectedStoreId(storesData[0].id);
       }
+      setStoresLoading(false);
     });
 
     return () => unsubscribe();
-  }, [firestore]);
+  }, [firestore, selectedStoreId]);
 
 
   useEffect(() => {
@@ -263,7 +266,7 @@ export default function ShoppingPage() {
      return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
-  if (loading || !user || stores.length === 0) {
+  if (userLoading || storesLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/40">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -583,7 +586,5 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
-
-    
 
     
