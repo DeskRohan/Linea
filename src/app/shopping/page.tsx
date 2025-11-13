@@ -78,7 +78,8 @@ export default function ShoppingPage() {
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [stores, setStores] = useState<Store[] | null>(null);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [storesLoading, setStoresLoading] = useState(true);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -93,24 +94,32 @@ export default function ShoppingPage() {
   // Fetch stores in real-time
   useEffect(() => {
     if (!firestore) return;
-
+    
+    setStoresLoading(true);
     const storesCollection = collection(firestore, "stores");
     const unsubscribe = onSnapshot(storesCollection, (snapshot) => {
       const storesData: Store[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        storesData.push({
-          id: doc.id,
-          name: data.shopName || "Unnamed Store",
-          address: data.shopAddress || "No address"
-        });
+        // Important: Make sure documents have a shopName field.
+        if (data.shopName) {
+            storesData.push({
+                id: doc.id,
+                name: data.shopName,
+                address: data.shopAddress || "No address"
+            });
+        }
       });
+      
       setStores(storesData);
       
       // Set a default store if none is selected and stores exist
       if (storesData.length > 0 && !selectedStoreId) {
         setSelectedStoreId(storesData[0].id);
       }
+      
+      setStoresLoading(false);
+
     }, (error) => {
       console.error("Error fetching stores:", error);
       toast({
@@ -118,12 +127,13 @@ export default function ShoppingPage() {
         title: "Could not fetch stores",
         description: "Please check your connection or try again later.",
       });
-      setStores([]); // Set to empty array on error to stop loading
+      setStores([]); // Set to empty array on error
+      setStoresLoading(false);
     });
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [firestore, toast]);
+  }, [firestore, toast]); // Dependency array is correct
 
 
   useEffect(() => {
@@ -284,6 +294,10 @@ export default function ShoppingPage() {
       </div>
     );
   }
+  
+  if (!user) {
+    return null; // The useEffect hook will redirect.
+  }
 
   const renderContent = () => {
     switch (appState) {
@@ -295,6 +309,7 @@ export default function ShoppingPage() {
             total={total}
             totalItems={totalItems}
             stores={stores}
+            storesLoading={storesLoading}
             selectedStoreId={selectedStoreId}
             isScanning={isScanning}
             onSetIsScanning={setIsScanning}
@@ -316,6 +331,7 @@ export default function ShoppingPage() {
             total={total}
             totalItems={totalItems}
             stores={stores}
+            storesLoading={storesLoading}
             selectedStoreId={selectedStoreId}
             isScanning={isScanning}
             onSetIsScanning={setIsScanning}
@@ -339,6 +355,7 @@ const ShoppingScreen = ({
   total,
   totalItems,
   stores,
+  storesLoading,
   selectedStoreId,
   isScanning,
   onSetIsScanning,
@@ -353,7 +370,8 @@ const ShoppingScreen = ({
   cartItems: CartItem[];
   total: number;
   totalItems: number;
-  stores: Store[] | null;
+  stores: Store[];
+  storesLoading: boolean;
   selectedStoreId: string | null;
   isScanning: boolean;
   onSetIsScanning: (isScanning: boolean) => void;
@@ -396,13 +414,13 @@ const ShoppingScreen = ({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={stores === null}>
+            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={storesLoading || stores.length === 0}>
               <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
                 <MapPin className="h-4 w-4 mr-2 text-primary" />
                 <SelectValue placeholder="Select a store" />
               </SelectTrigger>
               <SelectContent>
-                {stores === null ? (
+                {storesLoading ? (
                    <SelectItem value="loading" disabled>Loading stores...</SelectItem>
                 ) : stores.length === 0 ? (
                   <SelectItem value="no-stores" disabled>No stores available</SelectItem>
@@ -608,3 +626,5 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
+
+    
