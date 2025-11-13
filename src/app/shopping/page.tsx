@@ -107,7 +107,7 @@ export default function ShoppingPage() {
       });
       setStores(storesData);
       
-      // Set a default store if none is selected
+      // Set a default store if none is selected and stores exist
       if (storesData.length > 0 && !selectedStoreId) {
         setSelectedStoreId(storesData[0].id);
       }
@@ -123,8 +123,7 @@ export default function ShoppingPage() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firestore, toast]);
+  }, [firestore, toast, selectedStoreId]);
 
 
   useEffect(() => {
@@ -609,3 +608,5 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
+
+    
