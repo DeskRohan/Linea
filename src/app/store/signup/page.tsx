@@ -24,10 +24,10 @@ import { Loader2 } from "lucide-react";
 const VALID_ACTIVATION_KEY = "rhlinea2k25";
 
 export default function StoreSignupPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [storeName, setStoreName] = useState("");
-  const [activationKey, setActivationKey] = useState("");
+  const [email, setEmail] = useState("tcc@linea.com");
+  const [password, setPassword] = useState("tcc2k25");
+  const [storeName, setStoreName] = useState("The Corner Collection");
+  const [activationKey, setActivationKey] = useState(VALID_ACTIVATION_KEY);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -51,15 +51,15 @@ export default function StoreSignupPage() {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       toast({
-        title: "Store Account Created",
-        description: "You can now log in to your store dashboard.",
+        title: "Store Account Created & Logged In",
+        description: "Redirecting to your dashboard...",
       });
-      router.push("/store/login");
+      router.push("/store/dashboard");
     } catch (error: any) {
        toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: error.message || "An unexpected error occurred.",
+        description: error.message || "An unexpected error occurred. The email might already be in use.",
       });
     } finally {
         setIsLoading(false);
