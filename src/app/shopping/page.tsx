@@ -109,7 +109,7 @@ export default function ShoppingPage() {
     });
 
     return () => unsubscribe();
-  }, [firestore, selectedStoreId]);
+  }, [firestore]);
 
 
   useEffect(() => {
@@ -583,5 +583,7 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
+
+    
 
     
