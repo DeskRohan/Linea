@@ -90,6 +90,7 @@ export default function ShoppingPage() {
     }
   }, [user, userLoading, router]);
 
+  // Fetch stores in real-time
   useEffect(() => {
     if (!firestore) return;
 
@@ -106,6 +107,7 @@ export default function ShoppingPage() {
       });
       setStores(storesData);
       
+      // Set a default store if none is selected
       if (storesData.length > 0 && !selectedStoreId) {
         setSelectedStoreId(storesData[0].id);
       }
@@ -116,9 +118,10 @@ export default function ShoppingPage() {
         title: "Could not fetch stores",
         description: "Please check your connection or try again later.",
       });
-      setStores([]); // Set to empty array on error
+      setStores([]); // Set to empty array on error to stop loading
     });
 
+    // Cleanup subscription on unmount
     return () => unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firestore, toast]);
@@ -275,7 +278,7 @@ export default function ShoppingPage() {
      return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
-  if (userLoading || stores === null) {
+  if (userLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/40">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -394,7 +397,7 @@ const ShoppingScreen = ({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={!stores || stores.length === 0}>
+            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={!stores}>
               <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
                 <MapPin className="h-4 w-4 mr-2 text-primary" />
                 <SelectValue placeholder="Select a store" />
