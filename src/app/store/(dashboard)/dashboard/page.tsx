@@ -25,32 +25,24 @@ import {
 } from "@/components/ui/table";
 import { useUser, useFirestore } from "@/firebase";
 import { collection, onSnapshot, query, limit, getCountFromServer, orderBy } from "firebase/firestore";
-import { getAuth, type UserRecord } from "firebase-admin/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
 
-// Note: Most of this data is now static or placeholder as we don't have an "orders" collection yet.
 // This component is ready for dynamic data once order processing is implemented.
 
 export default function StoreDashboard() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalRevenue: 3764231.89, // Mock
-    totalSales: 2350, // Mock
-    newCustomers: 120, // Mock
-    pendingOrders: 573, // Mock
+    totalRevenue: 0,
+    totalSales: 0,
+    newCustomers: 0,
+    pendingOrders: 0,
   });
-  const [recentSales, setRecentSales] = useState([ // Mock
-      { customer: "Liam Johnson", email: "liam@example.com", amount: "₹20,800.00" },
-      { customer: "Olivia Smith", email: "olivia@example.com", amount: "₹12,500.00" },
-      { customer: "Noah Williams", email: "noah@example.com", amount: "₹29,100.00" },
-      { customer: "Emma Brown", email: "emma@example.com", amount: "₹37,450.00" },
-      { customer: "Liam Johnson", email: "liam@example.com", amount: "₹20,800.00" },
-  ]);
+  const [recentSales, setRecentSales] = useState<any[]>([]);
 
   useEffect(() => {
     // In a real application, you would fetch this data from your 'orders' collection in Firestore.
-    // Since we don't have that yet, we'll stick with mock data and set loading to false.
+    // Since we don't have that yet, we'll use an empty state.
     setLoading(false);
   }, []);
 
@@ -67,7 +59,7 @@ export default function StoreDashboard() {
           </CardHeader>
           <CardContent>
             {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>}
-            {loading ? <Skeleton className="h-4 w-1/2 mt-1" /> : <p className="text-xs text-muted-foreground">+20.1% from last month</p>}
+            <p className="text-xs text-muted-foreground">No sales data yet</p>
           </CardContent>
         </Card>
         <Card>
@@ -77,7 +69,7 @@ export default function StoreDashboard() {
           </CardHeader>
           <CardContent>
             {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">+{stats.totalSales}</div>}
-            {loading ? <Skeleton className="h-4 w-1/2 mt-1" /> : <p className="text-xs text-muted-foreground">+180.1% from last month</p>}
+             <p className="text-xs text-muted-foreground">No sales data yet</p>
           </CardContent>
         </Card>
          <Card>
@@ -87,7 +79,7 @@ export default function StoreDashboard() {
           </CardHeader>
           <CardContent>
             {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">+{stats.newCustomers}</div>}
-            {loading ? <Skeleton className="h-4 w-1/2 mt-1" /> : <p className="text-xs text-muted-foreground">+15% from last month</p>}
+            <p className="text-xs text-muted-foreground">No customer data yet</p>
           </CardContent>
         </Card>
         <Card>
@@ -97,7 +89,7 @@ export default function StoreDashboard() {
           </CardHeader>
           <CardContent>
             {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">+{stats.pendingOrders}</div>}
-            {loading ? <Skeleton className="h-4 w-1/2 mt-1" /> : <p className="text-xs text-muted-foreground">+201 since last hour</p>}
+            <p className="text-xs text-muted-foreground">No pending orders</p>
           </CardContent>
         </Card>
       </div>
@@ -106,7 +98,7 @@ export default function StoreDashboard() {
           <CardHeader>
             <CardTitle>Recent Customers</CardTitle>
              <CardDescription>
-                This data is a placeholder until the payment system is live.
+                Your most recent customers will appear here.
               </CardDescription>
           </CardHeader>
           <CardContent>
@@ -118,17 +110,31 @@ export default function StoreDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentSales.map((sale, index) => (
-                    <TableRow key={index}>
-                    <TableCell>
-                        <div className="font-medium">{sale.customer}</div>
-                        <div className="hidden text-sm text-muted-foreground md:inline">
-                        {sale.email}
-                        </div>
-                    </TableCell>
-                    <TableCell className="text-right">{sale.amount}</TableCell>
+                {loading ? (
+                    <TableRow>
+                        <TableCell colSpan={2} className="h-24 text-center">
+                            <Skeleton className="h-8 w-full" />
+                        </TableCell>
                     </TableRow>
-                ))}
+                ) : recentSales.length === 0 ? (
+                    <TableRow>
+                        <TableCell colSpan={2} className="h-24 text-center">
+                            No recent sales.
+                        </TableCell>
+                    </TableRow>
+                ) : (
+                    recentSales.map((sale, index) => (
+                        <TableRow key={index}>
+                        <TableCell>
+                            <div className="font-medium">{sale.customer}</div>
+                            <div className="hidden text-sm text-muted-foreground md:inline">
+                            {sale.email}
+                            </div>
+                        </TableCell>
+                        <TableCell className="text-right">{sale.amount}</TableCell>
+                        </TableRow>
+                    ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -137,7 +143,7 @@ export default function StoreDashboard() {
           <CardHeader>
             <CardTitle>Recent Sales</CardTitle>
             <CardDescription>
-                Recent transactions from your store (Placeholder Data).
+                Recent transactions from your store will show here.
               </CardDescription>
           </CardHeader>
           <CardContent>
@@ -149,17 +155,31 @@ export default function StoreDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentSales.map((sale, index) => (
-                    <TableRow key={index}>
-                    <TableCell>
-                        <div className="font-medium">{sale.customer}</div>
-                        <div className="hidden text-sm text-muted-foreground md:inline">
-                        {sale.email}
-                        </div>
-                    </TableCell>
-                    <TableCell className="text-right">{sale.amount}</TableCell>
+                {loading ? (
+                    <TableRow>
+                        <TableCell colSpan={2} className="h-24 text-center">
+                            <Skeleton className="h-8 w-full" />
+                        </TableCell>
                     </TableRow>
-                ))}
+                ) : recentSales.length === 0 ? (
+                    <TableRow>
+                        <TableCell colSpan={2} className="h-24 text-center">
+                            No recent sales.
+                        </TableCell>
+                    </TableRow>
+                ) : (
+                    recentSales.map((sale, index) => (
+                        <TableRow key={index}>
+                        <TableCell>
+                            <div className="font-medium">{sale.customer}</div>
+                            <div className="hidden text-sm text-muted-foreground md:inline">
+                            {sale.email}
+                            </div>
+                        </TableCell>
+                        <TableCell className="text-right">{sale.amount}</TableCell>
+                        </TableRow>
+                    ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
