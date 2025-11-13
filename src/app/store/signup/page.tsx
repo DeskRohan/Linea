@@ -4,6 +4,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { useAuth } from "@/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,8 +18,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LineaLogo } from "@/components/icons/linea-logo";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 const VALID_ACTIVATION_KEY = "rhlinea2k25";
 
@@ -26,11 +28,14 @@ export default function StoreSignupPage() {
   const [password, setPassword] = useState("");
   const [storeName, setStoreName] = useState("");
   const [activationKey, setActivationKey] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
 
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
+    setIsLoading(true);
 
     if (activationKey !== VALID_ACTIVATION_KEY) {
       toast({
@@ -39,23 +44,32 @@ export default function StoreSignupPage() {
         description:
           "Please enter the correct activation key to create a store.",
       });
+      setIsLoading(false);
       return;
     }
 
-    toast({
-      title: "Store Created",
-      description: "You can now log in to your store dashboard.",
-    });
-    router.push("/store/dashboard");
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      toast({
+        title: "Store Account Created",
+        description: "You can now log in to your store dashboard.",
+      });
+      router.push("/store/login");
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Signup Failed",
+        description: error.message || "An unexpected error occurred.",
+      });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-sm shadow-2xl">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <LineaLogo className="h-16 w-16" />
-          </div>
           <CardTitle className="text-2xl">Create Your Store</CardTitle>
           <CardDescription>
             Join Linea and start selling today.
@@ -72,6 +86,7 @@ export default function StoreSignupPage() {
                 required
                 value={storeName}
                 onChange={(e) => setStoreName(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -83,6 +98,7 @@ export default function StoreSignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -93,6 +109,7 @@ export default function StoreSignupPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -104,9 +121,11 @@ export default function StoreSignupPage() {
                 required
                 value={activationKey}
                 onChange={(e) => setActivationKey(e.target.value)}
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Store
             </Button>
           </form>
