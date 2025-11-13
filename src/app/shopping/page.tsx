@@ -121,7 +121,7 @@ export default function ShoppingPage() {
     });
 
     return () => unsubscribe();
-  }, [firestore, toast, selectedStoreId]);
+  }, [firestore, toast]);
 
 
   useEffect(() => {
@@ -275,7 +275,7 @@ export default function ShoppingPage() {
      return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
-  if (userLoading || !user) {
+  if (userLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/40">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -612,5 +612,3 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
-
-    
