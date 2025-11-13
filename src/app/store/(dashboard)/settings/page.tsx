@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -19,6 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Check } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
+import { useUser, useFirestore } from "@/firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 interface StoreSettings {
   shopName: string;
@@ -33,19 +35,35 @@ interface StoreSettings {
 
 export default function ShopSettingsPage() {
   const { toast } = useToast();
+  const { user } = useUser();
+  const firestore = useFirestore();
 
   const [settings, setSettings] = useState<StoreSettings>({
-    shopName: "My Awesome Store",
-    shopAddress: "123 Main Street, Anytown, 12345",
+    shopName: "",
+    shopAddress: "",
     invoicePrefix: "INV-",
     invoiceFooter: "Thank you for your business!",
-    whatsapp: "9876543210",
-    gstin: "29AABCU9603R1ZM",
+    whatsapp: "",
+    gstin: "",
     terms: "1. All sales are final. 2. No returns or exchanges.",
     receiptTemplate: "classic",
   });
-
+  
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setIsLoading(true);
+    const storeDocRef = doc(firestore, "stores", user.uid);
+    getDoc(storeDocRef).then((docSnap) => {
+      if (docSnap.exists()) {
+        setSettings(docSnap.data() as StoreSettings);
+      }
+    }).finally(() => {
+      setIsLoading(false);
+    });
+  }, [user, firestore]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -57,16 +75,28 @@ export default function ShopSettingsPage() {
   };
   
   const handleSave = async () => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Not Authenticated" });
+      return;
+    }
     setIsSaving(true);
-    // Mock saving
-    setTimeout(() => {
-      setIsSaving(false);
+    const storeDocRef = doc(firestore, "stores", user.uid);
+    try {
+      await setDoc(storeDocRef, settings, { merge: true });
       toast({
-        title: "Settings Saved (Mock)",
+        title: "Settings Saved",
         description: "Your store settings have been updated.",
         action: <Check className="h-5 w-5 text-green-500" />,
       });
-    }, 1000);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error Saving Settings",
+        description: error.message,
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const TemplatePreview = ({ name, id }: { name: string, id: string }) => {
@@ -170,6 +200,10 @@ export default function ShopSettingsPage() {
       </div>
     );
   };
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
 
   return (
     <>
@@ -306,3 +340,5 @@ export default function ShopSettingsPage() {
     </>
   );
 }
+
+    

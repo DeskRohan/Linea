@@ -58,16 +58,16 @@ import {
 import { useAuth, useUser, useFirestore } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { formatCurrency } from "@/lib/utils";
-import { collection, query, where, getDocs, limit, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, limit, addDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
 
 type AppState = "shopping" | "completed";
 
-// This is now static metadata. The actual product fetching is dynamic.
-const stores = [
-  { id: "1", name: "The Corner Collection", address: "Pawai, Mumbai", ownerUid: "M1bsRzDB85g4YEVN1aWNFa2c5w62" },
-  { id: "2", name: "GreenMart", address: "Koramangala, Bangalore", ownerUid: "some-other-uid" },
-  { id: "3", name: "FreshFinds Superette", address: "Tilakwadi, Belagavi", ownerUid: "some-other-uid-2" },
-];
+interface Store {
+  id: string; // This is the ownerUid
+  name: string;
+  address: string;
+}
+
 
 export default function ShoppingPage() {
   const router = useRouter();
@@ -78,7 +78,8 @@ export default function ShoppingPage() {
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [selectedStore, setSelectedStore] = useState(stores[0].id);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const scannerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -89,6 +90,28 @@ export default function ShoppingPage() {
     }
   }, [user, loading, router]);
   
+  useEffect(() => {
+    const storesCollection = collection(firestore, "stores");
+    const unsubscribe = onSnapshot(storesCollection, (snapshot) => {
+      const storesData: Store[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        storesData.push({ 
+          id: doc.id, 
+          name: data.shopName || "Unnamed Store",
+          address: data.shopAddress || "No address"
+        });
+      });
+      setStores(storesData);
+      if (storesData.length > 0 && !selectedStoreId) {
+        setSelectedStoreId(storesData[0].id);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [firestore, selectedStoreId]);
+
+
   useEffect(() => {
     if (isScanning) {
       scannerTimeoutRef.current = setTimeout(() => {
@@ -116,13 +139,12 @@ export default function ShoppingPage() {
   const handleScanSuccess = async (decodedText: string) => {
     setIsScanning(false); // Stop scanning immediately
     
-    const storeOwnerUid = stores.find(s => s.id === selectedStore)?.ownerUid;
-    if (!storeOwnerUid) {
-        toast({ variant: "destructive", title: "Store not found", description: "Selected store is invalid." });
+    if (!selectedStoreId) {
+        toast({ variant: "destructive", title: "No Store Selected", description: "Please select a store first." });
         return;
     }
 
-    const productsCollection = collection(firestore, `stores/${storeOwnerUid}/products`);
+    const productsCollection = collection(firestore, `stores/${selectedStoreId}/products`);
     const q = query(productsCollection, where("barcode", "==", decodedText), limit(1));
     
     try {
@@ -175,8 +197,7 @@ export default function ShoppingPage() {
     if (!user || cartItems.length === 0) return;
     setIsCheckingOut(true);
 
-    const storeOwnerUid = stores.find(s => s.id === selectedStore)?.ownerUid;
-    if (!storeOwnerUid) {
+    if (!selectedStoreId) {
       toast({ variant: "destructive", title: "Store not found" });
       setIsCheckingOut(false);
       return;
@@ -185,7 +206,9 @@ export default function ShoppingPage() {
     const order = {
       customerId: user.uid,
       customerName: user.displayName || user.email,
-      storeId: storeOwnerUid,
+      customerEmail: user.email, // Add email for customer page
+      customerPhotoURL: user.photoURL, // Add photoURL for customer page
+      storeId: selectedStoreId,
       items: cartItems,
       totalAmount: total,
       totalItems: totalItems,
@@ -194,7 +217,7 @@ export default function ShoppingPage() {
     };
 
     try {
-      const ordersCollection = collection(firestore, "stores", storeOwnerUid, "orders");
+      const ordersCollection = collection(firestore, "stores", selectedStoreId, "orders");
       await addDoc(ordersCollection, order);
       setAppState("completed");
     } catch (error: any) {
@@ -240,7 +263,7 @@ export default function ShoppingPage() {
      return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
-  if (loading || !user) {
+  if (loading || !user || stores.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/40">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -257,10 +280,11 @@ export default function ShoppingPage() {
             cartItems={cartItems}
             total={total}
             totalItems={totalItems}
-            selectedStore={selectedStore}
+            stores={stores}
+            selectedStoreId={selectedStoreId}
             isScanning={isScanning}
             onSetIsScanning={setIsScanning}
-            onStoreChange={setSelectedStore}
+            onStoreChange={setSelectedStoreId}
             onScanSuccess={handleScanSuccess}
             onCheckout={handleCheckout}
             onLogout={handleLogout}
@@ -277,10 +301,11 @@ export default function ShoppingPage() {
             cartItems={cartItems}
             total={total}
             totalItems={totalItems}
-            selectedStore={selectedStore}
+            stores={stores}
+            selectedStoreId={selectedStoreId}
             isScanning={isScanning}
             onSetIsScanning={setIsScanning}
-            onStoreChange={setSelectedStore}
+            onStoreChange={setSelectedStoreId}
             onScanSuccess={handleScanSuccess}
             onCheckout={handleCheckout}
             onLogout={handleLogout}
@@ -299,7 +324,8 @@ const ShoppingScreen = ({
   cartItems,
   total,
   totalItems,
-  selectedStore,
+  stores,
+  selectedStoreId,
   isScanning,
   onSetIsScanning,
   onStoreChange,
@@ -313,7 +339,8 @@ const ShoppingScreen = ({
   cartItems: CartItem[];
   total: number;
   totalItems: number;
-  selectedStore: string;
+  stores: Store[];
+  selectedStoreId: string | null;
   isScanning: boolean;
   onSetIsScanning: (isScanning: boolean) => void;
   onStoreChange: (storeId: string) => void;
@@ -355,7 +382,7 @@ const ShoppingScreen = ({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-            <Select value={selectedStore} onValueChange={onStoreChange}>
+            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange}>
               <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
                 <MapPin className="h-4 w-4 mr-2 text-primary" />
                 <SelectValue placeholder="Select a store" />
@@ -556,3 +583,5 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
+
+    
