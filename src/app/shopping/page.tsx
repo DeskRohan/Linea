@@ -57,15 +57,9 @@ import {
 } from "@/components/ui/sheet";
 import { useAuth, useUser } from "@/firebase";
 import { signOut } from "firebase/auth";
+import { formatCurrency } from "@/lib/utils";
 
 type AppState = "shopping" | "completed";
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-  }).format(amount);
-};
 
 const stores = [
   { id: "1", name: "The Corner Collection", address: "Pawai, Mumbai" },

@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowUpRight, Search, Users, DollarSign, Crown } from "lucide-react";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/utils";
 
 const mockCustomers = [
   {
@@ -74,13 +75,6 @@ const mockCustomers = [
     spent: 350.00,
   }
 ];
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-  }).format(amount);
-};
 
 export default function CustomersPage() {
 

@@ -1,3 +1,11 @@
+// /ai/dev.ts
+// This file is used by Genkit when running in dev mode.
+// Import flows here so they register correctly.
 
-// Flows will be imported for their side effects in this file.
-import './flows/store-chat-flow';
+import "./flows/store-chat-flow";   // <-- REQUIRED
+
+// You can import more flows here if you add them later.
+// Example:
+// import "./flows/inventory-flow";
+
+console.log("Genkit Dev Mode: Flows loaded successfully.");
