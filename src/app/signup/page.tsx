@@ -33,11 +33,11 @@ export default function SignupPage() {
   const auth = useAuth();
   const firestore = useFirestore();
 
-  // Function to create a customer document in Firestore
-  const createCustomerDocument = async (user: User) => {
+  // Function to create a user document in Firestore
+  const createUserDocument = async (user: User) => {
     if (!user) return;
-    const customerRef = doc(firestore, "customers", user.uid);
-    await setDoc(customerRef, {
+    const userRef = doc(firestore, "users", user.uid);
+    await setDoc(userRef, {
       uid: user.uid,
       displayName: user.displayName,
       email: user.email,
@@ -53,7 +53,7 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName });
       
-      await createCustomerDocument(userCredential.user);
+      await createUserDocument(userCredential.user);
 
       toast({
         title: "Signup Successful",
@@ -84,7 +84,7 @@ export default function SignupPage() {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
-      await createCustomerDocument(result.user);
+      await createUserDocument(result.user);
 
       toast({ title: "Sign-up Successful" });
       router.push("/shopping");
