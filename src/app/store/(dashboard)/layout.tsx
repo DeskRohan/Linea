@@ -5,6 +5,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { useAuth, useUser } from "@/firebase";
+import { signOut } from "firebase/auth";
 
 import {
   LayoutDashboard,
@@ -17,6 +19,7 @@ import {
   Mail,
   Instagram,
   MessageSquare,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,10 +48,35 @@ export default function StoreLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const auth = useAuth();
+  const { user, loading } = useUser();
+  const pathname = usePathname();
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/store/login");
+    }
+  }, [user, loading, router]);
+
 
   const handleLogout = async () => {
+    await signOut(auth);
     router.push("/");
   };
+
+  if (loading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-muted/40">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const getInitials = (email: string) => {
+    const parts = email.split('@');
+    return parts[0].substring(0, 2).toUpperCase();
+  }
+
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -61,7 +89,7 @@ export default function StoreLayout({
             <Store className="h-6 w-6" />
             <span className="sr-only">My Store</span>
           </Link>
-          <NavLinks />
+          <NavLinks pathname={pathname} />
         </nav>
         <Sheet>
           <SheetTrigger asChild>
@@ -83,7 +111,7 @@ export default function StoreLayout({
                 <Store className="h-6 w-6" />
                 <span className="">My Store</span>
               </Link>
-              <NavLinks mobile />
+              <NavLinks pathname={pathname} mobile />
             </nav>
           </SheetContent>
         </Sheet>
@@ -97,14 +125,16 @@ export default function StoreLayout({
                   className="rounded-full"
                 >
                   <Avatar>
-                    <AvatarImage src={""} />
-                    <AvatarFallback>S</AvatarFallback>
+                    <AvatarImage src={user.photoURL || ""} />
+                    <AvatarFallback>{getInitials(user.email!)}</AvatarFallback>
                   </Avatar>
                   <span className="sr-only">Toggle user menu</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                 <DropdownMenuItem disabled>{user.email}</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DialogTrigger asChild>
                   <DropdownMenuItem>Support</DropdownMenuItem>
@@ -154,8 +184,7 @@ export default function StoreLayout({
   );
 }
 
-const NavLinks = ({ mobile }: { mobile?: boolean }) => {
-  const pathname = usePathname();
+const NavLinks = ({ mobile, pathname }: { mobile?: boolean, pathname: string }) => {
   const links = [
     { href: "/store/dashboard", text: "Dashboard", icon: LayoutDashboard },
     { href: "/store/inventory", text: "Inventory", icon: Boxes },

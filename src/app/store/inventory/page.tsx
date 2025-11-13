@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -38,6 +38,9 @@ import { Input } from "@/components/ui/input";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { type Product } from "@/lib/products";
+import { useUser, useFirestore } from "@/firebase";
+import { collection, addDoc, onSnapshot, query, where } from "firebase/firestore";
+import { formatCurrency } from "@/lib/utils";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
@@ -52,6 +55,28 @@ export default function InventoryPage() {
   const { toast } = useToast();
   const [inventory, setInventory] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const firestore = useFirestore();
+  const { user } = useUser();
+
+  useEffect(() => {
+    if (!user) return;
+
+    const storeId = user.email!;
+    const productsCollection = collection(firestore, "stores", storeId, "products");
+    
+    const unsubscribe = onSnapshot(productsCollection, (snapshot) => {
+      const products: Product[] = [];
+      snapshot.forEach((doc) => {
+        products.push({ id: doc.id, ...doc.data() } as Product);
+      });
+      setInventory(products);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, firestore]);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -64,24 +89,33 @@ export default function InventoryPage() {
   });
 
   const onSubmit: SubmitHandler<ProductFormValues> = async (data) => {
-    // This is a mock implementation.
-    // In a real app, this would save to a database.
-    const newProduct: Product = { ...data, id: data.barcode };
-    setInventory((prev) => [...prev, newProduct]);
+    if (!user) {
+        toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to add products." });
+        return;
+    }
+    const storeId = user.email!;
+    const productsCollection = collection(firestore, "stores", storeId, "products");
 
-    toast({
-      title: "Product Added (Mock)",
-      description: `${data.name} has been added to the local list.`,
-    });
-    form.reset();
-    setIsDialogOpen(false);
-  };
+    try {
+        await addDoc(productsCollection, {
+            ...data,
+            imageUrl: `https://picsum.photos/seed/${data.barcode}/200/200`,
+            imageHint: data.name.split(" ").slice(0, 2).join(" ").toLowerCase()
+        });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-    }).format(amount);
+        toast({
+            title: "Product Added",
+            description: `${data.name} has been added to your inventory.`,
+        });
+        form.reset();
+        setIsDialogOpen(false);
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Error adding product",
+            description: error.message || "An unexpected error occurred.",
+        });
+    }
   };
 
   return (
@@ -174,7 +208,11 @@ export default function InventoryPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {inventory.length === 0 ? (
+          {isLoading ? (
+             <div className="flex justify-center items-center h-40">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+             </div>
+          ) : inventory.length === 0 ? (
             <div className="text-center text-muted-foreground py-10">
                 <p>No products found in your inventory.</p>
                 <p>Click "Add Product" to get started.</p>

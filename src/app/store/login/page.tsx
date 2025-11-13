@@ -4,7 +4,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { useAuth } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,25 +17,39 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LineaLogo } from "@/components/icons/linea-logo";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export default function StoreLoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("tcc@linea.com");
+  const [password, setPassword] = useState("tcc2k25");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const auth = useAuth();
+  const { toast } = useToast();
 
-  const handleLogin = (event: React.FormEvent) => {
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    router.push("/store/dashboard");
+    setIsLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push("/store/dashboard");
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: "Please check your email and password.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-sm shadow-2xl">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <LineaLogo className="h-16 w-16" />
-          </div>
           <CardTitle className="text-2xl">Shop Owner Login</CardTitle>
           <CardDescription>Sign in to manage your store.</CardDescription>
         </CardHeader>
@@ -49,6 +64,7 @@ export default function StoreLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -59,9 +75,11 @@ export default function StoreLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
           </form>
