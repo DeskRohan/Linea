@@ -123,7 +123,7 @@ export default function ShoppingPage() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [firestore, toast, selectedStoreId]);
+  }, [firestore, toast]);
 
 
   useEffect(() => {
@@ -396,7 +396,7 @@ const ShoppingScreen = ({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={!stores}>
+            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={stores === null}>
               <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
                 <MapPin className="h-4 w-4 mr-2 text-primary" />
                 <SelectValue placeholder="Select a store" />
@@ -608,5 +608,3 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
-
-    
