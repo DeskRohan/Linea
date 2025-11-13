@@ -55,12 +55,14 @@ export default function LoginPage() {
         await signInWithPopup(auth, provider);
         router.push("/shopping");
     } catch (error: any) {
-        console.error("Google Sign-In failed:", error);
-        toast({
-            variant: "destructive",
-            title: "Google Sign-In Failed",
-            description: error.message || "Could not sign in with Google.",
-        });
+        if (error.code !== 'auth/popup-closed-by-user') {
+            console.error("Google Sign-In failed:", error);
+            toast({
+                variant: "destructive",
+                title: "Google Sign-In Failed",
+                description: error.message || "Could not sign in with Google.",
+            });
+        }
     } finally {
         setIsLoading(false);
     }
