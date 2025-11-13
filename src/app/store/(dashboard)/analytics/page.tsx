@@ -298,5 +298,3 @@ const ChartLegendContent = (props: any) => {
     </div>
   );
 };
-
-    
