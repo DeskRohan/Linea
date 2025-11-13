@@ -93,6 +93,7 @@ export default function ShoppingPage() {
   
   useEffect(() => {
     if (!firestore) return;
+    setStoresLoading(true);
     const storesCollection = collection(firestore, "stores");
     const unsubscribe = onSnapshot(storesCollection, (snapshot) => {
       const storesData: Store[] = [];
@@ -109,10 +110,18 @@ export default function ShoppingPage() {
         setSelectedStoreId(storesData[0].id);
       }
       setStoresLoading(false);
+    }, (error) => {
+      console.error("Error fetching stores:", error);
+      toast({
+        variant: "destructive",
+        title: "Could not fetch stores",
+        description: "Please check your connection or try again later.",
+      });
+      setStoresLoading(false);
     });
 
     return () => unsubscribe();
-  }, [firestore, selectedStoreId]);
+  }, [firestore, toast, selectedStoreId]);
 
 
   useEffect(() => {
@@ -266,7 +275,7 @@ export default function ShoppingPage() {
      return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
-  if (userLoading || storesLoading || !user) {
+  if (userLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/40">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -284,6 +293,7 @@ export default function ShoppingPage() {
             total={total}
             totalItems={totalItems}
             stores={stores}
+            storesLoading={storesLoading}
             selectedStoreId={selectedStoreId}
             isScanning={isScanning}
             onSetIsScanning={setIsScanning}
@@ -305,6 +315,7 @@ export default function ShoppingPage() {
             total={total}
             totalItems={totalItems}
             stores={stores}
+            storesLoading={storesLoading}
             selectedStoreId={selectedStoreId}
             isScanning={isScanning}
             onSetIsScanning={setIsScanning}
@@ -328,6 +339,7 @@ const ShoppingScreen = ({
   total,
   totalItems,
   stores,
+  storesLoading,
   selectedStoreId,
   isScanning,
   onSetIsScanning,
@@ -343,6 +355,7 @@ const ShoppingScreen = ({
   total: number;
   totalItems: number;
   stores: Store[];
+  storesLoading: boolean;
   selectedStoreId: string | null;
   isScanning: boolean;
   onSetIsScanning: (isScanning: boolean) => void;
@@ -385,22 +398,30 @@ const ShoppingScreen = ({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange}>
-              <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
-                <MapPin className="h-4 w-4 mr-2 text-primary" />
-                <SelectValue placeholder="Select a store" />
-              </SelectTrigger>
-              <SelectContent>
-                {stores.map((store) => (
-                  <SelectItem key={store.id} value={store.id}>
-                    <div className="flex flex-col">
-                      <span className="font-semibold">{store.name}</span>
-                      <span className="text-xs text-muted-foreground">{store.address}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {storesLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+              <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={stores.length === 0}>
+                <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
+                  <MapPin className="h-4 w-4 mr-2 text-primary" />
+                  <SelectValue placeholder="Select a store" />
+                </SelectTrigger>
+                <SelectContent>
+                  {stores.length === 0 ? (
+                    <SelectItem value="no-stores" disabled>No stores available</SelectItem>
+                  ) : (
+                    stores.map((store) => (
+                      <SelectItem key={store.id} value={store.id}>
+                        <div className="flex flex-col">
+                          <span className="font-semibold">{store.name}</span>
+                          <span className="text-xs text-muted-foreground">{store.address}</span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            )}
         </div>
       </CardHeader>
 
@@ -423,11 +444,16 @@ const ShoppingScreen = ({
                             variant="ghost"
                             className="h-48 w-48 rounded-full border-4 border-dashed border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all animate-pulse"
                             onClick={() => onSetIsScanning(true)}
+                            disabled={!selectedStoreId}
                         >
                             <Camera className="h-20 w-20 text-primary/50" />
                         </Button>
                          <h2 className="text-xl font-semibold">Tap to Scan</h2>
-                        <p className="text-foreground/80 mt-1 max-w-xs">Click the button to activate the scanner and add items to your cart.</p>
+                         {selectedStoreId ? (
+                            <p className="text-foreground/80 mt-1 max-w-xs">Click the button to add items to your cart.</p>
+                         ) : (
+                            <p className="text-destructive/80 mt-1 max-w-xs">Please select a store to begin scanning.</p>
+                         )}
                     </div>
                 )}
             </div>
