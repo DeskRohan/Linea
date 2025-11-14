@@ -166,6 +166,11 @@ export default function ShoppingPage() {
         return;
     }
 
+    if (!firestore) {
+        toast({ variant: "destructive", title: "Database not connected" });
+        return;
+    }
+
     const productsCollection = collection(firestore, `stores/${selectedStore.id}/products`);
     const q = query(productsCollection, where("barcode", "==", decodedText), limit(1));
     
@@ -207,10 +212,13 @@ export default function ShoppingPage() {
   
   const handleStoreChange = (storeId: string) => {
       const newStore = stores?.find(s => s.id === storeId) || null;
-      setStore(newStore);
+      if (newStore) {
+        setStore(newStore);
+      }
   }
 
   const handleLogout = async () => {
+    if (!auth) return;
     await signOut(auth);
     router.push("/");
   };
@@ -266,6 +274,17 @@ const ShoppingScreen = ({
   onLogout: () => void;
 }) => {
   const { items: cartItems, updateItemQuantity, totalItems, totalPrice } = useCartStore();
+  const [greeting, setGreeting] = useState("Welcome");
+
+  useEffect(() => {
+    const getGreeting = () => {
+      const hour = new Date().getHours();
+      if (hour < 12) return "Shubh Prabhat"; // Good Morning
+      if (hour < 17) return "Shubh Dopahar"; // Good Afternoon
+      return "Shubh Sandhya"; // Good Evening
+    };
+    setGreeting(getGreeting());
+  }, []);
 
   return (
     <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
@@ -299,11 +318,11 @@ const ShoppingScreen = ({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <h1 className="font-headline text-xl">Welcome, {user.displayName || user.email}!</h1>
+            <h1 className="font-headline text-xl">{greeting}, {user.displayName?.split(' ')[0] || user.email}!</h1>
           </div>
           <div className="w-full sm:w-auto">
               <Select value={selectedStore?.id ?? ""} onValueChange={onStoreChange} disabled={storesLoading}>
-                <SelectTrigger className="w-full sm:w-auto min-w-[200px] max-w-full input-paper">
+                <SelectTrigger className="w-full min-w-[200px] max-w-full sm:w-auto input-paper">
                   <MapPin className="h-4 w-4 mr-2 text-primary" />
                   <SelectValue placeholder="Select a store" />
                 </SelectTrigger>
@@ -486,7 +505,3 @@ const CartFooterActions = ({
     </>
   );
 };
-
-    
-
-    
