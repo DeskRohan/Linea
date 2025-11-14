@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from "react";
@@ -190,7 +189,6 @@ const NavLinks = ({ mobile, pathname }: { mobile?: boolean, pathname: string }) 
     { href: "/store/inventory", text: "Inventory", icon: Boxes },
     { href: "/store/analytics", text: "Analytics", icon: BarChart3 },
     { href: "/store/customers", text: "Customers", icon: Users },
-    { href: "/store/chat", text: "Chat with Navya", icon: MessageSquare },
     { href: "/store/settings", text: "Settings", icon: Settings },
   ];
 
