@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Loader2,
   Building,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -137,7 +138,7 @@ export default function StoreLayout({
                  <DropdownMenuItem disabled>{user.email}</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DialogTrigger asChild>
-                  <DropdownMenuItem>Support</DropdownMenuItem>
+                  <DropdownMenuItem>About This Platform</DropdownMenuItem>
                 </DialogTrigger>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
@@ -148,20 +149,20 @@ export default function StoreLayout({
               <DialogHeader>
                 <DialogTitle>About This Platform</DialogTitle>
                 <DialogDescription>
-                  Information about the creators of this application.
+                  This platform was architected and coded by Rohan Godakhindi.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                   <div className="font-semibold flex items-center gap-3">
-                    <Building className="h-8 w-8 text-primary" />
+                    <User className="h-8 w-8 text-primary" />
                     <div>
-                        <p className="text-lg">Built by Simplinovus</p>
-                        <p className="text-sm text-muted-foreground">Innovators & Creators</p>
+                        <p className="text-lg">Rohan Godakhindi</p>
+                        <p className="text-sm text-muted-foreground">Innovator & Platform Architect</p>
                     </div>
                   </div>
 
                   <div className="space-y-3 pt-4 border-t">
-                     <p className="text-sm font-semibold text-muted-foreground">Contact the development team:</p>
+                     <p className="text-sm font-semibold text-muted-foreground">For support, contact the development team:</p>
                     <a href="mailto:simplinovus@gmail.com" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
                       <Mail className="h-5 w-5 text-gray-500" />
                       <span className="text-sm font-medium">simplinovus@gmail.com</span>
