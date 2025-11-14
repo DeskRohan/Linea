@@ -23,7 +23,7 @@ import { formatCurrency } from '@/lib/utils';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -63,8 +63,8 @@ export default function CheckoutPage() {
   const total = subtotal + gst;
 
   const handlePayment = async () => {
-    if (!user || !store) {
-        toast({ variant: 'destructive', title: 'Error', description: 'User or store information is missing.' });
+    if (!user || !store || !firestore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'User, store, or database information is missing.' });
         return;
     }
     setIsProcessing(true);
@@ -72,7 +72,7 @@ export default function CheckoutPage() {
     // Simulate payment processing delay
     await new Promise(resolve => setTimeout(resolve, 2500));
 
-    const order = {
+    const orderData = {
       customerId: user.uid,
       customerName: user.displayName || user.email,
       customerEmail: user.email,
@@ -87,19 +87,30 @@ export default function CheckoutPage() {
       createdAt: serverTimestamp(),
       status: 'completed',
     };
-
-    const ordersCollection = collection(firestore, 'stores', store.id, 'orders');
     
-    addDoc(ordersCollection, order)
-      .then((docRef) => {
+    // Use a batch to write to both locations atomically
+    const batch = writeBatch(firestore);
+    
+    // 1. Reference to the new order in the store's collection
+    const storeOrderRef = doc(collection(firestore, 'stores', store.id, 'orders'));
+    batch.set(storeOrderRef, orderData);
+
+    // 2. Reference to the new order in the user's collection
+    const userOrderRef = doc(collection(firestore, 'users', user.uid, 'orders'));
+    batch.set(userOrderRef, orderData);
+
+    batch.commit()
+      .then(() => {
         clearCart();
-        router.push(`/invoice/${docRef.id}?storeId=${store.id}`);
+        // We can redirect to the store's copy of the invoice, as it's the official record
+        router.push(`/invoice/${storeOrderRef.id}?storeId=${store.id}`);
       })
       .catch((serverError) => {
+          console.error("Batch write failed:", serverError);
           const permissionError = new FirestorePermissionError({
-              path: ordersCollection.path,
+              path: `/stores/${store.id}/orders and /users/${user.uid}/orders`,
               operation: 'create',
-              requestResourceData: order,
+              requestResourceData: orderData,
           });
           errorEmitter.emit('permission-error', permissionError);
           setIsProcessing(false);

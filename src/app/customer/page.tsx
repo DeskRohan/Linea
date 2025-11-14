@@ -1,24 +1,31 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/firebase";
+import { Loader2 } from "lucide-react";
 
 export default function CustomerDashboard() {
-  
+  const router = useRouter();
+  const { user, loading } = useUser();
+
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        // If the user is logged in, redirect them to their orders page.
+        router.replace("/customer/orders");
+      } else {
+        // If not logged in, redirect to the login page.
+        router.replace("/login");
+      }
+    }
+  }, [user, loading, router]);
+
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Dashboard</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Welcome, Customer! Here is your information.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40">
+      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      <p className="mt-4 text-muted-foreground">Loading your dashboard...</p>
     </div>
   );
 }

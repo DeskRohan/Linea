@@ -35,7 +35,8 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/shopping");
+      // Redirect to the generic customer page, which will handle routing to orders
+      router.push("/customer");
     } catch (error: any) {
       console.error("Login failed:", error);
       let description = "Please check your email and password.";
@@ -59,7 +60,7 @@ export default function LoginPage() {
     try {
         const provider = new GoogleAuthProvider();
         await signInWithPopup(auth, provider);
-        router.push("/shopping");
+        router.push("/customer");
     } catch (error: any) {
         if (error.code === 'auth/popup-closed-by-user') {
             // User closed the popup, do nothing

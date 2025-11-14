@@ -35,8 +35,10 @@ export default function SignupPage() {
 
   // Function to create a user document in Firestore
   const createUserDocument = async (user: User) => {
-    if (!user) return;
+    if (!user || !firestore) return;
     const userRef = doc(firestore, "users", user.uid);
+    // Use setDoc with { merge: true } to create or update the document
+    // This prevents overwriting data if the user signs up with email then links Google
     await setDoc(userRef, {
       uid: user.uid,
       displayName: user.displayName,
@@ -49,11 +51,24 @@ export default function SignupPage() {
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
+    if (!auth) {
+        toast({ variant: "destructive", title: "Authentication service not ready."});
+        setIsLoading(false);
+        return;
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName });
       
-      await createUserDocument(userCredential.user);
+      // We need to create a new user object to pass to createUserDocument
+      // because the user object from userCredential might not be updated with the new profile yet.
+      const updatedUser = {
+        ...userCredential.user,
+        displayName: displayName,
+      } as User
+
+      await createUserDocument(updatedUser);
 
       toast({
         title: "Signup Successful",
@@ -80,6 +95,11 @@ export default function SignupPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
+    if (!auth) {
+        toast({ variant: "destructive", title: "Authentication service not ready."});
+        setIsLoading(false);
+        return;
+    }
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -87,7 +107,8 @@ export default function SignupPage() {
       await createUserDocument(result.user);
 
       toast({ title: "Sign-up Successful" });
-      router.push("/shopping");
+      // Redirect to the generic customer page, which will handle routing to orders
+      router.push("/customer");
     } catch (error: any) {
        if (error.code === 'auth/popup-closed-by-user') {
             // User closed the popup, do nothing.
