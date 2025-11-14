@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
   CreditCard,
-  CheckCircle2,
   Package,
   LogOut,
   PlusCircle,
@@ -16,9 +15,6 @@ import {
   Trophy,
   MapPin,
   Camera,
-  Wallet,
-  Landmark,
-  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,7 +50,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Scanner from "@/components/scanner";
-import { type CartItem, type Product } from "@/lib/products";
+import { type Product } from "@/lib/products";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -69,17 +65,10 @@ import {
 import { useAuth, useUser, useFirestore } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { formatCurrency } from "@/lib/utils";
-import { collection, query, where, getDocs, limit, addDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
-import { cn } from "@/lib/utils";
-
-
-type AppState = "shopping" | "completed";
-
-interface Store {
-  id: string; // This is the ownerUid
-  name: string;
-  address: string;
-}
+import { collection, query, where, getDocs, limit, onSnapshot } from "firebase/firestore";
+import { useCartStore } from "@/store/cart-store";
+import { type Store } from "@/lib/types";
+import Link from "next/link";
 
 
 export default function ShoppingPage() {
@@ -89,15 +78,21 @@ export default function ShoppingPage() {
   const firestore = useFirestore();
   const { user, loading: userLoading } = useUser();
 
-  const [appState, setAppState] = useState<AppState>("shopping");
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [stores, setStores] = useState<Store[] | null>(null);
   const [storesLoading, setStoresLoading] = useState(true);
-  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
   const scannerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Zustand store integration
+  const { 
+    items: cartItems, 
+    store: selectedStore,
+    addItem, 
+    updateItemQuantity,
+    setStore,
+    totalItems
+  } = useCartStore();
+
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -119,8 +114,8 @@ export default function ShoppingPage() {
       
       setStores(storesData);
       
-      if (storesData.length > 0 && !selectedStoreId) {
-        setSelectedStoreId(storesData[0].id);
+      if (storesData.length > 0 && !selectedStore) {
+        setStore(storesData[0]);
       }
       setStoresLoading(false);
     }, (error) => {
@@ -135,7 +130,7 @@ export default function ShoppingPage() {
     });
 
     return () => unsubscribe();
-  }, [firestore, toast]);
+  }, [firestore, toast, setStore, selectedStore]);
 
 
   useEffect(() => {
@@ -165,12 +160,12 @@ export default function ShoppingPage() {
   const handleScanSuccess = async (decodedText: string) => {
     setIsScanning(false);
     
-    if (!selectedStoreId) {
+    if (!selectedStore) {
         toast({ variant: "destructive", title: "No Store Selected", description: "Please select a store first." });
         return;
     }
 
-    const productsCollection = collection(firestore, `stores/${selectedStoreId}/products`);
+    const productsCollection = collection(firestore, `stores/${selectedStore.id}/products`);
     const q = query(productsCollection, where("barcode", "==", decodedText), limit(1));
     
     try {
@@ -197,17 +192,7 @@ export default function ShoppingPage() {
             description: `Price: ${formatCurrency(product.price)}`,
         });
 
-        setCartItems((prevItems) => {
-            const existingItem = prevItems.find((item) => item.id === product.id);
-            if (existingItem) {
-            return prevItems.map((item) =>
-                item.id === product.id
-                ? { ...item, quantity: item.quantity + 1 }
-                : item
-            );
-            }
-            return [{ ...product, quantity: 1 }, ...prevItems];
-        });
+        addItem(product);
 
     } catch (error) {
         console.error("Error fetching product:", error);
@@ -218,80 +203,16 @@ export default function ShoppingPage() {
         });
     }
   };
-
-  const handleCheckout = async () => {
-    if (!user || cartItems.length === 0 || !selectedStoreId) {
-      if (!selectedStoreId) {
-        toast({ variant: "destructive", title: "Store not found" });
-      }
-      return;
-    };
-
-    setIsCheckingOut(true);
-    
-    // Simulate payment processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const order = {
-      customerId: user.uid,
-      customerName: user.displayName || user.email,
-      customerEmail: user.email,
-      customerPhotoURL: user.photoURL,
-      storeId: selectedStoreId,
-      items: cartItems,
-      totalAmount: total,
-      totalItems: totalItems,
-      createdAt: serverTimestamp(),
-      status: "completed",
-    };
-
-    try {
-      const ordersCollection = collection(firestore, "stores", selectedStoreId, "orders");
-      await addDoc(ordersCollection, order);
-      setAppState("completed");
-    } catch (error: any) {
-      console.error("Error creating order: ", error);
-      toast({
-        variant: "destructive",
-        title: "Checkout Error",
-        description: error.message || "Could not process your order.",
-      });
-    } finally {
-      setIsCheckingOut(false);
-      setIsPaymentSheetOpen(false);
-    }
-  };
-
-
-  const handleQuantityChange = (productId: string, newQuantity: number) => {
-    setCartItems((prevItems) => {
-        if (newQuantity <= 0) {
-            return prevItems.filter(item => item.id !== productId);
-        }
-        return prevItems.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item);
-    });
-  };
-
-  const handleNewSession = () => {
-    setCartItems([]);
-    setAppState("shopping");
-  };
+  
+  const handleStoreChange = (storeId: string) => {
+      const newStore = stores?.find(s => s.id === storeId) || null;
+      setStore(newStore);
+  }
 
   const handleLogout = async () => {
     await signOut(auth);
     router.push("/");
   };
-
-  const total = useMemo(() => {
-    return cartItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-  }, [cartItems]);
-
-  const totalItems = useMemo(() => {
-     return cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  }, [cartItems]);
 
   if (userLoading) {
     return (
@@ -305,244 +226,195 @@ export default function ShoppingPage() {
     return null; // The useEffect hook will redirect.
   }
 
-  const renderContent = () => {
-    switch (appState) {
-      case "shopping":
-        return (
-          <ShoppingScreen
-            user={user}
-            cartItems={cartItems}
-            total={total}
-            totalItems={totalItems}
-            stores={stores}
-            storesLoading={storesLoading}
-            selectedStoreId={selectedStoreId}
-            isScanning={isScanning}
-            onSetIsScanning={setIsScanning}
-            onStoreChange={setSelectedStoreId}
-            onScanSuccess={handleScanSuccess}
-            onCheckout={handleCheckout}
-            onLogout={handleLogout}
-            onQuantityChange={handleQuantityChange}
-            isCheckingOut={isCheckingOut}
-            isPaymentSheetOpen={isPaymentSheetOpen}
-            onPaymentSheetOpenChange={setIsPaymentSheetOpen}
-          />
-        );
-      case "completed":
-        return <CompletionScreen onNewSession={handleNewSession} />;
-      default:
-        return (
-           <ShoppingScreen
-            user={user}
-            cartItems={cartItems}
-            total={total}
-            totalItems={totalItems}
-            stores={stores}
-            storesLoading={storesLoading}
-            selectedStoreId={selectedStoreId}
-            isScanning={isScanning}
-            onSetIsScanning={setIsScanning}
-            onStoreChange={setSelectedStoreId}
-            onScanSuccess={handleScanSuccess}
-            onCheckout={handleCheckout}
-            onLogout={handleLogout}
-            onQuantityChange={handleQuantityChange}
-            isCheckingOut={isCheckingOut}
-            isPaymentSheetOpen={isPaymentSheetOpen}
-            onPaymentSheetOpenChange={setIsPaymentSheetOpen}
-          />
-        );
-    }
-  };
-
-  return <div className="min-h-screen bg-gradient-background flex items-center justify-center p-4">{renderContent()}</div>;
+  return (
+    <div className="min-h-screen bg-gradient-background flex items-center justify-center p-4">
+      <ShoppingScreen
+        user={user}
+        stores={stores}
+        storesLoading={storesLoading}
+        selectedStore={selectedStore}
+        isScanning={isScanning}
+        onSetIsScanning={setIsScanning}
+        onStoreChange={handleStoreChange}
+        onScanSuccess={handleScanSuccess}
+        onLogout={handleLogout}
+      />
+    </div>
+  );
 }
 
 const ShoppingScreen = ({
   user,
-  cartItems,
-  total,
-  totalItems,
   stores,
   storesLoading,
-  selectedStoreId,
+  selectedStore,
   isScanning,
   onSetIsScanning,
   onStoreChange,
   onScanSuccess,
-  onCheckout,
   onLogout,
-  onQuantityChange,
-  isCheckingOut,
-  isPaymentSheetOpen,
-  onPaymentSheetOpenChange,
 }: {
   user: any;
-  cartItems: CartItem[];
-  total: number;
-  totalItems: number;
   stores: Store[] | null;
   storesLoading: boolean;
-  selectedStoreId: string | null;
+  selectedStore: Store | null;
   isScanning: boolean;
   onSetIsScanning: (isScanning: boolean) => void;
   onStoreChange: (storeId: string) => void;
   onScanSuccess: (decodedText: string) => void;
-  onCheckout: () => void;
   onLogout: () => void;
-  onQuantityChange: (productId: string, newQuantity: number) => void;
-  isCheckingOut: boolean;
-  isPaymentSheetOpen: boolean;
-  onPaymentSheetOpenChange: (isOpen: boolean) => void;
-}) => (
-  <div className="w-full h-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:h-[90vh]">
-    
-    {/* Left Side: Scanner and User Info */}
-    <Card className="flex flex-col h-full overflow-hidden shadow-xl rounded-2xl">
-      <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
-        <div className="flex items-center gap-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Avatar className="h-10 w-10 border-2 border-primary/50 cursor-pointer">
-                <AvatarImage src={user.photoURL || ""} alt={user.displayName || "User"} />
-                <AvatarFallback className="bg-secondary text-secondary-foreground">
-                  {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuLabel>
-                <div className="font-bold">{user.displayName || "User"}</div>
-                <div className="text-xs text-muted-foreground font-normal">{user.email}</div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="ghost" size="icon">
-            <Trophy className="h-6 w-6 text-yellow-500" />
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-            <Select value={selectedStoreId ?? ""} onValueChange={onStoreChange} disabled={storesLoading}>
-              <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
-                <MapPin className="h-4 w-4 mr-2 text-primary" />
-                <SelectValue placeholder="Select a store" />
-              </SelectTrigger>
-              <SelectContent>
-                {storesLoading ? (
-                   <SelectItem value="loading" disabled>Loading stores...</SelectItem>
-                ) : stores && stores.length === 0 ? (
-                  <SelectItem value="no-stores" disabled>No stores available</SelectItem>
-                ) : (
-                  stores && stores.map((store) => (
-                    <SelectItem key={store.id} value={store.id}>
-                      <div className="flex flex-col">
-                        <span className="font-semibold">{store.name}</span>
-                        <span className="text-xs text-muted-foreground">{store.address}</span>
-                      </div>
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-        </div>
-      </CardHeader>
+}) => {
+  const { items: cartItems, updateItemQuantity, totalItems, totalPrice } = useCartStore();
 
-      <CardContent className="flex-grow flex flex-col items-center justify-center p-4 text-center">
-        <div className="relative w-full max-w-[300px] sm:max-w-[400px] aspect-square rounded-3xl bg-background shadow-lg p-2 overflow-hidden">
-            <div className="w-full h-full rounded-2xl overflow-hidden relative flex items-center justify-center">
-                {isScanning ? (
-                    <>
-                        <Scanner onScanSuccess={onScanSuccess} />
-                        <div className="absolute inset-0 pointer-events-none">
-                            <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-xl animate-pulse"></div>
-                            <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-xl animate-pulse"></div>
-                            <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-xl animate-pulse"></div>
-                            <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-xl animate-pulse"></div>
-                        </div>
-                    </>
-                ) : (
-                    <div className="flex flex-col items-center justify-center gap-4">
-                        <Button
-                            variant="ghost"
-                            className="h-48 w-48 rounded-full border-4 border-dashed border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all animate-pulse"
-                            onClick={() => onSetIsScanning(true)}
-                            disabled={!selectedStoreId}
-                        >
-                            <Camera className="h-20 w-20 text-primary/50" />
-                        </Button>
-                         <h2 className="text-xl font-semibold">Tap to Scan</h2>
-                         {selectedStoreId ? (
-                            <p className="text-foreground/80 mt-1 max-w-xs">Click the button to add items to your cart.</p>
-                         ) : (
-                            <p className="text-destructive/80 mt-1 max-w-xs">Please select a store to begin scanning.</p>
-                         )}
-                    </div>
-                )}
-            </div>
-        </div>
-      </CardContent>
-
-      <CardFooter className="p-4 border-t lg:hidden">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button size="lg" className="w-full h-14 text-lg rounded-2xl shadow-lg" disabled={cartItems.length === 0}>
-              <ShoppingCart className="mr-3 h-6 w-6" />
-              View Cart ({totalItems} items)
+  return (
+    <div className="w-full h-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:h-[90vh]">
+      
+      {/* Left Side: Scanner and User Info */}
+      <Card className="flex flex-col h-full overflow-hidden shadow-xl rounded-2xl">
+        <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
+          <div className="flex items-center gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar className="h-10 w-10 border-2 border-primary/50 cursor-pointer">
+                  <AvatarImage src={user.photoURL || ""} alt={user.displayName || "User"} />
+                  <AvatarFallback className="bg-secondary text-secondary-foreground">
+                    {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuLabel>
+                  <div className="font-bold">{user.displayName || "User"}</div>
+                  <div className="text-xs text-muted-foreground font-normal">{user.email}</div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button variant="ghost" size="icon">
+              <Trophy className="h-6 w-6 text-yellow-500" />
             </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="h-[90vh] flex flex-col bg-card rounded-t-3xl p-0">
-            <SheetHeader className="text-left p-4 pb-0">
-              <SheetTitle className="text-2xl">Your Cart</SheetTitle>
-            </SheetHeader>
-            <div className="flex-grow overflow-hidden">
-              <ScrollArea className="h-full px-4">
-                <CartContent
-                  cartItems={cartItems}
-                  onQuantityChange={onQuantityChange}
-                />
-              </ScrollArea>
-            </div>
-            <SheetFooter className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t">
-              <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} isCheckingOut={isCheckingOut} isPaymentSheetOpen={isPaymentSheetOpen} onPaymentSheetOpenChange={onPaymentSheetOpenChange} />
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
-      </CardFooter>
-    </Card>
+          </div>
+          <div className="flex items-center gap-2">
+              <Select value={selectedStore?.id ?? ""} onValueChange={onStoreChange} disabled={storesLoading}>
+                <SelectTrigger className="w-auto sm:w-[220px] bg-background border-2 rounded-full shadow-inner">
+                  <MapPin className="h-4 w-4 mr-2 text-primary" />
+                  <SelectValue placeholder="Select a store" />
+                </SelectTrigger>
+                <SelectContent>
+                  {storesLoading ? (
+                     <SelectItem value="loading" disabled>Loading stores...</SelectItem>
+                  ) : stores && stores.length === 0 ? (
+                    <SelectItem value="no-stores" disabled>No stores available</SelectItem>
+                  ) : (
+                    stores && stores.map((store) => (
+                      <SelectItem key={store.id} value={store.id}>
+                        <div className="flex flex-col">
+                          <span className="font-semibold">{store.name}</span>
+                          <span className="text-xs text-muted-foreground">{store.address}</span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+          </div>
+        </CardHeader>
 
-    {/* Right Side: Cart - Hidden on mobile, visible on desktop */}
-    <Card className="hidden lg:flex flex-col h-full overflow-hidden shadow-xl rounded-2xl">
-      <CardHeader>
-        <CardTitle className="text-2xl font-semibold text-card-foreground">Your Cart</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-grow overflow-hidden p-0">
-        <ScrollArea className="h-full px-6">
-          <CartContent
-            cartItems={cartItems}
-            onQuantityChange={onQuantityChange}
-          />
-        </ScrollArea>
-      </CardContent>
-      <CardFooter className="p-4 !flex-col gap-4 border-t">
-        <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} isCheckingOut={isCheckingOut} isPaymentSheetOpen={isPaymentSheetOpen} onPaymentSheetOpenChange={onPaymentSheetOpenChange} />
-      </CardFooter>
-    </Card>
+        <CardContent className="flex-grow flex flex-col items-center justify-center p-4 text-center">
+          <div className="relative w-full max-w-[300px] sm:max-w-[400px] aspect-square rounded-3xl bg-background shadow-lg p-2 overflow-hidden">
+              <div className="w-full h-full rounded-2xl overflow-hidden relative flex items-center justify-center">
+                  {isScanning ? (
+                      <>
+                          <Scanner onScanSuccess={onScanSuccess} />
+                          <div className="absolute inset-0 pointer-events-none">
+                              <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-xl animate-pulse"></div>
+                              <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-xl animate-pulse"></div>
+                              <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-xl animate-pulse"></div>
+                              <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-xl animate-pulse"></div>
+                          </div>
+                      </>
+                  ) : (
+                      <div className="flex flex-col items-center justify-center gap-4">
+                          <Button
+                              variant="ghost"
+                              className="h-48 w-48 rounded-full border-4 border-dashed border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all animate-pulse"
+                              onClick={() => onSetIsScanning(true)}
+                              disabled={!selectedStore}
+                          >
+                              <Camera className="h-20 w-20 text-primary/50" />
+                          </Button>
+                           <h2 className="text-xl font-semibold">Tap to Scan</h2>
+                           {selectedStore ? (
+                              <p className="text-foreground/80 mt-1 max-w-xs">Click the button to add items to your cart.</p>
+                           ) : (
+                              <p className="text-destructive/80 mt-1 max-w-xs">Please select a store to begin scanning.</p>
+                           )}
+                      </div>
+                  )}
+              </div>
+          </div>
+        </CardContent>
 
-  </div>
-);
+        <CardFooter className="p-4 border-t lg:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button size="lg" className="w-full h-14 text-lg rounded-2xl shadow-lg" disabled={cartItems.length === 0}>
+                <ShoppingCart className="mr-3 h-6 w-6" />
+                View Cart ({totalItems()} items)
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[90vh] flex flex-col bg-card rounded-t-3xl p-0">
+              <SheetHeader className="text-left p-4 pb-0">
+                <SheetTitle className="text-2xl">Your Cart</SheetTitle>
+              </SheetHeader>
+              <div className="flex-grow overflow-hidden">
+                <ScrollArea className="h-full px-4">
+                  <CartContent
+                    cartItems={cartItems}
+                    onQuantityChange={updateItemQuantity}
+                  />
+                </ScrollArea>
+              </div>
+              <SheetFooter className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t">
+                <CartFooterActions total={totalPrice()} cartItems={cartItems} />
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+        </CardFooter>
+      </Card>
+
+      {/* Right Side: Cart - Hidden on mobile, visible on desktop */}
+      <Card className="hidden lg:flex flex-col h-full overflow-hidden shadow-xl rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold text-card-foreground">Your Cart</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-grow overflow-hidden p-0">
+          <ScrollArea className="h-full px-6">
+            <CartContent
+              cartItems={cartItems}
+              onQuantityChange={updateItemQuantity}
+            />
+          </ScrollArea>
+        </CardContent>
+        <CardFooter className="p-4 !flex-col gap-4 border-t">
+          <CartFooterActions total={totalPrice()} cartItems={cartItems} />
+        </CardFooter>
+      </Card>
+
+    </div>
+  );
+};
 
 
 const CartContent = ({
   cartItems,
   onQuantityChange,
 }: {
-  cartItems: CartItem[];
+  cartItems: any[];
   onQuantityChange: (productId: string, newQuantity: number) => void;
 }) => (
   <>
@@ -590,20 +462,11 @@ const CartContent = ({
 
 const CartFooterActions = ({
   total,
-  onCheckout,
   cartItems,
-  isCheckingOut,
-  isPaymentSheetOpen,
-  onPaymentSheetOpenChange,
 }: {
   total: number;
-  onCheckout: () => void;
-  cartItems: CartItem[];
-  isCheckingOut: boolean;
-  isPaymentSheetOpen: boolean;
-  onPaymentSheetOpenChange: (isOpen: boolean) => void;
+  cartItems: any[];
 }) => {
-  const [paymentMethod, setPaymentMethod] = useState("card");
 
   return (
     <>
@@ -611,104 +474,17 @@ const CartFooterActions = ({
         <span>Total</span>
         <span>{formatCurrency(total)}</span>
       </div>
-      <Dialog open={isPaymentSheetOpen} onOpenChange={onPaymentSheetOpenChange}>
-        <DialogTrigger asChild>
-          <Button
-            size="lg"
-            className="w-full text-lg h-14 rounded-2xl shadow-lg"
-            disabled={cartItems.length === 0 || isCheckingOut}
-          >
-            <CreditCard className="mr-3 h-6 w-6" />
-            Proceed to Payment
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Confirm Payment</DialogTitle>
-            <DialogDescription>
-              Select a payment method to complete your purchase. This is a simulated payment.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-3 gap-3">
-               <PaymentMethodButton 
-                label="Card" 
-                icon={CreditCard} 
-                isSelected={paymentMethod === 'card'} 
-                onClick={() => setPaymentMethod('card')} 
-              />
-              <PaymentMethodButton 
-                label="Wallet" 
-                icon={Wallet} 
-                isSelected={paymentMethod === 'wallet'} 
-                onClick={() => setPaymentMethod('wallet')} 
-              />
-              <PaymentMethodButton 
-                label="Net Banking" 
-                icon={Landmark} 
-                isSelected={paymentMethod === 'banking'} 
-                onClick={() => setPaymentMethod('banking')} 
-              />
-            </div>
-
-            <Card className="bg-muted/50">
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center text-lg font-bold">
-                  <span>Total Amount</span>
-                  <span>{formatCurrency(total)}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Button
-              onClick={onCheckout}
-              size="lg"
-              className="w-full text-lg h-14 rounded-2xl shadow-lg"
-              disabled={isCheckingOut}
-            >
-              {isCheckingOut ? (
-                <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-              ) : (
-                <ShieldCheck className="mr-3 h-6 w-6" />
-              )}
-              {isCheckingOut ? 'Processing...' : `Pay ${formatCurrency(total)}`}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <Button
+        asChild
+        size="lg"
+        className="w-full text-lg h-14 rounded-2xl shadow-lg"
+        disabled={cartItems.length === 0}
+      >
+        <Link href="/checkout">
+          <CreditCard className="mr-3 h-6 w-6" />
+          Proceed to Checkout
+        </Link>
+      </Button>
     </>
   );
 };
-
-const PaymentMethodButton = ({ label, icon: Icon, isSelected, onClick }: { label: string, icon: React.ElementType, isSelected: boolean, onClick: () => void }) => (
-  <button
-    onClick={onClick}
-    className={cn(
-      "flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all",
-      isSelected ? "border-primary bg-primary/10" : "border-border hover:bg-muted"
-    )}
-  >
-    <Icon className={cn("h-8 w-8", isSelected ? "text-primary" : "text-muted-foreground")} />
-    <span className={cn("text-sm font-semibold", isSelected ? "text-primary" : "text-muted-foreground")}>{label}</span>
-  </button>
-)
-
-const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
-  <div className="w-full h-screen flex flex-col items-center justify-center text-center p-4">
-    <Card className="max-w-md w-full shadow-xl rounded-2xl">
-      <CardContent className="p-10">
-        <CheckCircle2 className="h-20 w-20 text-green-500 mb-6 mx-auto" />
-        <h1 className="text-3xl font-bold text-primary">
-          Payment Complete!
-        </h1>
-        <p className="text-foreground/80 mt-2 mb-8">
-          Thank you for shopping with Linea. Your receipt has been sent to
-          your email.
-        </p>
-        <Button onClick={onNewSession} size="lg" className="w-full h-14 rounded-2xl shadow-lg">
-          Start a New Session
-        </Button>
-      </CardContent>
-    </Card>
-  </div>
-);
