@@ -299,7 +299,7 @@ const ShoppingScreen = ({
           </div>
           <div className="flex items-center gap-2">
               <Select value={selectedStore?.id ?? ""} onValueChange={onStoreChange} disabled={storesLoading}>
-                <SelectTrigger className="w-auto sm:w-[220px] input-paper">
+                <SelectTrigger className="w-auto sm:max-w-xs input-paper">
                   <MapPin className="h-4 w-4 mr-2 text-primary" />
                   <SelectValue placeholder="Select a store" />
                 </SelectTrigger>
