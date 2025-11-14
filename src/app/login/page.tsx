@@ -84,11 +84,11 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-emerald-100 p-4">
-      <div className="absolute top-8">
-          <LineaLogo className="h-20 w-20" />
-      </div>
-      <Card className="w-full max-w-sm shadow-xl rounded-2xl">
+    <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+      <Link href="/" className="absolute top-8">
+          <LineaLogo className="h-16 w-16" />
+      </Link>
+      <Card className="w-full max-w-sm border-2 border-foreground shadow-none">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Customer Login</CardTitle>
           <CardDescription>
@@ -107,6 +107,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
+                className="border-2"
               />
             </div>
             <div className="space-y-2">
@@ -118,6 +119,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
+                className="border-2"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -125,21 +127,18 @@ export default function LoginPage() {
               Sign In
             </Button>
           </form>
-           <Button variant="outline" className="w-full mt-4" onClick={handleGoogleSignIn} disabled={isLoading}>
+           <Button variant="outline" className="w-full mt-4 border-2" onClick={handleGoogleSignIn} disabled={isLoading}>
             <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.1 512 0 401.9 0 265.8 0 129.7 110.1 20 244 20c66.5 0 125.1 24.4 169.6 63.7L373.1 120.1C338.3 89.2 295.6 70 244 70c-78.6 0-142.9 64.3-142.9 142.9s64.3 142.9 142.9 142.9c85.3 0 131.9-58.4 136.8-98.2H244v-73.8h236.1c2.3 12.7 3.9 26.1 3.9 40.8z"></path></svg>
             Sign in with Google
           </Button>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4 justify-center text-center text-sm text-muted-foreground">
+        <CardFooter className="flex flex-col gap-2 justify-center text-center text-sm text-muted-foreground">
           <p>
             Don't have an account?{" "}
-            <Link href="/signup" className="text-primary hover:underline">
+            <Link href="/signup" className="text-accent underline">
               Sign up
             </Link>
           </p>
-          <Link href="/" className="text-primary hover:underline">
-            Back to role selection
-          </Link>
         </CardFooter>
       </Card>
     </main>
