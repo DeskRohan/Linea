@@ -197,7 +197,7 @@ export default function ShoppingPage() {
     } catch (error) {
         console.error("Error fetching product:", error);
         toast({
-            variant: "destructive,
+            variant: "destructive",
             title: "Database Error",
             description: "Could not fetch product from the inventory.",
         });
