@@ -16,7 +16,7 @@ import {
   Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
@@ -281,5 +281,4 @@ const PaymentMethodButton = ({ label, icon: Icon, isSelected, onClick }: { label
     <span className={cn("text-xs font-semibold", isSelected ? "text-primary" : "text-muted-foreground")}>{label}</span>
   </button>
 )
-
     
