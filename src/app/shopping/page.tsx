@@ -228,7 +228,7 @@ export default function ShoppingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background p-4 flex justify-center">
       <ShoppingScreen
         user={user}
         stores={stores}
@@ -268,12 +268,12 @@ const ShoppingScreen = ({
   const { items: cartItems, updateItemQuantity, totalItems, totalPrice } = useCartStore();
 
   return (
-    <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+    <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
       
       {/* Left Side: Scanner and User Info */}
-      <Card className="card-paper flex flex-col h-full overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between p-4 border-b-2">
-          <div className="flex items-center gap-3">
+      <Card className="card-paper flex flex-col h-full overflow-hidden lg:col-span-3">
+        <CardHeader className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b-2">
+          <div className="flex items-center gap-3 self-start">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-10 w-10 border-2 border-border cursor-pointer">
@@ -289,6 +289,10 @@ const ShoppingScreen = ({
                   <div className="text-xs text-muted-foreground font-normal">{user.email}</div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                    <Link href="/customer/orders">My Orders</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>
@@ -297,9 +301,9 @@ const ShoppingScreen = ({
             </DropdownMenu>
             <h1 className="font-headline text-xl">Scan & Go</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="w-full sm:w-auto">
               <Select value={selectedStore?.id ?? ""} onValueChange={onStoreChange} disabled={storesLoading}>
-                <SelectTrigger className="w-auto sm:max-w-xs input-paper">
+                <SelectTrigger className="w-full sm:w-auto min-w-[200px] max-w-full input-paper">
                   <MapPin className="h-4 w-4 mr-2 text-primary" />
                   <SelectValue placeholder="Select a store" />
                 </SelectTrigger>
@@ -382,7 +386,7 @@ const ShoppingScreen = ({
       </Card>
 
       {/* Right Side: Cart - Hidden on mobile, visible on desktop */}
-      <Card className="hidden lg:flex flex-col h-full overflow-hidden card-paper">
+      <Card className="hidden lg:flex flex-col h-full overflow-hidden card-paper lg:col-span-2">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Your Cart</CardTitle>
         </CardHeader>
@@ -482,3 +486,5 @@ const CartFooterActions = ({
     </>
   );
 };
+
+    
