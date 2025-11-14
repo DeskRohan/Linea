@@ -19,6 +19,7 @@ import {
   Instagram,
   MessageSquare,
   Loader2,
+  Building,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -145,29 +146,25 @@ export default function StoreLayout({
 
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Contact Support</DialogTitle>
+                <DialogTitle>About This Platform</DialogTitle>
                 <DialogDescription>
-                  Contact the application architect for support.
+                  Information about the creators of this application.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                  <div className="font-semibold">
-                    <p className="text-lg">Rohan Godakhindi</p>
-                    <p className="text-sm text-muted-foreground">Application Architect</p>
+                  <div className="font-semibold flex items-center gap-3">
+                    <Building className="h-8 w-8 text-primary" />
+                    <div>
+                        <p className="text-lg">Built by Simplinovus</p>
+                        <p className="text-sm text-muted-foreground">Innovators & Creators</p>
+                    </div>
                   </div>
 
-                  <div className="space-y-3">
-                     <a href="https://wa.me/9110218701" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
-                      <MessageSquare className="h-5 w-5 text-green-500" />
-                      <span className="text-sm font-medium">9110218701</span>
-                    </a>
-                    <a href="mailto:rohangodakhindi@gmail.com" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
+                  <div className="space-y-3 pt-4 border-t">
+                     <p className="text-sm font-semibold text-muted-foreground">Contact the development team:</p>
+                    <a href="mailto:simplinovus@gmail.com" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
                       <Mail className="h-5 w-5 text-gray-500" />
-                      <span className="text-sm font-medium">rohangodakhindi@gmail.com</span>
-                    </a>
-                    <a href="https://www.instagram.com/_irohang" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
-                      <Instagram className="h-5 w-5 text-pink-500" />
-                      <span className="text-sm font-medium">_irohang</span>
+                      <span className="text-sm font-medium">simplinovus@gmail.com</span>
                     </a>
                   </div>
 
