@@ -58,8 +58,9 @@ export default function CheckoutPage() {
   }, [isClient, items, user, userLoading, router]);
 
   const subtotal = totalPrice();
-  const gst = subtotal * 0.05; // Simulate 5% GST
-  const total = subtotal + gst;
+  const cgst = subtotal * 0.09; // 9% CGST
+  const sgst = subtotal * 0.09; // 9% SGST
+  const total = subtotal + cgst + sgst;
 
   const handlePayment = async () => {
     if (!user || !store || !firestore) {
@@ -78,9 +79,10 @@ export default function CheckoutPage() {
       customerPhotoURL: user.photoURL,
       storeId: store.id,
       storeName: store.name,
-      items: items,
+      items: items.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
       subtotal: subtotal,
-      gst: gst,
+      cgst: cgst,
+      sgst: sgst,
       totalAmount: total,
       totalItems: totalItems(),
       createdAt: serverTimestamp(),
@@ -221,8 +223,12 @@ export default function CheckoutPage() {
                     <span>{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">GST (5%)</span>
-                    <span>{formatCurrency(gst)}</span>
+                    <span className="text-muted-foreground">CGST (9%)</span>
+                    <span>{formatCurrency(cgst)}</span>
+                  </div>
+                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">SGST (9%)</span>
+                    <span>{formatCurrency(sgst)}</span>
                   </div>
                    <div className="flex items-center justify-between text-muted-foreground">
                     <span>Delivery Fee</span>
@@ -298,3 +304,4 @@ const PaymentMethodButton = ({ label, icon: Icon, isSelected, onClick }: { label
     
 
     
+
