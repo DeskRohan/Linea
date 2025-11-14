@@ -15,6 +15,7 @@ import {
   Trophy,
   MapPin,
   Camera,
+  ScanLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -271,7 +272,7 @@ const ShoppingScreen = ({
       
       {/* Left Side: Scanner and User Info */}
       <Card className="card-paper flex flex-col h-full overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
+        <CardHeader className="flex flex-row items-center justify-between p-4 border-b-2">
           <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -323,33 +324,47 @@ const ShoppingScreen = ({
         </CardHeader>
 
         <CardContent className="flex-grow flex flex-col items-center justify-center p-4 text-center">
-          <div className="relative w-full max-w-[400px] aspect-square border-4 border-dashed border-border/30 p-2">
-              <div className="w-full h-full relative flex items-center justify-center bg-white/50">
-                  {isScanning ? (
-                      <>
-                          <Scanner onScanSuccess={onScanSuccess} />
-                      </>
-                  ) : (
-                      <div className="flex flex-col items-center justify-center gap-4">
-                          <Button
-                              variant="ghost"
-                              className="h-48 w-48"
-                              onClick={() => onSetIsScanning(true)}
-                              disabled={!selectedStore}
-                          >
-                              <Camera className="h-24 w-24 text-foreground/20" />
-                          </Button>
-                           <h2 className="text-xl font-headline">Tap to Scan Item</h2>
+            <div className="relative w-full max-w-sm aspect-square bg-background border-2 border-border shadow-inner p-2">
+                <div className="w-full h-full relative border-2 border-dashed border-border/30 flex items-center justify-center">
+                    {isScanning ? (
+                        <>
+                            <Scanner onScanSuccess={onScanSuccess} />
+                            <div className="absolute inset-0 pointer-events-none border-[1.5rem] border-background/80 shadow-inner" />
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-1 bg-destructive/50 animate-pulse" />
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center gap-4 p-4">
+                            <Button
+                                variant="ghost"
+                                className="h-full w-full flex flex-col gap-4"
+                                onClick={() => onSetIsScanning(true)}
+                                disabled={!selectedStore}
+                            >
+                                <div className="relative flex items-center justify-center w-32 h-32">
+                                    <div className="absolute w-full h-full text-foreground/20">
+                                        <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4"></div>
+                                        <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4"></div>
+                                        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4"></div>
+                                        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4"></div>
+                                        <div className="absolute top-1/2 left-0 w-4 border-t-2"></div>
+                                        <div className="absolute top-1/2 right-0 w-4 border-t-2"></div>
+                                        <div className="absolute left-1/2 top-0 h-4 border-l-2"></div>
+                                        <div className="absolute left-1/2 bottom-0 h-4 border-l-2"></div>
+                                    </div>
+                                    <ScanLine className="h-16 w-16 text-foreground/30" />
+                                </div>
+                                <h2 className="text-xl font-headline">Tap to Scan Item</h2>
+                            </Button>
                            {!selectedStore && (
-                              <p className="text-destructive mt-1 max-w-xs">Please select a store to begin scanning.</p>
+                              <p className="text-destructive mt-1 max-w-xs text-sm">Please select a store to begin scanning.</p>
                            )}
-                      </div>
-                  )}
-              </div>
-          </div>
+                        </div>
+                    )}
+                </div>
+            </div>
         </CardContent>
 
-        <CardFooter className="p-4 border-t lg:hidden">
+        <CardFooter className="p-4 border-t-2 border-border lg:hidden">
           <Sheet>
             <SheetTrigger asChild>
               <Button size="lg" className="btn-paper btn-primary w-full h-14 text-lg" disabled={cartItems.length === 0}>
@@ -478,3 +493,5 @@ const CartFooterActions = ({
     </>
   );
 };
+
+    
