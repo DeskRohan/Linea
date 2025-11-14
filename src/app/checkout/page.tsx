@@ -23,7 +23,7 @@ import { formatCurrency } from '@/lib/utils';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, writeBatch, serverTimestamp, increment } from 'firebase/firestore';
 import Link from 'next/link';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -98,6 +98,14 @@ export default function CheckoutPage() {
     // 2. Reference to the new order in the user's collection
     const userOrderRef = doc(collection(firestore, 'users', user.uid, 'orders'));
     batch.set(userOrderRef, orderData);
+
+    // 3. Decrement inventory for each item purchased
+    items.forEach(item => {
+        const productRef = doc(firestore, 'stores', store.id, 'products', item.id);
+        // Use the 'increment' utility to safely decrement the quantity
+        batch.update(productRef, { quantity: increment(-item.quantity) });
+    });
+
 
     batch.commit()
       .then(() => {
