@@ -299,7 +299,7 @@ const ShoppingScreen = ({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <h1 className="font-headline text-xl">Scan & Go</h1>
+            <h1 className="font-headline text-xl">Welcome, {user.displayName || user.email}!</h1>
           </div>
           <div className="w-full sm:w-auto">
               <Select value={selectedStore?.id ?? ""} onValueChange={onStoreChange} disabled={storesLoading}>
@@ -486,5 +486,7 @@ const CartFooterActions = ({
     </>
   );
 };
+
+    
 
     
