@@ -2,7 +2,7 @@
 // This file is used by Genkit when running in dev mode.
 // Import flows here so they register correctly.
 
-import "./flows/store-chat-flow";   // <-- REQUIRED
+import "./flows/store-chat-flow";
 
 // You can import more flows here if you add them later.
 // Example:
