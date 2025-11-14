@@ -4,13 +4,26 @@
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
-import { Silkscreen } from "next/font/google";
+import { Playfair_Display, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 
-const silkscreen = Silkscreen({
-  weight: ["400", "700"],
+const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
-  variable: "--font-silkscreen",
+  weight: ["400", "700"],
+  variable: "--font-playfair-display",
 });
+
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ibm-plex-sans",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+    subsets: ['latin'],
+    weight: ['400', '500', '600', '700'],
+    variable: '--font-ibm-plex-mono'
+})
+
 
 export default function RootLayout({
   children,
@@ -18,22 +31,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={silkscreen.variable}>
+    <html lang="en" suppressHydrationWarning className={`${playfairDisplay.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
       <head>
         <title>Linea Mobile</title>
         <meta name="description" content="A contactless scan-as-you-go shopping experience." />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Silkscreen:wght@400;700&display=swap"
-          rel="stylesheet"
-        />
       </head>
-      <body className="font-headline antialiased">
+      <body className="font-body antialiased">
         <FirebaseClientProvider>
           {children}
           <Toaster />

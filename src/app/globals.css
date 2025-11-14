@@ -4,58 +4,65 @@
 
 @layer base {
   :root {
-    --background: 210 20% 90%; /* Light grey-blue */
-    --foreground: 0 0% 0%; /* Black */
-    --card: 210 20% 90%;
-    --card-foreground: 0 0% 0%;
-    --popover: 210 20% 90%;
-    --popover-foreground: 0 0% 0%;
-    --primary: 210 100% 40%; /* System Blue */
-    --primary-foreground: 0 0% 100%; /* White */
-    --secondary: 210 15% 80%;
-    --secondary-foreground: 0 0% 0%;
-    --muted: 210 15% 85%;
-    --muted-foreground: 0 0% 30%;
-    --accent: 210 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 210 10% 40%;
-    --input: 210 10% 40%;
-    --ring: 210 100% 40%;
+    --background: 30 67% 91%; /* warm cream paper */
+    --foreground: 30 31% 17%; /* dark brown ink */
+
+    --card: 30 67% 91%;
+    --card-foreground: 30 31% 17%;
+
+    --popover: 30 67% 91%;
+    --popover-foreground: 30 31% 17%;
+
+    --primary: 213 62% 40%; /* old stamp blue */
+    --primary-foreground: 30 67% 95%; /* lighter cream */
+
+    --secondary: 30 20% 85%;
+    --secondary-foreground: 30 31% 17%;
+
+    --muted: 30 20% 88%;
+    --muted-foreground: 30 20% 35%;
+
+    --accent: 213 62% 45%;
+    --accent-foreground: 30 67% 95%;
+    
+    --destructive: 7 45% 44%; /* vintage brick red */
+    --destructive-foreground: 30 67% 95%;
+
+    --border: 30 29% 23%; /* brown/ink lines */
+    --input: 30 29% 23%;
+    --ring: 213 62% 40%;
+
     --radius: 0rem;
-    --sidebar-background: 210 20% 85%;
-    --sidebar-foreground: 0 0% 0%;
-    --sidebar-primary: 210 100% 40%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 75%;
-    --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 210 10% 60%;
-    --sidebar-ring: 210 100% 40%;
-    --gradient-from: 210 20% 90%;
-    --gradient-to: 210 20% 90%;
   }
 
   .dark {
-    --background: 210 10% 15%;
-    --foreground: 210 20% 90%;
-    --card: 210 10% 15%;
-    --card-foreground: 210 20% 90%;
-    --popover: 210 10% 15%;
-    --popover-foreground: 210 20% 90%;
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 210 10% 25%;
-    --secondary-foreground: 210 20% 90%;
-    --muted: 210 10% 25%;
-    --muted-foreground: 210 10% 60%;
-    --accent: 210 100% 60%;
-    --accent-foreground: 0 0% 0%;
-    --destructive: 0 80% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 210 10% 50%;
-    --input: 210 10% 50%;
-    --ring: 210 100% 50%;
+    --background: 30 10% 10%;
+    --foreground: 30 20% 88%;
+
+    --card: 30 10% 10%;
+    --card-foreground: 30 20% 88%;
+
+    --popover: 30 10% 10%;
+    --popover-foreground: 30 20% 88%;
+
+    --primary: 213 70% 55%;
+    --primary-foreground: 30 10% 10%;
+    
+    --secondary: 30 10% 20%;
+    --secondary-foreground: 30 20% 88%;
+
+    --muted: 30 10% 20%;
+    --muted-foreground: 30 20% 60%;
+
+    --accent: 213 70% 60%;
+    --accent-foreground: 30 10% 10%;
+
+    --destructive: 7 50% 50%;
+    --destructive-foreground: 30 10% 10%;
+
+    --border: 30 20% 40%;
+    --input: 30 20% 40%;
+    --ring: 213 70% 55%;
   }
 }
 
@@ -65,48 +72,37 @@
   }
   body {
     @apply bg-background text-foreground font-body;
-    background-color: hsl(210 20% 90%); /* PaperDesk background color */
   }
    h1, h2, h3, h4, h5, h6 {
     @apply font-headline;
   }
 }
 
+/* Custom Component Styles for Old-Shop Theme */
 @layer components {
-  /* Custom PaperDesk UI styles */
   .card-paper {
-    @apply border-t-white border-l-white border-r-gray-500 border-b-gray-500 bg-gray-300;
-    border-top: 2px solid #ffffff;
-    border-left: 2px solid #ffffff;
-    border-right: 2px solid #808080;
-    border-bottom: 2px solid #808080;
-    background-color: hsl(var(--background));
-    box-shadow: none;
+    @apply border-2 bg-card shadow-[4px_4px_0px_hsl(var(--foreground))];
   }
 
   .btn-paper {
-    @apply border-t-white border-l-white border-r-gray-500 border-b-gray-500 active:border-t-gray-500 active:border-l-gray-500 active:border-r-white active:border-b-white;
-    border-top: 2px solid #ffffff;
-    border-left: 2px solid #ffffff;
-    border-right: 2px solid #808080;
-    border-bottom: 2px solid #808080;
-    background-color: hsl(var(--muted));
+    @apply border-2 font-semibold text-foreground active:translate-x-[2px] active:translate-y-[2px] active:shadow-none;
+    box-shadow: 2px 2px 0px hsl(var(--foreground));
   }
   
-  .btn-paper.btn-primary {
-      @apply bg-primary text-primary-foreground;
+  .btn-paper:disabled {
+      @apply shadow-none translate-x-[2px] translate-y-[2px];
+  }
+
+  .btn-primary {
+      @apply bg-primary text-primary-foreground border-primary-foreground;
+      box-shadow: 2px 2px 0px hsl(var(--primary-foreground));
   }
 
   .input-paper {
-    @apply border-2 border-gray-500 bg-white;
-    border-top-color: #808080;
-    border-left-color: #808080;
-    border-right-color: #ffffff;
-    border-bottom-color: #ffffff;
-    box-shadow: inset 1px 1px 2px #c0c0c0;
+    @apply border-2 bg-background focus:bg-white;
   }
 
   .title-bar {
-      @apply bg-primary text-primary-foreground p-1 flex items-center justify-between font-headline;
+      @apply bg-foreground text-background p-1 flex items-center justify-between font-headline;
   }
 }

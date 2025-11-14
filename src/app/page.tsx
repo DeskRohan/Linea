@@ -16,14 +16,14 @@ export default function RoleSelectionPage() {
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-sm card-paper">
         <header className="title-bar">
-          <h1 className="text-lg">Welcome to Linea</h1>
+          <h1 className="text-lg font-headline">Welcome to Linea</h1>
         </header>
         <div className="p-6 text-center">
            <div className="flex justify-center mb-4">
             <LineaLogo className="h-16 w-16" />
           </div>
-          <p className="mb-6">How would you like to log in?</p>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 p-0">
+          <p className="mb-6 font-semibold">How would you like to log in?</p>
+          <CardContent className="grid grid-cols-2 gap-4 p-0">
             <Link href="/store/login" passHref>
               <Button
                 variant="outline"
