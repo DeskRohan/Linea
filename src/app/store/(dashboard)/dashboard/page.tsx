@@ -29,6 +29,8 @@ import { collection, onSnapshot, query, limit, orderBy, getCountFromServer } fro
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 
 export default function StoreDashboard() {
@@ -48,61 +50,60 @@ export default function StoreDashboard() {
     setLoading(true);
     const storeId = user.uid;
 
-    // Real-time listener for orders
-    const ordersQuery = query(
+    // Real-time listener for recent orders
+    const recentOrdersQuery = query(
       collection(firestore, "stores", storeId, "orders"),
       orderBy("createdAt", "desc"),
-      limit(5) // Get the 5 most recent sales
+      limit(5)
     );
 
-    const unsubscribeOrders = onSnapshot(ordersQuery, (snapshot) => {
-      let totalRevenue = 0;
-      let totalSales = 0;
+    const unsubscribeRecent = onSnapshot(recentOrdersQuery, (snapshot) => {
       const sales: any[] = [];
-
       snapshot.forEach((doc) => {
-        const order = doc.data();
-        totalRevenue += order.totalAmount;
-        totalSales++;
         sales.push({
-            id: doc.id,
-            customerName: order.customerName || 'Unknown',
-            totalAmount: order.totalAmount,
+          id: doc.id,
+          customerName: doc.data().customerName || 'Unknown',
+          totalAmount: doc.data().totalAmount,
         });
       });
-      
       setRecentSales(sales);
-
-      // For total stats, we listen to the whole collection
-      const allOrdersQuery = collection(firestore, "stores", storeId, "orders");
-      onSnapshot(allOrdersQuery, (allDocsSnapshot) => {
-          let revenue = 0;
-          allDocsSnapshot.forEach(doc => {
-              revenue += doc.data().totalAmount;
-          });
-          setStats(prev => ({ ...prev, totalRevenue: revenue, totalSales: allDocsSnapshot.size }));
-      });
-
-      setLoading(false);
-    });
-
-    // Real-time listener for new customers
-    // Note: This only counts users who have made a purchase if you only track them via orders.
-    // For a full customer list, you'd query the main 'users' collection if you had one.
-    // For this app, let's count unique customers from orders.
-    const allOrdersQuery = collection(firestore, "stores", storeId, "orders");
-    const unsubscribeCustomers = onSnapshot(allOrdersQuery, (snapshot) => {
-        const customerIds = new Set<string>();
-        snapshot.forEach(doc => {
-            customerIds.add(doc.data().customerId);
+      setLoading(false); // Stop loading after first data fetch
+    }, (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: recentOrdersQuery.path,
+          operation: 'list',
         });
-        setStats(prev => ({...prev, newCustomers: customerIds.size }));
+        errorEmitter.emit('permission-error', permissionError);
+        setLoading(false);
     });
 
+    // Real-time listener for all orders to calculate stats
+    const allOrdersQuery = collection(firestore, "stores", storeId, "orders");
+    const unsubscribeAll = onSnapshot(allOrdersQuery, (snapshot) => {
+      let revenue = 0;
+      const customerIds = new Set<string>();
+      snapshot.forEach(doc => {
+        const orderData = doc.data();
+        revenue += orderData.totalAmount;
+        customerIds.add(orderData.customerId);
+      });
+      setStats({
+        totalRevenue: revenue,
+        totalSales: snapshot.size,
+        newCustomers: customerIds.size,
+      });
+    }, (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: allOrdersQuery.path,
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        setLoading(false);
+    });
 
     return () => {
-      unsubscribeOrders();
-      unsubscribeCustomers();
+      unsubscribeRecent();
+      unsubscribeAll();
     };
   }, [user, firestore]);
 
@@ -127,7 +128,7 @@ export default function StoreDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>}
+            {loading && stats.totalSales === 0 ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>}
             <p className="text-xs text-muted-foreground">From {stats.totalSales} sales</p>
           </CardContent>
         </Card>
@@ -137,7 +138,7 @@ export default function StoreDashboard() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">+{stats.totalSales}</div>}
+            {loading && stats.totalSales === 0 ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">+{stats.totalSales}</div>}
              <p className="text-xs text-muted-foreground">Total completed orders</p>
           </CardContent>
         </Card>
@@ -147,7 +148,7 @@ export default function StoreDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">+{stats.newCustomers}</div>}
+            {loading && stats.newCustomers === 0 ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">+{stats.newCustomers}</div>}
             <p className="text-xs text-muted-foreground">Customers who made a purchase</p>
           </CardContent>
         </Card>
