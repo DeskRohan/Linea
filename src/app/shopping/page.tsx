@@ -323,38 +323,27 @@ const ShoppingScreen = ({
           </div>
         </CardHeader>
 
-        <CardContent className="flex-grow flex flex-col items-center justify-center p-4 text-center">
-            <div className="relative w-full max-w-sm aspect-square bg-background border-2 border-border shadow-inner p-2">
+         <CardContent className="flex-grow flex flex-col items-center justify-center p-4 text-center bg-foreground/5 font-mono">
+            <h2 className="text-sm text-foreground/60 tracking-widest mb-2">SCANNING WINDOW</h2>
+            <div className="relative w-full max-w-md aspect-video bg-background border-2 border-border shadow-inner p-4">
                 <div className="w-full h-full relative border-2 border-dashed border-border/30 flex items-center justify-center">
                     {isScanning ? (
                         <>
                             <Scanner onScanSuccess={onScanSuccess} />
-                            <div className="absolute inset-0 pointer-events-none border-[1.5rem] border-background/80 shadow-inner" />
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-1 bg-destructive/50 animate-pulse" />
+                            <div className="absolute inset-0 pointer-events-none border-[1rem] border-background/80 shadow-inner" />
+                            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-destructive/70 shadow-[0_0_10px_1px_theme(colors.destructive)] animate-pulse" />
                         </>
                     ) : (
-                        <div className="flex flex-col items-center justify-center gap-4 p-4">
-                            <Button
-                                variant="ghost"
-                                className="h-full w-full flex flex-col gap-4"
+                       <div className="flex flex-col items-center justify-center gap-4 p-4">
+                            <button
+                                className="h-full w-full flex flex-col items-center justify-center gap-2 text-foreground/40 hover:text-foreground transition-colors"
                                 onClick={() => onSetIsScanning(true)}
                                 disabled={!selectedStore}
                             >
-                                <div className="relative flex items-center justify-center w-32 h-32">
-                                    <div className="absolute w-full h-full text-foreground/20">
-                                        <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4"></div>
-                                        <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4"></div>
-                                        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4"></div>
-                                        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4"></div>
-                                        <div className="absolute top-1/2 left-0 w-4 border-t-2"></div>
-                                        <div className="absolute top-1/2 right-0 w-4 border-t-2"></div>
-                                        <div className="absolute left-1/2 top-0 h-4 border-l-2"></div>
-                                        <div className="absolute left-1/2 bottom-0 h-4 border-l-2"></div>
-                                    </div>
-                                    <ScanLine className="h-16 w-16 text-foreground/30" />
-                                </div>
-                                <h2 className="text-xl font-headline">Tap to Scan Item</h2>
-                            </Button>
+                                <ScanLine className="h-16 w-16" />
+                                <h3 className="font-semibold tracking-wider">SYSTEM STATUS:</h3>
+                                <p className="text-lg">AWAITING INPUT</p>
+                            </button>
                            {!selectedStore && (
                               <p className="text-destructive mt-1 max-w-xs text-sm">Please select a store to begin scanning.</p>
                            )}
@@ -493,5 +482,3 @@ const CartFooterActions = ({
     </>
   );
 };
-
-    
