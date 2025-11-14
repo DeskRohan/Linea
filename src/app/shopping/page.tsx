@@ -16,6 +16,9 @@ import {
   Trophy,
   MapPin,
   Camera,
+  Wallet,
+  Landmark,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +28,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +70,8 @@ import { useAuth, useUser, useFirestore } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { formatCurrency } from "@/lib/utils";
 import { collection, query, where, getDocs, limit, addDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
+import { cn } from "@/lib/utils";
+
 
 type AppState = "shopping" | "completed";
 
@@ -78,11 +91,12 @@ export default function ShoppingPage() {
 
   const [appState, setAppState] = useState<AppState>("shopping");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
+  const [stores, setStores] = useState<Store[] | null>(null);
   const [storesLoading, setStoresLoading] = useState(true);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
   const scannerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -105,7 +119,6 @@ export default function ShoppingPage() {
       
       setStores(storesData);
       
-      // Set a default store if none is selected and stores exist
       if (storesData.length > 0 && !selectedStoreId) {
         setSelectedStoreId(storesData[0].id);
       }
@@ -117,13 +130,12 @@ export default function ShoppingPage() {
         title: "Could not fetch stores",
         description: "Please check your connection or try again later.",
       });
-      setStores([]); // Set to empty array on error
+      setStores([]);
       setStoresLoading(false);
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [firestore, toast]); // Removed selectedStoreId from dependencies
+  }, [firestore, toast]);
 
 
   useEffect(() => {
@@ -151,7 +163,7 @@ export default function ShoppingPage() {
 
 
   const handleScanSuccess = async (decodedText: string) => {
-    setIsScanning(false); // Stop scanning immediately
+    setIsScanning(false);
     
     if (!selectedStoreId) {
         toast({ variant: "destructive", title: "No Store Selected", description: "Please select a store first." });
@@ -208,14 +220,17 @@ export default function ShoppingPage() {
   };
 
   const handleCheckout = async () => {
-    if (!user || cartItems.length === 0) return;
-    setIsCheckingOut(true);
-
-    if (!selectedStoreId) {
-      toast({ variant: "destructive", title: "Store not found" });
-      setIsCheckingOut(false);
+    if (!user || cartItems.length === 0 || !selectedStoreId) {
+      if (!selectedStoreId) {
+        toast({ variant: "destructive", title: "Store not found" });
+      }
       return;
-    }
+    };
+
+    setIsCheckingOut(true);
+    
+    // Simulate payment processing delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     const order = {
       customerId: user.uid,
@@ -243,6 +258,7 @@ export default function ShoppingPage() {
       });
     } finally {
       setIsCheckingOut(false);
+      setIsPaymentSheetOpen(false);
     }
   };
 
@@ -309,6 +325,8 @@ export default function ShoppingPage() {
             onLogout={handleLogout}
             onQuantityChange={handleQuantityChange}
             isCheckingOut={isCheckingOut}
+            isPaymentSheetOpen={isPaymentSheetOpen}
+            onPaymentSheetOpenChange={setIsPaymentSheetOpen}
           />
         );
       case "completed":
@@ -331,6 +349,8 @@ export default function ShoppingPage() {
             onLogout={handleLogout}
             onQuantityChange={handleQuantityChange}
             isCheckingOut={isCheckingOut}
+            isPaymentSheetOpen={isPaymentSheetOpen}
+            onPaymentSheetOpenChange={setIsPaymentSheetOpen}
           />
         );
     }
@@ -355,12 +375,14 @@ const ShoppingScreen = ({
   onLogout,
   onQuantityChange,
   isCheckingOut,
+  isPaymentSheetOpen,
+  onPaymentSheetOpenChange,
 }: {
   user: any;
   cartItems: CartItem[];
   total: number;
   totalItems: number;
-  stores: Store[];
+  stores: Store[] | null;
   storesLoading: boolean;
   selectedStoreId: string | null;
   isScanning: boolean;
@@ -371,6 +393,8 @@ const ShoppingScreen = ({
   onLogout: () => void;
   onQuantityChange: (productId: string, newQuantity: number) => void;
   isCheckingOut: boolean;
+  isPaymentSheetOpen: boolean;
+  onPaymentSheetOpenChange: (isOpen: boolean) => void;
 }) => (
   <div className="w-full h-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:h-[90vh]">
     
@@ -412,10 +436,10 @@ const ShoppingScreen = ({
               <SelectContent>
                 {storesLoading ? (
                    <SelectItem value="loading" disabled>Loading stores...</SelectItem>
-                ) : stores.length === 0 ? (
+                ) : stores && stores.length === 0 ? (
                   <SelectItem value="no-stores" disabled>No stores available</SelectItem>
                 ) : (
-                  stores.map((store) => (
+                  stores && stores.map((store) => (
                     <SelectItem key={store.id} value={store.id}>
                       <div className="flex flex-col">
                         <span className="font-semibold">{store.name}</span>
@@ -485,7 +509,7 @@ const ShoppingScreen = ({
               </ScrollArea>
             </div>
             <SheetFooter className="p-4 !flex-col gap-4 bg-background/95 sticky bottom-0 border-t">
-              <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} isCheckingOut={isCheckingOut} />
+              <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} isCheckingOut={isCheckingOut} isPaymentSheetOpen={isPaymentSheetOpen} onPaymentSheetOpenChange={onPaymentSheetOpenChange} />
             </SheetFooter>
           </SheetContent>
         </Sheet>
@@ -506,7 +530,7 @@ const ShoppingScreen = ({
         </ScrollArea>
       </CardContent>
       <CardFooter className="p-4 !flex-col gap-4 border-t">
-        <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} isCheckingOut={isCheckingOut} />
+        <CartFooterActions total={total} onCheckout={onCheckout} cartItems={cartItems} isCheckingOut={isCheckingOut} isPaymentSheetOpen={isPaymentSheetOpen} onPaymentSheetOpenChange={onPaymentSheetOpenChange} />
       </CardFooter>
     </Card>
 
@@ -569,33 +593,105 @@ const CartFooterActions = ({
   onCheckout,
   cartItems,
   isCheckingOut,
+  isPaymentSheetOpen,
+  onPaymentSheetOpenChange,
 }: {
   total: number;
   onCheckout: () => void;
   cartItems: CartItem[];
   isCheckingOut: boolean;
-}) => (
-  <>
-    <div className="flex justify-between w-full text-2xl font-bold pt-4">
-      <span>Total</span>
-      <span>{formatCurrency(total)}</span>
-    </div>
-    <Button
-      onClick={onCheckout}
-      size="lg"
-      className="w-full text-lg h-14 rounded-2xl shadow-lg"
-      disabled={cartItems.length === 0 || isCheckingOut}
-    >
-      {isCheckingOut ? (
-        <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-      ) : (
-        <CreditCard className="mr-3 h-6 w-6" />
-      )}
-      Proceed to Payment
-    </Button>
-  </>
-);
+  isPaymentSheetOpen: boolean;
+  onPaymentSheetOpenChange: (isOpen: boolean) => void;
+}) => {
+  const [paymentMethod, setPaymentMethod] = useState("card");
 
+  return (
+    <>
+      <div className="flex justify-between w-full text-2xl font-bold pt-4">
+        <span>Total</span>
+        <span>{formatCurrency(total)}</span>
+      </div>
+      <Dialog open={isPaymentSheetOpen} onOpenChange={onPaymentSheetOpenChange}>
+        <DialogTrigger asChild>
+          <Button
+            size="lg"
+            className="w-full text-lg h-14 rounded-2xl shadow-lg"
+            disabled={cartItems.length === 0 || isCheckingOut}
+          >
+            <CreditCard className="mr-3 h-6 w-6" />
+            Proceed to Payment
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Confirm Payment</DialogTitle>
+            <DialogDescription>
+              Select a payment method to complete your purchase. This is a simulated payment.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-3 gap-3">
+               <PaymentMethodButton 
+                label="Card" 
+                icon={CreditCard} 
+                isSelected={paymentMethod === 'card'} 
+                onClick={() => setPaymentMethod('card')} 
+              />
+              <PaymentMethodButton 
+                label="Wallet" 
+                icon={Wallet} 
+                isSelected={paymentMethod === 'wallet'} 
+                onClick={() => setPaymentMethod('wallet')} 
+              />
+              <PaymentMethodButton 
+                label="Net Banking" 
+                icon={Landmark} 
+                isSelected={paymentMethod === 'banking'} 
+                onClick={() => setPaymentMethod('banking')} 
+              />
+            </div>
+
+            <Card className="bg-muted/50">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total Amount</span>
+                  <span>{formatCurrency(total)}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Button
+              onClick={onCheckout}
+              size="lg"
+              className="w-full text-lg h-14 rounded-2xl shadow-lg"
+              disabled={isCheckingOut}
+            >
+              {isCheckingOut ? (
+                <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+              ) : (
+                <ShieldCheck className="mr-3 h-6 w-6" />
+              )}
+              {isCheckingOut ? 'Processing...' : `Pay ${formatCurrency(total)}`}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+const PaymentMethodButton = ({ label, icon: Icon, isSelected, onClick }: { label: string, icon: React.ElementType, isSelected: boolean, onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      "flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all",
+      isSelected ? "border-primary bg-primary/10" : "border-border hover:bg-muted"
+    )}
+  >
+    <Icon className={cn("h-8 w-8", isSelected ? "text-primary" : "text-muted-foreground")} />
+    <span className={cn("text-sm font-semibold", isSelected ? "text-primary" : "text-muted-foreground")}>{label}</span>
+  </button>
+)
 
 const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
   <div className="w-full h-screen flex flex-col items-center justify-center text-center p-4">
@@ -616,5 +712,3 @@ const CompletionScreen = ({ onNewSession }: { onNewSession: () => void }) => (
     </Card>
   </div>
 );
-
-    
