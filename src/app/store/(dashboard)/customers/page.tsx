@@ -25,6 +25,8 @@ import { formatCurrency } from "@/lib/utils";
 import { useUser, useFirestore } from "@/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 interface Customer {
     uid: string;
@@ -71,6 +73,13 @@ export default function CustomersPage() {
 
         const customerList = Object.values(customerData).sort((a,b) => b.spent - a.spent);
         setCustomers(customerList);
+        setLoading(false);
+    }, (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: ordersQuery.path,
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
         setLoading(false);
     });
 

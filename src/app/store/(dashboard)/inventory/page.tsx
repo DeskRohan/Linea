@@ -59,6 +59,8 @@ import { useUser, useFirestore } from "@/firebase";
 import { collection, addDoc, onSnapshot, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { formatCurrency } from "@/lib/utils";
 import Scanner from "@/components/scanner";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
@@ -93,13 +95,12 @@ export default function InventoryPage() {
       });
       setInventory(products);
       setIsLoading(false);
-    }, (error) => {
-      console.error("Error fetching inventory:", error);
-      toast({
-        variant: "destructive",
-        title: "Error Fetching Inventory",
-        description: "Could not load products. Please check your connection and permissions."
+    }, (serverError) => {
+      const permissionError = new FirestorePermissionError({
+          path: productsCollection.path,
+          operation: 'list',
       });
+      errorEmitter.emit('permission-error', permissionError);
       setIsLoading(false);
     });
 
@@ -398,5 +399,3 @@ export default function InventoryPage() {
     </>
   );
 }
-
-    

@@ -20,6 +20,8 @@ import { useUser, useFirestore } from "@/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 interface MonthlySale {
   month: string;
@@ -115,6 +117,13 @@ export default function AnalyticsPage() {
       });
 
       setLoading(false);
+    }, (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: ordersQuery.path,
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        setLoading(false);
     });
 
     return () => unsubscribe();
