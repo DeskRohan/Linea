@@ -4,8 +4,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, User } from "firebase/auth";
+import { useAuth, useFirestore } from "@/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,22 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
+
+  // Function to create/update a user document in Firestore
+  const createUserDocument = async (user: User) => {
+    if (!user || !firestore) return;
+    const userRef = doc(firestore, "users", user.uid);
+    // Use setDoc with { merge: true } to create or update the document
+    await setDoc(userRef, {
+      uid: user.uid,
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL,
+      createdAt: serverTimestamp(),
+    }, { merge: true });
+  };
+
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -56,7 +73,11 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
         const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
+        const result = await signInWithPopup(auth, provider);
+
+        // Create a user document in Firestore after successful sign-in
+        await createUserDocument(result.user);
+
         router.push("/customer");
     } catch (error: any) {
         if (error.code === 'auth/popup-closed-by-user') {
