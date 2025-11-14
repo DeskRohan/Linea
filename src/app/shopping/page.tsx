@@ -98,18 +98,11 @@ export default function ShoppingPage() {
     setStoresLoading(true);
     const storesCollection = collection(firestore, "stores");
     const unsubscribe = onSnapshot(storesCollection, (snapshot) => {
-      const storesData: Store[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        // Important: Make sure documents have a shopName field.
-        if (data.shopName) {
-            storesData.push({
-                id: doc.id,
-                name: data.shopName,
-                address: data.shopAddress || "No address"
-            });
-        }
-      });
+      const storesData: Store[] = snapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().shopName || "Unnamed Store",
+          address: doc.data().shopAddress || "No address provided"
+      }));
       
       setStores(storesData);
       
@@ -133,7 +126,7 @@ export default function ShoppingPage() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [firestore, toast]); // Dependency array is correct
+  }, [firestore, toast]); // Removed selectedStoreId from dependencies
 
 
   useEffect(() => {
