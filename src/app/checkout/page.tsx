@@ -25,6 +25,8 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -86,22 +88,22 @@ export default function CheckoutPage() {
       status: 'completed',
     };
 
-    try {
-      const ordersCollection = collection(firestore, 'stores', store.id, 'orders');
-      const docRef = await addDoc(ordersCollection, order);
-      
-      clearCart();
-      router.push(`/invoice/${docRef.id}?storeId=${store.id}`);
-
-    } catch (error: any) {
-      console.error('Error creating order: ', error);
-      toast({
-        variant: 'destructive',
-        title: 'Checkout Error',
-        description: error.message || 'Could not process your order.',
+    const ordersCollection = collection(firestore, 'stores', store.id, 'orders');
+    
+    addDoc(ordersCollection, order)
+      .then((docRef) => {
+        clearCart();
+        router.push(`/invoice/${docRef.id}?storeId=${store.id}`);
+      })
+      .catch((serverError) => {
+          const permissionError = new FirestorePermissionError({
+              path: ordersCollection.path,
+              operation: 'create',
+              requestResourceData: order,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+          setIsProcessing(false);
       });
-      setIsProcessing(false);
-    }
   };
 
   if (!isClient || userLoading) {
@@ -281,4 +283,6 @@ const PaymentMethodButton = ({ label, icon: Icon, isSelected, onClick }: { label
     <span className={cn("text-xs font-semibold", isSelected ? "text-primary" : "text-muted-foreground")}>{label}</span>
   </button>
 )
+    
+
     
