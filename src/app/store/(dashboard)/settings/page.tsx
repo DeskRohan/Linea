@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -21,6 +20,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { useUser, useFirestore } from "@/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 interface StoreSettings {
   shopName: string;
@@ -81,22 +82,26 @@ export default function ShopSettingsPage() {
     }
     setIsSaving(true);
     const storeDocRef = doc(firestore, "stores", user.uid);
-    try {
-      await setDoc(storeDocRef, settings, { merge: true });
-      toast({
-        title: "Settings Saved",
-        description: "Your store settings have been updated.",
-        action: <Check className="h-5 w-5 text-green-500" />,
+    
+    setDoc(storeDocRef, settings, { merge: true })
+      .then(() => {
+        toast({
+          title: "Settings Saved",
+          description: "Your store settings have been updated.",
+          action: <Check className="h-5 w-5 text-green-500" />,
+        });
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: storeDocRef.path,
+          operation: 'update', // or 'create' depending on context
+          requestResourceData: settings,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      })
+      .finally(() => {
+        setIsSaving(false);
       });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error Saving Settings",
-        description: error.message,
-      });
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   const TemplatePreview = ({ name, id }: { name: string, id: string }) => {
@@ -340,5 +345,3 @@ export default function ShopSettingsPage() {
     </>
   );
 }
-
-    
