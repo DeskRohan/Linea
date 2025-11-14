@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -260,4 +261,3 @@ const PaymentMethodButton = ({ label, icon: Icon, isSelected, onClick }: { label
     <span className={cn("text-xs font-semibold", isSelected ? "text-primary" : "text-muted-foreground")}>{label}</span>
   </button>
 )
-
