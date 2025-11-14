@@ -15,10 +15,12 @@ service cloud.firestore {
         allow read, create, update, delete: if request.auth != null && request.auth.uid == storeId;
       }
 
-      // This rule allows the store owner to read their own orders.
-      // Customers cannot read this collection.
+      // This rule manages access to a store's orders subcollection.
       match /orders/{orderId} {
-        allow read, create, update, delete: if request.auth != null && request.auth.uid == storeId;
+        // Customers can create orders if the order belongs to them.
+        allow create: if request.auth != null && request.resource.data.customerId == request.auth.uid;
+        // The store owner can read, update, or delete any order in their store.
+        allow read, update, delete: if request.auth != null && request.auth.uid == storeId;
       }
     }
 
