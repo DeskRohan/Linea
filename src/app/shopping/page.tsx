@@ -53,7 +53,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Scanner from "@/components/scanner";
 import { type Product } from "@/lib/products";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import {
   Sheet,
@@ -448,7 +447,6 @@ const CartContent = ({
             key={item.id}
             className="flex items-center gap-4 p-3 border-b-2 border-dashed border-border/50"
           >
-            <Image src={item.imageUrl} alt={item.name} width={64} height={64} className="border-2 border-border object-cover" data-ai-hint={item.imageHint}/>
             <div className="flex-grow">
               <p className="font-medium">{item.name}</p>
               <p className="text-sm text-muted-foreground font-mono">

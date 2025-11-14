@@ -149,11 +149,7 @@ export default function InventoryPage() {
         } else {
             // Add new product
             const productsCollection = collection(firestore, "stores", storeId, "products");
-            await addDoc(productsCollection, {
-                ...data,
-                imageUrl: `https://picsum.photos/seed/${data.barcode}/200/200`,
-                imageHint: data.name.split(" ").slice(0, 2).join(" ").toLowerCase()
-            });
+            await addDoc(productsCollection, data);
             toast({
                 title: "Product Added",
                 description: `${data.name} has been added to your inventory.`,

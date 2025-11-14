@@ -20,7 +20,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { collection, doc, writeBatch, serverTimestamp, increment } from 'firebase/firestore';
@@ -114,9 +113,8 @@ export default function CheckoutPage() {
         router.push(`/invoice/${storeOrderRef.id}?storeId=${store.id}`);
       })
       .catch((serverError) => {
-          console.error("Batch write failed:", serverError);
           const permissionError = new FirestorePermissionError({
-              path: `/stores/${store.id}/orders and /users/${user.uid}/orders`,
+              path: `/stores/${store.id}/orders/{generatedId} and /users/${user.uid}/orders/{generatedId}`,
               operation: 'create',
               requestResourceData: orderData,
           });
@@ -188,13 +186,6 @@ export default function CheckoutPage() {
               <CardContent className="space-y-4">
                 {items.map(item => (
                   <div key={item.id} className="flex items-center gap-4">
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.name}
-                      width={64}
-                      height={64}
-                      className="rounded-md border object-cover"
-                    />
                     <div className="flex-grow">
                       <p className="font-medium">{item.name}</p>
                       <p className="text-sm text-muted-foreground">
