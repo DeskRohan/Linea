@@ -42,6 +42,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import OnboardingTour from "./OnboardingTour";
+
 
 export default function StoreLayout({
   children,
@@ -52,12 +54,25 @@ export default function StoreLayout({
   const auth = useAuth();
   const { user, loading } = useUser();
   const pathname = usePathname();
+  const [showTour, setShowTour] = React.useState(false);
 
   React.useEffect(() => {
     if (!loading && !user) {
       router.replace("/store/login");
     }
   }, [user, loading, router]);
+
+  React.useEffect(() => {
+    const hasSeenTour = localStorage.getItem("hasSeenOnboardingTour");
+    if (!hasSeenTour) {
+      setShowTour(true);
+    }
+  }, []);
+
+  const handleTourComplete = () => {
+    localStorage.setItem("hasSeenOnboardingTour", "true");
+    setShowTour(false);
+  };
 
 
   const handleLogout = async () => {
@@ -81,6 +96,7 @@ export default function StoreLayout({
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <OnboardingTour open={showTour} onOpenChange={setShowTour} onComplete={handleTourComplete} />
       <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
         <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
           <Link
