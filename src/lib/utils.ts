@@ -5,9 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const formatCurrency = (amount: number) => {
+export function formatCurrency(amount: number, currency: string = "INR", minimumFractionDigits: number = 2) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "INR",
+    currency: currency,
+    minimumFractionDigits: minimumFractionDigits,
   }).format(amount)
 }
+
+    

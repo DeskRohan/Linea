@@ -50,7 +50,8 @@ export default function CheckoutPage() {
         router.replace('/login');
       }
       if (items.length === 0) {
-        router.replace('/shopping');
+        // Allow navigation away from checkout, but don't force it if they're just arriving
+        // router.replace('/shopping');
       }
     }
   }, [isClient, items, user, userLoading, router]);
@@ -103,13 +104,32 @@ export default function CheckoutPage() {
     }
   };
 
-  if (!isClient || userLoading || items.length === 0) {
+  if (!isClient || userLoading) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-muted/40">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
+
+  if (items.length === 0) {
+     return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40 p-4">
+        <Card className="text-center p-8">
+            <Package className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+            <CardTitle className="text-2xl">Your Cart is Empty</CardTitle>
+            <CardDescription className="mt-2">Add some items from the shopping page to proceed.</CardDescription>
+            <Button asChild className="mt-6">
+                <Link href="/shopping">
+                    <ArrowLeft className="mr-2" />
+                    Go Back to Shopping
+                </Link>
+            </Button>
+        </Card>
+      </div>
+     )
+  }
+
 
   return (
     <div className="min-h-screen bg-muted/40 p-4 lg:p-8">
@@ -261,3 +281,5 @@ const PaymentMethodButton = ({ label, icon: Icon, isSelected, onClick }: { label
     <span className={cn("text-xs font-semibold", isSelected ? "text-primary" : "text-muted-foreground")}>{label}</span>
   </button>
 )
+
+    

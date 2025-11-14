@@ -49,8 +49,10 @@ export default function InvoicePage({ params }: { params: { orderId: string } })
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!firestore) return; // Wait for firestore to be initialized
+
     if (!orderId || !storeId) {
-      setError('Order or Store ID is missing.');
+      setError('Order or Store ID is missing from the URL.');
       setLoading(false);
       return;
     }
@@ -61,7 +63,7 @@ export default function InvoicePage({ params }: { params: { orderId: string } })
         const orderRef = doc(firestore, 'stores', storeId, 'orders', orderId);
         const orderSnap = await getDoc(orderRef);
         if (!orderSnap.exists()) {
-          throw new Error('Order not found.');
+          throw new Error('Order not found. It may have been deleted or the ID is incorrect.');
         }
         const orderData = { id: orderSnap.id, ...orderSnap.data() } as Order;
         setOrder(orderData);
@@ -75,6 +77,7 @@ export default function InvoicePage({ params }: { params: { orderId: string } })
         setStore(storeSnap.data() as StoreSettings);
 
       } catch (err: any) {
+        console.error("Invoice fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -97,10 +100,11 @@ export default function InvoicePage({ params }: { params: { orderId: string } })
       <div className="flex min-h-screen w-full items-center justify-center bg-muted/40 p-4">
         <Card className="max-w-md w-full shadow-xl">
             <CardHeader>
-                <CardTitle className="text-destructive">Error</CardTitle>
+                <CardTitle className="text-destructive">Error Loading Invoice</CardTitle>
             </CardHeader>
             <CardContent>
                 <p>{error}</p>
+                 <p className="mt-4 text-sm text-muted-foreground">Please check the URL or go back to start a new session.</p>
             </CardContent>
              <CardFooter>
                  <Button asChild className="w-full">
@@ -175,7 +179,7 @@ const ClassicTemplate = ({ order, store }: { order: Order; store: StoreSettings 
         {order.items.map((item, i) => (
             <div key={i} className="flex">
             <span className="flex-grow">{item.name}</span>
-            <span className="w-16 text-right">{formatCurrency(item.price, 'INR', 0)}</span>
+            <span className="w-16 text-right">{formatCurrency(item.price)}</span>
             <span className="w-12 text-right">{item.quantity}</span>
             <span className="w-20 text-right">{formatCurrency(item.price * item.quantity)}</span>
             </div>
@@ -287,7 +291,7 @@ const CompactTemplate = ({ order, store }: { order: Order; store: StoreSettings 
                 <div key={i} className="grid grid-cols-12 gap-1">
                     <span className="col-span-7 truncate">{item.name}</span>
                     <span className="col-span-2 text-right">{item.quantity}x</span>
-                    <span className="col-span-3 text-right">{formatCurrency(item.price, 'INR', 0)}</span>
+                    <span className="col-span-3 text-right">{formatCurrency(item.price)}</span>
                 </div>
             ))}
         </div>
@@ -308,3 +312,5 @@ const CompactTemplate = ({ order, store }: { order: Order; store: StoreSettings 
         </div>
     </div>
 );
+
+    
