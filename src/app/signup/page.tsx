@@ -107,8 +107,8 @@ export default function SignupPage() {
       await createUserDocument(result.user);
 
       toast({ title: "Sign-up Successful" });
-      // Redirect to the generic customer page, which will handle routing to orders
-      router.push("/customer");
+      // Redirect to the shopping page
+      router.push("/shopping");
     } catch (error: any) {
        if (error.code === 'auth/popup-closed-by-user') {
             // User closed the popup, do nothing.

@@ -47,10 +47,15 @@ export default function LoginPage() {
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
+    if (!auth) {
+        toast({ variant: "destructive", title: "Authentication service not ready."});
+        setIsLoading(false);
+        return;
+    }
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Redirect to the generic customer page, which will handle routing to orders
-      router.push("/customer");
+      // Redirect to the shopping page, which handles auth state
+      router.push("/shopping");
     } catch (error: any) {
       console.error("Login failed:", error);
       let description = "Please check your email and password.";
@@ -71,6 +76,11 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
+     if (!auth) {
+        toast({ variant: "destructive", title: "Authentication service not ready."});
+        setIsLoading(false);
+        return;
+    }
     try {
         const provider = new GoogleAuthProvider();
         const result = await signInWithPopup(auth, provider);
@@ -78,7 +88,7 @@ export default function LoginPage() {
         // Create a user document in Firestore after successful sign-in
         await createUserDocument(result.user);
 
-        router.push("/customer");
+        router.push("/shopping");
     } catch (error: any) {
         if (error.code === 'auth/popup-closed-by-user') {
             // User closed the popup, do nothing
