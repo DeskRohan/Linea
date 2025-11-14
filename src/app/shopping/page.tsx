@@ -325,7 +325,7 @@ const ShoppingScreen = ({
 
          <CardContent className="flex-grow flex flex-col items-center justify-center p-4 text-center bg-foreground/5 font-mono">
             <h2 className="text-sm text-foreground/60 tracking-widest mb-2">SCANNING WINDOW</h2>
-            <div className="relative w-full max-w-md aspect-video bg-background border-2 border-border shadow-inner p-4">
+            <div className="relative w-full max-w-md aspect-square bg-background border-2 border-border shadow-inner p-4">
                 <div className="w-full h-full relative border-2 border-dashed border-border/30 flex items-center justify-center">
                     {isScanning ? (
                         <>
