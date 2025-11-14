@@ -14,7 +14,7 @@ export default {
       },
       fontFamily: {
         body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        headline: ['var(--font-silkscreen)', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
