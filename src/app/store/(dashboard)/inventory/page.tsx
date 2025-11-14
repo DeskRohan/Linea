@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -34,12 +35,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, ScanLine } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { type Product } from "@/lib/products";
 import { useUser, useFirestore } from "@/firebase";
 import { collection, addDoc, onSnapshot, query, where } from "firebase/firestore";
 import { formatCurrency } from "@/lib/utils";
+import Scanner from "@/components/scanner";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
@@ -53,7 +55,8 @@ type ProductFormValues = z.infer<typeof productSchema>;
 export default function InventoryPage() {
   const { toast } = useToast();
   const [inventory, setInventory] = useState<Product[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
   const firestore = useFirestore();
@@ -62,7 +65,7 @@ export default function InventoryPage() {
   useEffect(() => {
     if (!user) return;
 
-    const storeId = user.uid; // Use UID instead of email
+    const storeId = user.uid;
     const productsCollection = collection(firestore, "stores", storeId, "products");
     
     const unsubscribe = onSnapshot(productsCollection, (snapshot) => {
@@ -100,7 +103,7 @@ export default function InventoryPage() {
         toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to add products." });
         return;
     }
-    const storeId = user.uid; // Use UID instead of email
+    const storeId = user.uid;
     const productsCollection = collection(firestore, "stores", storeId, "products");
 
     try {
@@ -115,7 +118,7 @@ export default function InventoryPage() {
             description: `${data.name} has been added to your inventory.`,
         });
         form.reset();
-        setIsDialogOpen(false);
+        setIsAddProductDialogOpen(false);
     } catch (error: any) {
         console.error("Error adding product: ", error);
         toast({
@@ -126,11 +129,20 @@ export default function InventoryPage() {
     }
   };
 
+  const handleScanSuccess = (decodedText: string) => {
+    form.setValue("barcode", decodedText, { shouldValidate: true });
+    setIsScannerOpen(false);
+    toast({
+        title: "Barcode Scanned!",
+        description: `Value: ${decodedText}`,
+    });
+  };
+
   return (
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold md:text-2xl">Inventory Management</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isAddProductDialogOpen} onOpenChange={setIsAddProductDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" /> Add Product
@@ -190,9 +202,29 @@ export default function InventoryPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Barcode (ID)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Scan or enter barcode" {...field} />
-                      </FormControl>
+                      <div className="flex items-center gap-2">
+                        <FormControl>
+                          <Input placeholder="Scan or enter barcode" {...field} />
+                        </FormControl>
+                        <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
+                            <DialogTrigger asChild>
+                                <Button type="button" variant="outline" size="icon">
+                                    <ScanLine className="h-4 w-4" />
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle>Scan Barcode</DialogTitle>
+                                    <DialogDescription>
+                                    Position the barcode inside the frame to scan it.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="w-full aspect-square rounded-lg overflow-hidden">
+                                    <Scanner onScanSuccess={handleScanSuccess} />
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
