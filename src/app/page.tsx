@@ -13,7 +13,7 @@ export default function RoleSelectionPage() {
       <Card className="w-full max-w-md card-paper">
         <CardHeader className="text-center items-center p-6">
           <Image
-            src="/logo.png"
+            src="/img/logo.png"
             alt="App Logo"
             width={96}
             height={96}
