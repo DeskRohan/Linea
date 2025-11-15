@@ -38,7 +38,7 @@ service cloud.firestore {
       // Rules for the user's orders subcollection
       match /orders/{orderId} {
         // Allow a user to create their own order record.
-        allow create: if request.auth != null && request.resource.data.customerId == request.auth.uid && request.auth.uid == userId;
+        allow create: if request.auth != null && request.resource.data.customerId == request.auth.uid;
         // Allow a user to read, update, and delete their own orders after they've been created.
         allow read, update, delete: if request.auth != null && request.auth.uid == userId;
       }
