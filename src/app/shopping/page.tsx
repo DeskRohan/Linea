@@ -264,20 +264,17 @@ export default function ShoppingPage() {
     };
 
     try {
-        const batch = writeBatch(firestore);
-        
-        // 1. Create order in the root 'orders' collection
-        const newOrderRef = doc(collection(firestore, 'orders'));
-        batch.set(newOrderRef, orderData);
+        const ordersCollection = collection(firestore, 'orders');
+        const newOrderRef = await addDoc(ordersCollection, orderData);
 
-        // 2. Update product quantities in the store's inventory
+        const batch = writeBatch(firestore);
+        // Update product quantities in the store's inventory
         for (const item of cartItems) {
             const productRef = doc(firestore, 'stores', selectedStore.id, 'products', item.id);
             batch.update(productRef, {
                 quantity: increment(-item.quantity)
             });
         }
-        
         await batch.commit();
         
         clearCart();
@@ -296,7 +293,6 @@ export default function ShoppingPage() {
             description: "There was an error creating your order. Please try again.",
         });
 
-        // Emit a detailed error for debugging security rules
         const permissionError = new FirestorePermissionError({
             path: `/orders/{generatedId}`,
             operation: 'create',
