@@ -13,6 +13,11 @@ export default function RoleSelectionPage() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+      {/* Logo Placeholder */}
+      <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-muted/50 border-2 border-dashed">
+        <span className="text-sm text-muted-foreground">Logo</span>
+      </div>
+
       <Card className="w-full max-w-sm card-paper">
         <header className="title-bar">
           <h1 className="text-lg font-headline">Welcome to Linea</h1>
