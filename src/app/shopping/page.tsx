@@ -230,62 +230,18 @@ export default function ShoppingPage() {
   };
 
   const handlePayment = async () => {
-    if (!user || !selectedStore || !firestore) {
-        toast({ variant: 'destructive', title: 'Error', description: 'User, store, or database information is missing.' });
+    if (!user || !selectedStore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'User or store information is missing.' });
         return;
     }
     setIsProcessing(true);
 
-    const subtotal = totalPrice();
-    const cgst = subtotal * 0.09;
-    const sgst = subtotal * 0.09;
-
-    const orderData = {
-      customerId: user.uid,
-      customerName: user.displayName || user.email,
-      customerEmail: user.email,
-      customerPhotoURL: user.photoURL,
-      storeId: selectedStore.id,
-      storeName: selectedStore.name,
-      items: cartItems.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
-      subtotal: subtotal,
-      cgst: cgst,
-      sgst: sgst,
-      totalAmount: subtotal + cgst + sgst,
-      totalItems: totalItems(),
-      createdAt: serverTimestamp(),
-      status: 'completed',
-    };
-    
-    const batch = writeBatch(firestore);
-    
-    // Use the specific ID from the cart store
-    const storeOrderRef = doc(collection(firestore, 'stores', selectedStore.id, 'orders'));
-    batch.set(storeOrderRef, orderData);
-
-    const userOrderRef = doc(collection(firestore, 'users', user.uid, 'orders'), storeOrderRef.id);
-    batch.set(userOrderRef, orderData);
-
-    cartItems.forEach(item => {
-        const productRef = doc(firestore, 'stores', selectedStore.id, 'products', item.id);
-        batch.update(productRef, { quantity: increment(-item.quantity) });
-    });
-
-
-    batch.commit()
-      .then(() => {
-        clearCart();
-        router.push(`/invoice/${storeOrderRef.id}?storeId=${selectedStore.id}`);
-      })
-      .catch((serverError) => {
-          const permissionError = new FirestorePermissionError({
-              path: `/stores/${selectedStore.id}/orders/{generatedId} and /users/${user.uid}/orders/{generatedId}`,
-              operation: 'create',
-              requestResourceData: orderData,
-          });
-          errorEmitter.emit('permission-error', permissionError);
-          setIsProcessing(false);
-      });
+    // Simulate a short delay for processing
+    setTimeout(() => {
+        router.push(`/bill`);
+        // No need to call clearCart() here as the bill page will display the final cart
+        setIsProcessing(false);
+    }, 1000);
   };
 
   if (userLoading) {
