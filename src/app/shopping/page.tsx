@@ -68,10 +68,17 @@ import { signOut } from "firebase/auth";
 import { formatCurrency } from "@/lib/utils";
 import { collection, query, where, getDocs, limit, onSnapshot, writeBatch, doc, serverTimestamp, increment, addDoc } from "firebase/firestore";
 import { useCartStore } from "@/store/cart-store";
-import { type Store } from "@/lib/types";
 import Link from "next/link";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
+
+
+export type Store = {
+  id: string;
+  ownerUid: string;
+  name: string;
+  address: string;
+};
 
 
 export default function ShoppingPage() {
@@ -107,37 +114,45 @@ export default function ShoppingPage() {
     }
   }, [user, userLoading, router]);
 
-  // Fetch stores in real-time
+
   useEffect(() => {
     if (!firestore) return;
     setStoresLoading(true);
+
     const storesCollection = collection(firestore, "stores");
-    const unsubscribe = onSnapshot(storesCollection, (snapshot) => {
-      const storesData: Store[] = snapshot.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().shopName || "Unnamed Store",
-          address: doc.data().shopAddress || "No address provided"
-      }));
-      
-      setStores(storesData);
-      
-      if (storesData.length > 0 && !selectedStore) {
-        setStore(storesData[0]);
+
+    const unsubscribe = onSnapshot(
+      storesCollection,
+      (snapshot) => {
+        const storesData: Store[] = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ownerUid: docSnap.id,
+          name: docSnap.data().shopName || "Unnamed Store",
+          address: docSnap.data().shopAddress || "No address provided",
+        }));
+
+        setStores(storesData);
+
+        if (storesData.length > 0 && !selectedStore) {
+          setStore(storesData[0]);
+        }
+        setStoresLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching stores:", error);
+        toast({
+          variant: "destructive",
+          title: "Could not fetch stores",
+          description: "Please check your connection or try again later.",
+        });
+        setStores([]);
+        setStoresLoading(false);
       }
-      setStoresLoading(false);
-    }, (error) => {
-      console.error("Error fetching stores:", error);
-      toast({
-        variant: "destructive",
-        title: "Could not fetch stores",
-        description: "Please check your connection or try again later.",
-      });
-      setStores([]);
-      setStoresLoading(false);
-    });
+    );
 
     return () => unsubscribe();
   }, [firestore, toast, setStore, selectedStore]);
+
 
 
   useEffect(() => {
@@ -149,7 +164,7 @@ export default function ShoppingPage() {
           title: "Scanner Timed Out",
           description: "No barcode was detected in time.",
         });
-      }, 10000); // 10 seconds
+      }, 10000);
     } else {
       if (scannerTimeoutRef.current) {
         clearTimeout(scannerTimeoutRef.current);
@@ -216,18 +231,19 @@ export default function ShoppingPage() {
     }
   };
   
+
   const handleStoreChange = (storeId: string) => {
-      const newStore = stores?.find(s => s.id === storeId) || null;
-      if (newStore) {
-        setStore(newStore);
-      }
+    const newStore = stores?.find(s => s.id === storeId) || null;
+    if (newStore) setStore(newStore);
   }
+
 
   const handleLogout = async () => {
     if (!auth) return;
     await signOut(auth);
     router.push("/");
   };
+
 
   const handlePayment = async () => {
     if (!user || !selectedStore || !firestore) {
@@ -247,30 +263,44 @@ export default function ShoppingPage() {
     const totalAmount = subtotal + cgst + sgst;
 
     const orderData = {
-        customerId: user.uid,
-        customerName: user.displayName,
-        customerEmail: user.email,
-        customerPhotoURL: user.photoURL,
-        storeId: selectedStore.id,
-        storeName: selectedStore.name,
-        items: cartItems.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity })),
-        subtotal,
-        cgst,
-        sgst,
-        totalAmount,
-        totalItems: totalItems(),
-        createdAt: serverTimestamp(),
-        status: "completed"
+      customerId: user.uid,
+      customerName: user.displayName,
+      customerEmail: user.email,
+      customerPhotoURL: user.photoURL,
+
+      storeId: selectedStore.ownerUid,
+      storeName: selectedStore.name,
+
+      items: cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity
+      })),
+
+      subtotal,
+      cgst,
+      sgst,
+      totalAmount,
+      totalItems: totalItems(),
+      createdAt: serverTimestamp(),
+      status: "completed"
     };
 
     const ordersCollection = collection(firestore, 'orders');
     
-    // Use .then() and .catch() to handle success and failure
-    addDoc(ordersCollection, orderData).then(async (newOrderRef) => {
-        // This block runs on successful order creation.
+    addDoc(ordersCollection, orderData)
+    .then(async (newOrderRef) => {
+
         const batch = writeBatch(firestore);
         for (const item of cartItems) {
-            const productRef = doc(firestore, 'stores', selectedStore.id, 'products', item.id);
+            const productRef = doc(
+              firestore, 
+              'stores', 
+              selectedStore.id, 
+              'products', 
+              item.id
+            );
             batch.update(productRef, {
                 quantity: increment(-item.quantity)
             });
@@ -286,8 +316,8 @@ export default function ShoppingPage() {
 
         router.push(`/invoice/${newOrderRef.id}`);
 
-    }).catch((serverError) => {
-        // This block runs if addDoc fails, likely due to security rules.
+    })
+    .catch((serverError) => {
         console.error("Error processing payment: ", serverError);
         
         // Create and emit the detailed permission error.
@@ -296,20 +326,22 @@ export default function ShoppingPage() {
             operation: 'create',
             requestResourceData: orderData,
         } as SecurityRuleContext);
+
         errorEmitter.emit('permission-error', permissionError);
 
-        // Inform the user of a generic failure. The dev overlay will show the details.
         toast({
             variant: "destructive",
             title: "Payment Failed",
             description: "There was an error creating your bill. Please check the console for details.",
         });
 
-    }).finally(() => {
-        // This runs regardless of success or failure.
+    })
+    .finally(() => {
         setIsProcessing(false);
     });
   };
+
+
 
   if (userLoading) {
     return (
@@ -319,9 +351,9 @@ export default function ShoppingPage() {
     );
   }
   
-  if (!user) {
-    return null; // The useEffect hook will redirect.
-  }
+  if (!user) return null;
+
+
 
   return (
     <div className="min-h-screen bg-background p-4 flex justify-center">
@@ -341,6 +373,8 @@ export default function ShoppingPage() {
     </div>
   );
 }
+
+
 
 const ShoppingScreen = ({
   user,
@@ -367,15 +401,17 @@ const ShoppingScreen = ({
   isProcessing: boolean;
   onPayment: () => void;
 }) => {
+
+
   const { items: cartItems, updateItemQuantity, totalItems, totalPrice } = useCartStore();
   const [greeting, setGreeting] = useState("Welcome");
 
   useEffect(() => {
     const getGreeting = () => {
       const hour = new Date().getHours();
-      if (hour < 12) return "Shubh Prabhat"; // Good Morning
-      if (hour < 17) return "Shubh Dopahar"; // Good Afternoon
-      return "Shubh Sandhya"; // Good Evening
+      if (hour < 12) return "Shubh Prabhat";
+      if (hour < 17) return "Shubh Dopahar";
+      return "Shubh Sandhya";
     };
     setGreeting(getGreeting());
   }, []);
@@ -383,9 +419,11 @@ const ShoppingScreen = ({
   return (
     <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
       
-      {/* Left Side: Scanner and User Info */}
+      {/* LEFT SIDE */}
       <Card className="card-paper flex flex-col h-full overflow-hidden lg:col-span-3">
+        
         <CardHeader className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b-2">
+          
           <div className="flex items-center gap-3 self-start">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -396,37 +434,50 @@ const ShoppingScreen = ({
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent align="start">
                 <DropdownMenuLabel>
                   <div className="font-bold">{user.displayName || "User"}</div>
                   <div className="text-xs text-muted-foreground font-normal">{user.email}</div>
                 </DropdownMenuLabel>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                     <Link href="/customer/orders">My Orders</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+
                 <DropdownMenuItem onClick={onLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>
                 </DropdownMenuItem>
+
               </DropdownMenuContent>
             </DropdownMenu>
-            <h1 className="font-headline text-xl">{greeting}, {user.displayName?.split(' ')[0] || user.email}!</h1>
+
+            <h1 className="font-headline text-xl">
+              {greeting}, {user.displayName?.split(" ")[0] || user.email}!
+            </h1>
           </div>
+
           <div className="w-full sm:w-auto">
-              <Select value={selectedStore?.id ?? ""} onValueChange={onStoreChange} disabled={storesLoading}>
-                <SelectTrigger className="w-full min-w-[200px] max-w-full sm:w-auto input-paper">
+              <Select 
+                value={selectedStore?.id ?? ""} 
+                onValueChange={onStoreChange} 
+                disabled={storesLoading}
+              >
+                <SelectTrigger className="w-full min-w-[200px]">
                   <MapPin className="h-4 w-4 mr-2 text-primary" />
                   <SelectValue placeholder="Select a store" />
                 </SelectTrigger>
+
                 <SelectContent>
                   {storesLoading ? (
                      <SelectItem value="loading" disabled>Loading stores...</SelectItem>
                   ) : stores && stores.length === 0 ? (
                     <SelectItem value="no-stores" disabled>No stores available</SelectItem>
                   ) : (
-                    stores && stores.map((store) => (
+                    stores?.map((store) => (
                       <SelectItem key={store.id} value={store.id}>
                         <div className="flex flex-col">
                           <span className="font-semibold">{store.name}</span>
@@ -438,84 +489,110 @@ const ShoppingScreen = ({
                 </SelectContent>
               </Select>
           </div>
+
         </CardHeader>
 
-         <CardContent className="flex-grow flex flex-col items-center justify-center p-4 text-center bg-foreground/5 font-mono">
-            <h2 className="text-sm text-foreground/60 tracking-widest mb-2">SCANNING WINDOW</h2>
-            <div className="relative w-full max-w-md aspect-video rounded-lg bg-background border-2 border-border shadow-inner overflow-hidden">
-                <div className="w-full h-full relative flex items-center justify-center">
-                    {isScanning ? (
-                        <>
-                            <Scanner onScanSuccess={onScanSuccess} />
-                            <div className="absolute inset-0 pointer-events-none border-[1rem] border-background/80 shadow-inner" />
-                            <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-destructive/70 shadow-[0_0_10px_1px_theme(colors.destructive)] animate-pulse" />
-                        </>
-                    ) : (
-                       <div className="flex flex-col items-center justify-center gap-4 p-4">
-                            <button
-                                className="h-full w-full flex flex-col items-center justify-center gap-2 text-foreground/40 hover:text-foreground transition-colors group"
-                                onClick={() => onSetIsScanning(true)}
-                                disabled={!selectedStore}
-                            >
-                                <div className="p-5 rounded-full bg-foreground/5 group-hover:bg-foreground/10 transition-colors">
-                                  <ScanLine className="h-16 w-16" />
-                                </div>
-                                <h3 className="font-sans font-semibold tracking-wider mt-2">Tap to Scan</h3>
-                                <p className="font-sans text-xs max-w-xs">Place a product's barcode in the scanner window.</p>
-                            </button>
-                           {!selectedStore && (
-                              <p className="text-destructive mt-1 max-w-xs text-sm font-sans">Please select a store to begin scanning.</p>
-                           )}
-                        </div>
-                    )}
+        <CardContent className="flex-grow flex flex-col items-center justify-center p-4 text-center bg-foreground/5 font-mono">
+
+          <h2 className="text-sm text-foreground/60 tracking-widest mb-2">SCANNING WINDOW</h2>
+
+          <div className="relative w-full max-w-md aspect-video rounded-lg bg-background border-2 border-border shadow-inner overflow-hidden">
+
+            <div className="w-full h-full relative flex items-center justify-center">
+              
+              {isScanning ? (
+                <>
+                  <Scanner onScanSuccess={onScanSuccess} />
+                  <div className="absolute inset-0 pointer-events-none border-[1rem] border-background/80" />
+                  <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-destructive/70 animate-pulse" />
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-4 p-4">
+                  
+                  <button
+                    className="h-full w-full flex flex-col items-center justify-center gap-2 text-foreground/40 hover:text-foreground transition-colors"
+                    onClick={() => onSetIsScanning(true)}
+                    disabled={!selectedStore}
+                  >
+                    <div className="p-5 rounded-full bg-foreground/5">
+                      <ScanLine className="h-16 w-16" />
+                    </div>
+
+                    <h3 className="font-sans font-semibold tracking-wider mt-2">Tap to Scan</h3>
+                    <p className="text-xs max-w-xs">Place a product's barcode in the scanner window.</p>
+                  </button>
+
+                  {!selectedStore && (
+                    <p className="text-destructive mt-1 max-w-xs text-sm">Please select a store to begin scanning.</p>
+                  )}
+
                 </div>
+              )}
+
             </div>
+          </div>
         </CardContent>
 
+        {/* MOBILE CART BUTTON */}
         <CardFooter className="p-4 border-t-2 border-border lg:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <Button size="lg" className="btn-paper btn-primary w-full h-14 text-lg" disabled={cartItems.length === 0}>
+              <Button size="lg" className="w-full h-14 text-lg" disabled={cartItems.length === 0}>
                 <ShoppingCart className="mr-3 h-6 w-6" />
                 View Cart ({totalItems()} items)
               </Button>
             </SheetTrigger>
+
             <SheetContent side="bottom" className="h-[90vh] flex flex-col bg-card rounded-none border-t-4 border-foreground p-0">
+
               <SheetHeader className="p-4 pb-0 border-b-2 border-border">
-                <SheetTitle className="font-headline text-2xl">Your Cart</SheetTitle>
+                <SheetTitle className="text-2xl">Your Cart</SheetTitle>
               </SheetHeader>
+
               <div className="flex-grow overflow-hidden">
                 <ScrollArea className="h-full px-4">
-                  <CartContent
-                    cartItems={cartItems}
-                    onQuantityChange={updateItemQuantity}
-                  />
+                  <CartContent cartItems={cartItems} onQuantityChange={updateItemQuantity} />
                 </ScrollArea>
               </div>
-              <SheetFooter className="p-4 !flex-col gap-4 bg-background sticky bottom-0 border-t-2 border-border">
-                <CartFooterActions total={totalPrice()} cartItems={cartItems} onPayment={onPayment} isProcessing={isProcessing} />
+
+              <SheetFooter className="p-4 flex-col gap-4 bg-background sticky bottom-0 border-t-2 border-border">
+                <CartFooterActions 
+                  total={totalPrice()} 
+                  cartItems={cartItems} 
+                  onPayment={onPayment} 
+                  isProcessing={isProcessing} 
+                />
               </SheetFooter>
+
             </SheetContent>
           </Sheet>
         </CardFooter>
       </Card>
 
-      {/* Right Side: Cart - Hidden on mobile, visible on desktop */}
-      <Card className="hidden lg:flex flex-col h-full overflow-hidden card-paper lg:col-span-2">
+
+
+      {/* RIGHT SIDE CART (DESKTOP) */}
+      <Card className="hidden lg:flex flex-col h-full overflow-hidden lg:col-span-2">
+        
         <CardHeader>
-          <CardTitle className="font-headline text-2xl">Your Cart</CardTitle>
+          <CardTitle>Your Cart</CardTitle>
         </CardHeader>
+
         <CardContent className="flex-grow overflow-hidden p-0">
           <ScrollArea className="h-full px-6">
-            <CartContent
-              cartItems={cartItems}
-              onQuantityChange={updateItemQuantity}
-            />
+            <CartContent cartItems={cartItems} onQuantityChange={updateItemQuantity} />
           </ScrollArea>
         </CardContent>
-        <CardFooter className="p-4 !flex-col gap-4 border-t-2">
-          <CartFooterActions total={totalPrice()} cartItems={cartItems} onPayment={onPayment} isProcessing={isProcessing}/>
+
+        <CardFooter className="p-4 flex-col gap-4 border-t-2">
+          <CartFooterActions 
+            total={totalPrice()} 
+            cartItems={cartItems} 
+            onPayment={onPayment} 
+            isProcessing={isProcessing}
+          />
         </CardFooter>
+
       </Card>
 
     </div>
@@ -523,6 +600,12 @@ const ShoppingScreen = ({
 };
 
 
+
+
+
+/* -----------------------------------------
+     CART CONTENT
+----------------------------------------- */
 const CartContent = ({
   cartItems,
   onQuantityChange,
@@ -550,20 +633,25 @@ const CartContent = ({
                 {formatCurrency(item.price)}
               </p>
             </div>
+
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => onQuantityChange(item.id, item.quantity - 1)}>
+              <Button variant="ghost" size="icon" onClick={() => onQuantityChange(item.id, item.quantity - 1)}>
                   <MinusCircle className="h-5 w-5 text-destructive"/>
               </Button>
+
               <span className="font-bold text-lg min-w-[2ch] text-center">
                   {item.quantity}
               </span>
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => onQuantityChange(item.id, item.quantity + 1)}>
+
+              <Button variant="ghost" size="icon" onClick={() => onQuantityChange(item.id, item.quantity + 1)}>
                   <PlusCircle className="h-5 w-5 text-primary"/>
               </Button>
             </div>
-              <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-destructive" onClick={() => onQuantityChange(item.id, 0)}>
-                  <XCircle className="h-5 w-5"/>
-              </Button>
+
+            <Button variant="ghost" size="icon" onClick={() => onQuantityChange(item.id, 0)}>
+                <XCircle className="h-5 w-5 text-muted-foreground hover:text-destructive"/>
+            </Button>
+
           </div>
         ))}
       </div>
@@ -572,6 +660,10 @@ const CartContent = ({
 );
 
 
+
+/* -----------------------------------------
+     CART FOOTER ACTIONS
+----------------------------------------- */
 const CartFooterActions = ({
   total,
   cartItems,
@@ -583,6 +675,7 @@ const CartFooterActions = ({
   onPayment: () => void;
   isProcessing: boolean;
 }) => {
+
   const subtotal = total;
   const cgst = subtotal * 0.09;
   const sgst = subtotal * 0.09;
@@ -595,23 +688,27 @@ const CartFooterActions = ({
           <span className="text-muted-foreground">Subtotal</span>
           <span>{formatCurrency(subtotal)}</span>
         </div>
+
         <div className="flex justify-between">
           <span className="text-muted-foreground">CGST (9%)</span>
           <span>{formatCurrency(cgst)}</span>
         </div>
+
         <div className="flex justify-between">
           <span className="text-muted-foreground">SGST (9%)</span>
           <span>{formatCurrency(sgst)}</span>
         </div>
       </div>
-      <div className="flex justify-between w-full text-2xl font-bold font-headline pt-4 border-t-2 mt-2">
+
+      <div className="flex justify-between w-full text-2xl font-bold pt-4 border-t-2 mt-2">
         <span>Total</span>
         <span className="font-mono">{formatCurrency(finalTotal)}</span>
       </div>
+
       <Button
         onClick={onPayment}
         size="lg"
-        className="btn-paper btn-primary w-full text-lg h-14"
+        className="w-full text-lg h-14"
         disabled={cartItems.length === 0 || isProcessing}
       >
         {isProcessing ? (
@@ -624,5 +721,3 @@ const CartFooterActions = ({
     </>
   );
 };
-
-    
