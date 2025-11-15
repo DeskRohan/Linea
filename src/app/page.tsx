@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export default function RoleSelectionPage() {
   return (
-    <main className="flex h-screen w-screen flex-col items-center justify-center bg-muted/40">
+    <main className="flex h-screen w-screen flex-col items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md card-paper">
         <CardHeader className="text-center items-center p-6">
           {/* Logo Placeholder */}
