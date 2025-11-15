@@ -30,14 +30,14 @@ service cloud.firestore {
 
     // Rule for the root 'orders' collection
     match /orders/{orderId} {
-      // A customer can create an order if the order belongs to them.
+      // A customer can create an order if they are logged in.
+      // We will rely on the app logic to ensure customerId is set correctly.
       allow create: if request.auth != null && request.resource.data.customerId == request.auth.uid;
       
-      // An order can be read by the customer who owns it or the store owner it belongs to.
+      // An order can be read by the customer who owns it OR the store owner it belongs to.
       allow read: if request.auth != null && (resource.data.customerId == request.auth.uid || resource.data.storeId == request.auth.uid);
 
       // An order can be updated by the store owner.
-      // A customer could potentially update it if rules were added (e.g., to cancel)
       allow update: if request.auth != null && resource.data.storeId == request.auth.uid;
       
       // An order can be deleted by the store owner.
