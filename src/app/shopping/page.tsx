@@ -268,7 +268,7 @@ export default function ShoppingPage() {
       customerEmail: user.email,
       customerPhotoURL: user.photoURL,
 
-      storeId: selectedStore.ownerUid,
+      storeId: selectedStore.id,
       storeName: selectedStore.name,
 
       items: cartItems.map(item => ({
