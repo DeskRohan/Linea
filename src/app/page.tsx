@@ -35,12 +35,6 @@ export default function RoleSelectionPage() {
             title="Customer"
             description="Start a new shopping session and scan items."
           />
-          <RoleLink
-            href="/exit-scan"
-            icon={ScanSearch}
-            title="Exit Scanner"
-            description="Verify purchases at the store exit."
-          />
         </CardContent>
       </Card>
     </main>
