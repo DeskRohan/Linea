@@ -31,7 +31,7 @@ service cloud.firestore {
     // Rule for the root 'orders' collection
     match /orders/{orderId} {
       // A customer can create an order if the order belongs to them.
-      allow create: if request.auth != null && request.resource.data.customerId == request.auth.uid;
+      allow create: if request.auth.uid == request.resource.data.customerId;
       
       // An order can be read by the customer who owns it or the store owner it belongs to.
       allow read: if request.auth != null && (resource.data.customerId == request.auth.uid || resource.data.storeId == request.auth.uid);
