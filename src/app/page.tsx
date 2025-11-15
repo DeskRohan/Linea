@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-import { LineaLogo } from "@/components/icons/linea-logo";
 import { User, Store } from "lucide-react";
 
 export default function RoleSelectionPage() {
@@ -19,9 +18,6 @@ export default function RoleSelectionPage() {
           <h1 className="text-lg font-headline">Welcome to Linea</h1>
         </header>
         <div className="p-6 text-center">
-           <div className="flex justify-center mb-4">
-            <LineaLogo className="h-16 w-16" />
-          </div>
           <p className="mb-6 font-semibold">How would you like to log in?</p>
           <CardContent className="grid grid-cols-2 gap-4 p-0">
             <Link href="/store/login" passHref>
