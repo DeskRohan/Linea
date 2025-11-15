@@ -16,6 +16,7 @@ import {
   MapPin,
   Camera,
   ScanLine,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,10 +66,12 @@ import {
 import { useAuth, useUser, useFirestore } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { formatCurrency } from "@/lib/utils";
-import { collection, query, where, getDocs, limit, onSnapshot } from "firebase/firestore";
+import { collection, query, where, getDocs, limit, onSnapshot, writeBatch, doc, serverTimestamp, increment } from "firebase/firestore";
 import { useCartStore } from "@/store/cart-store";
 import { type Store } from "@/lib/types";
 import Link from "next/link";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 
 export default function ShoppingPage() {
@@ -82,15 +85,19 @@ export default function ShoppingPage() {
   const [storesLoading, setStoresLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const scannerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
 
   // Zustand store integration
   const { 
     items: cartItems, 
     store: selectedStore,
+    totalPrice,
+    totalItems,
+    clearCart,
     addItem, 
     updateItemQuantity,
-    setStore,
-    totalItems
+    setStore
   } = useCartStore();
 
 
@@ -222,6 +229,65 @@ export default function ShoppingPage() {
     router.push("/");
   };
 
+  const handlePayment = async () => {
+    if (!user || !selectedStore || !firestore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'User, store, or database information is missing.' });
+        return;
+    }
+    setIsProcessing(true);
+
+    const subtotal = totalPrice();
+    const cgst = subtotal * 0.09;
+    const sgst = subtotal * 0.09;
+
+    const orderData = {
+      customerId: user.uid,
+      customerName: user.displayName || user.email,
+      customerEmail: user.email,
+      customerPhotoURL: user.photoURL,
+      storeId: selectedStore.id,
+      storeName: selectedStore.name,
+      items: cartItems.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
+      subtotal: subtotal,
+      cgst: cgst,
+      sgst: sgst,
+      totalAmount: subtotal + cgst + sgst,
+      totalItems: totalItems(),
+      createdAt: serverTimestamp(),
+      status: 'completed',
+    };
+    
+    const batch = writeBatch(firestore);
+    
+    // Use the specific ID from the cart store
+    const storeOrderRef = doc(collection(firestore, 'stores', selectedStore.id, 'orders'));
+    batch.set(storeOrderRef, orderData);
+
+    const userOrderRef = doc(collection(firestore, 'users', user.uid, 'orders'), storeOrderRef.id);
+    batch.set(userOrderRef, orderData);
+
+    cartItems.forEach(item => {
+        const productRef = doc(firestore, 'stores', selectedStore.id, 'products', item.id);
+        batch.update(productRef, { quantity: increment(-item.quantity) });
+    });
+
+
+    batch.commit()
+      .then(() => {
+        clearCart();
+        router.push(`/invoice/${storeOrderRef.id}?storeId=${selectedStore.id}`);
+      })
+      .catch((serverError) => {
+          const permissionError = new FirestorePermissionError({
+              path: `/stores/${selectedStore.id}/orders/{generatedId} and /users/${user.uid}/orders/{generatedId}`,
+              operation: 'create',
+              requestResourceData: orderData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+          setIsProcessing(false);
+      });
+  };
+
   if (userLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -246,6 +312,8 @@ export default function ShoppingPage() {
         onStoreChange={handleStoreChange}
         onScanSuccess={handleScanSuccess}
         onLogout={handleLogout}
+        isProcessing={isProcessing}
+        onPayment={handlePayment}
       />
     </div>
   );
@@ -261,6 +329,8 @@ const ShoppingScreen = ({
   onStoreChange,
   onScanSuccess,
   onLogout,
+  isProcessing,
+  onPayment,
 }: {
   user: any;
   stores: Store[] | null;
@@ -271,6 +341,8 @@ const ShoppingScreen = ({
   onStoreChange: (storeId: string) => void;
   onScanSuccess: (decodedText: string) => void;
   onLogout: () => void;
+  isProcessing: boolean;
+  onPayment: () => void;
 }) => {
   const { items: cartItems, updateItemQuantity, totalItems, totalPrice } = useCartStore();
   const [greeting, setGreeting] = useState("Welcome");
@@ -398,7 +470,7 @@ const ShoppingScreen = ({
                 </ScrollArea>
               </div>
               <SheetFooter className="p-4 !flex-col gap-4 bg-background sticky bottom-0 border-t-2 border-border">
-                <CartFooterActions total={totalPrice()} cartItems={cartItems} />
+                <CartFooterActions total={totalPrice()} cartItems={cartItems} onPayment={onPayment} isProcessing={isProcessing} />
               </SheetFooter>
             </SheetContent>
           </Sheet>
@@ -419,7 +491,7 @@ const ShoppingScreen = ({
           </ScrollArea>
         </CardContent>
         <CardFooter className="p-4 !flex-col gap-4 border-t-2">
-          <CartFooterActions total={totalPrice()} cartItems={cartItems} />
+          <CartFooterActions total={totalPrice()} cartItems={cartItems} onPayment={onPayment} isProcessing={isProcessing}/>
         </CardFooter>
       </Card>
 
@@ -480,30 +552,52 @@ const CartContent = ({
 const CartFooterActions = ({
   total,
   cartItems,
+  onPayment,
+  isProcessing,
 }: {
   total: number;
   cartItems: any[];
+  onPayment: () => void;
+  isProcessing: boolean;
 }) => {
+  const subtotal = total;
+  const cgst = subtotal * 0.09;
+  const sgst = subtotal * 0.09;
+  const finalTotal = subtotal + cgst + sgst;
 
   return (
     <>
-      <div className="flex justify-between w-full text-2xl font-bold font-headline pt-4">
+      <div className="w-full space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Subtotal</span>
+          <span>{formatCurrency(subtotal)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">CGST (9%)</span>
+          <span>{formatCurrency(cgst)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">SGST (9%)</span>
+          <span>{formatCurrency(sgst)}</span>
+        </div>
+      </div>
+      <div className="flex justify-between w-full text-2xl font-bold font-headline pt-4 border-t-2 mt-2">
         <span>Total</span>
-        <span className="font-mono">{formatCurrency(total)}</span>
+        <span className="font-mono">{formatCurrency(finalTotal)}</span>
       </div>
       <Button
-        asChild
+        onClick={onPayment}
         size="lg"
         className="btn-paper btn-primary w-full text-lg h-14"
-        disabled={cartItems.length === 0}
+        disabled={cartItems.length === 0 || isProcessing}
       >
-        <Link href="/checkout">
-          <CreditCard className="mr-3 h-6 w-6" />
-          Proceed to Checkout
-        </Link>
+        {isProcessing ? (
+          <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+        ) : (
+          <ShieldCheck className="mr-3 h-6 w-6" />
+        )}
+        {isProcessing ? 'Processing...' : 'Proceed to Payment'}
       </Button>
     </>
   );
 };
-
-    
