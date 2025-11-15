@@ -53,7 +53,7 @@ export default function StoreSignupPage() {
         }
 
         if (activationKey !== "L1N-51M-9M9-NV5") {
-            setActivationKeyError("Invalid activation key.");
+            setActivationKeyError("Invalid activation key. Please contact support");
             hasError = true;
         }
 
