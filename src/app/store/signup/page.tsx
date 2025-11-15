@@ -37,6 +37,16 @@ export default function StoreSignupPage() {
     event.preventDefault();
     setIsLoading(true);
 
+    if (!email.endsWith("@linea.com")) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Email Domain",
+        description: "Only emails from @linea.com are allowed for store accounts.",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     if (activationKey !== "L1N-51M-9M9-NV5") {
       toast({
         variant: "destructive",
