@@ -43,11 +43,11 @@ service cloud.firestore {
 
     // Rule for the 'activation_keys' collection
     match /activation_keys/{keyId} {
-      // Anyone can read a key to validate it during signup.
+      // Allow reading a single key for validation during signup.
       allow get: if true;
-      // Only an admin (you) should be able to create new keys. 
-      // For now, we allow any authenticated user to create, but you should lock this down.
-      // You can manage keys directly in the Firebase Console.
+      // Allow a logged-in user to list all keys for the admin panel.
+      allow list: if request.auth != null;
+      // Allow a logged-in user to create new keys.
       allow create: if request.auth != null;
       // The `isUsed` field can only be changed from false to true.
       allow update: if request.resource.data.isUsed == true 
