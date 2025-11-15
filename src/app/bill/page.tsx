@@ -80,15 +80,21 @@ export default function BillPage() {
 
   return (
     <div className="min-h-screen bg-muted/40 p-4 sm:p-8 flex flex-col items-center">
-      <Card className="w-full max-w-2xl mx-auto shadow-lg mb-8">
-        <CardHeader className="text-center bg-background/80 p-6">
+      <Card className="w-full max-w-2xl mx-auto shadow-lg print:shadow-none">
+        <CardHeader className="text-center bg-background/80 p-6 print:hidden">
           <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
           <CardTitle className="text-3xl font-bold">Thank You!</CardTitle>
           <CardDescription>
-            Here is a summary of your session.
+            Your bill has been generated below.
           </CardDescription>
         </CardHeader>
-        <CardFooter className="p-6 flex flex-col sm:flex-row gap-4">
+        <CardContent className="p-0">
+             {/* Printable Invoice Section */}
+            <div className="p-8 bg-white print:p-0">
+                <ClassicTemplate order={orderData} store={staticStoreSettings} />
+            </div>
+        </CardContent>
+        <CardFooter className="p-6 flex flex-col sm:flex-row gap-4 border-t print:hidden">
           <Button onClick={handleNewSession} className="w-full">
             <Home className="mr-2" /> Start New Session
           </Button>
@@ -97,11 +103,6 @@ export default function BillPage() {
           </Button>
         </CardFooter>
       </Card>
-      
-      {/* Printable Invoice Section */}
-      <div className="w-full max-w-2xl mx-auto p-8 bg-white rounded-lg shadow-2xl print:shadow-none">
-        <ClassicTemplate order={orderData} store={staticStoreSettings} />
-      </div>
     </div>
   );
 }
