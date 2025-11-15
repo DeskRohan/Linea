@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Store, Mail, Lock, Key } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function StoreSignupPage() {
   const [email, setEmail] = useState("");
@@ -40,17 +41,21 @@ export default function StoreSignupPage() {
     setIsLoading(true);
     setEmailError("");
     setActivationKeyError("");
+    let hasError = false;
 
     if (!email.endsWith("@linea.com")) {
       setEmailError("Only emails from @linea.com are allowed.");
-      setIsLoading(false);
-      return;
+      hasError = true;
     }
 
     if (activationKey !== "L1N-51M-9M9-NV5") {
       setActivationKeyError("Invalid activation key.");
-      setIsLoading(false);
-      return;
+      hasError = true;
+    }
+
+    if(hasError) {
+        setIsLoading(false);
+        return;
     }
 
     try {
@@ -118,7 +123,7 @@ export default function StoreSignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
-                className="input-paper"
+                className={cn("input-paper", emailError && "border-destructive animate-shake")}
               />
               {emailError && <p className="text-sm font-medium text-destructive">{emailError}</p>}
             </div>
@@ -145,7 +150,7 @@ export default function StoreSignupPage() {
                 value={activationKey}
                 onChange={(e) => setActivationKey(e.target.value)}
                 disabled={isLoading}
-                className="input-paper"
+                className={cn("input-paper", activationKeyError && "border-destructive animate-shake")}
               />
               {activationKeyError && <p className="text-sm font-medium text-destructive">{activationKeyError}</p>}
                <p className="text-xs text-muted-foreground px-1">
