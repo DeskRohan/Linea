@@ -71,7 +71,7 @@ import { useCartStore } from "@/store/cart-store";
 import { type Store } from "@/lib/types";
 import Link from "next/link";
 import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError } from "@/firebase/errors";
+import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 
 
 export default function ShoppingPage() {
@@ -263,18 +263,19 @@ export default function ShoppingPage() {
         status: "completed"
     };
 
-    try {
-        const ordersCollection = collection(firestore, 'orders');
-        const newOrderRef = await addDoc(ordersCollection, orderData);
-
+    const ordersCollection = collection(firestore, 'orders');
+    
+    // Use .then() and .catch() to handle success and failure
+    addDoc(ordersCollection, orderData).then(async (newOrderRef) => {
+        // This block runs on successful order creation.
         const batch = writeBatch(firestore);
-        // Update product quantities in the store's inventory
         for (const item of cartItems) {
             const productRef = doc(firestore, 'stores', selectedStore.id, 'products', item.id);
             batch.update(productRef, {
                 quantity: increment(-item.quantity)
             });
         }
+        
         await batch.commit();
         
         clearCart();
@@ -285,24 +286,29 @@ export default function ShoppingPage() {
 
         router.push(`/invoice/${newOrderRef.id}`);
 
-    } catch (error: any) {
-        console.error("Error processing payment: ", error);
-        toast({
-            variant: "destructive",
-            title: "Payment Failed",
-            description: "There was an error creating your order. Please try again.",
-        });
-
+    }).catch((serverError) => {
+        // This block runs if addDoc fails, likely due to security rules.
+        console.error("Error processing payment: ", serverError);
+        
+        // Create and emit the detailed permission error.
         const permissionError = new FirestorePermissionError({
             path: `/orders/{generatedId}`,
             operation: 'create',
             requestResourceData: orderData,
-        });
+        } as SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
 
-    } finally {
+        // Inform the user of a generic failure. The dev overlay will show the details.
+        toast({
+            variant: "destructive",
+            title: "Payment Failed",
+            description: "There was an error creating your bill. Please check the console for details.",
+        });
+
+    }).finally(() => {
+        // This runs regardless of success or failure.
         setIsProcessing(false);
-    }
+    });
   };
 
   if (userLoading) {
@@ -618,3 +624,5 @@ const CartFooterActions = ({
     </>
   );
 };
+
+    
