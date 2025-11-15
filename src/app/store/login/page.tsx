@@ -21,8 +21,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 export default function StoreLoginPage() {
-  const [email, setEmail] = useState("tcc@linea.com");
-  const [password, setPassword] = useState("tcc2k25");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const auth = useAuth();

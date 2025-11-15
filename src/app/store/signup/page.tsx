@@ -24,10 +24,10 @@ import { Loader2 } from "lucide-react";
 const VALID_ACTIVATION_KEY = "rhlinea2k25";
 
 export default function StoreSignupPage() {
-  const [email, setEmail] = useState("tcc@linea.com");
-  const [password, setPassword] = useState("tcc2k25");
-  const [storeName, setStoreName] = useState("The Corner Collection");
-  const [activationKey, setActivationKey] = useState(VALID_ACTIVATION_KEY);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [activationKey, setActivationKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
