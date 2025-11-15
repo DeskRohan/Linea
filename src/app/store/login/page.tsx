@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock } from "lucide-react";
 
 export default function StoreLoginPage() {
   const [email, setEmail] = useState("");
@@ -64,7 +64,7 @@ export default function StoreLoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="flex items-center gap-2"><Mail />Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -76,7 +76,7 @@ export default function StoreLoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="flex items-center gap-2"><Lock />Password</Label>
               <Input
                 id="password"
                 type="password"

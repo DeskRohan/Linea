@@ -45,7 +45,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Loader2, ScanLine, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { PlusCircle, Loader2, ScanLine, MoreHorizontal, Pencil, Trash2, Package, IndianRupee, Warehouse, Barcode } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -233,7 +233,7 @@ export default function InventoryPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Name</FormLabel>
+                    <FormLabel className="flex items-center gap-2"><Package />Product Name</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. Green Tea" {...field} />
                     </FormControl>
@@ -246,7 +246,7 @@ export default function InventoryPage() {
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price (INR)</FormLabel>
+                    <FormLabel className="flex items-center gap-2"><IndianRupee />Price (INR)</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="e.g. 150.00" {...field} />
                     </FormControl>
@@ -259,7 +259,7 @@ export default function InventoryPage() {
                 name="quantity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quantity</FormLabel>
+                    <FormLabel className="flex items-center gap-2"><Warehouse />Quantity</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="e.g. 100" {...field} />
                     </FormControl>
@@ -272,7 +272,7 @@ export default function InventoryPage() {
                 name="barcode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Barcode (ID)</FormLabel>
+                    <FormLabel className="flex items-center gap-2"><Barcode />Barcode (ID)</FormLabel>
                     <div className="flex items-center gap-2">
                       <FormControl>
                         <Input placeholder="Scan or enter barcode" {...field} />

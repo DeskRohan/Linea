@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, Building, MapPin, Ticket, FileText, Phone, Landmark, FileCheck } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { useUser, useFirestore } from "@/firebase";
@@ -227,11 +227,11 @@ export default function ShopSettingsPage() {
             </CardHeader>
             <CardContent className="grid gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="shopName">Shop Name</Label>
+                <Label htmlFor="shopName" className="flex items-center gap-2"><Building />Shop Name</Label>
                 <Input id="shopName" type="text" className="w-full" value={settings.shopName} onChange={handleInputChange} />
               </div>
               <div className="grid gap-3">
-                <Label htmlFor="shopAddress">Shop Address</Label>
+                <Label htmlFor="shopAddress" className="flex items-center gap-2"><MapPin />Shop Address</Label>
                 <Textarea
                   id="shopAddress"
                   value={settings.shopAddress}
@@ -267,12 +267,12 @@ export default function ShopSettingsPage() {
             </CardHeader>
             <CardContent className="grid gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="invoicePrefix">Invoice Prefix (Optional)</Label>
+                <Label htmlFor="invoicePrefix" className="flex items-center gap-2"><Ticket />Invoice Prefix (Optional)</Label>
                 <Input id="invoicePrefix" value={settings.invoicePrefix} onChange={handleInputChange} />
                 <p className="text-xs text-muted-foreground">Set a prefix for your bill numbers.</p>
               </div>
               <div className="grid gap-3">
-                <Label htmlFor="invoiceFooter">Invoice Footer Note (Optional)</Label>
+                <Label htmlFor="invoiceFooter" className="flex items-center gap-2"><FileText />Invoice Footer Note (Optional)</Label>
                 <Textarea
                   id="invoiceFooter"
                   value={settings.invoiceFooter}
@@ -308,12 +308,12 @@ export default function ShopSettingsPage() {
             </CardHeader>
             <CardContent className="grid gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="whatsapp">Business WhatsApp Number</Label>
+                <Label htmlFor="whatsapp" className="flex items-center gap-2"><Phone />Business WhatsApp Number</Label>
                 <Input id="whatsapp" value={settings.whatsapp} onChange={handleInputChange} />
                 <p className="text-xs text-muted-foreground">Used for sharing bills.</p>
               </div>
               <div className="grid gap-3">
-                <Label htmlFor="gstin">GSTIN (Optional)</Label>
+                <Label htmlFor="gstin" className="flex items-center gap-2"><Landmark />GSTIN (Optional)</Label>
                 <Input id="gstin" value={settings.gstin} onChange={handleInputChange} />
                 <p className="text-xs text-muted-foreground">Your Goods and Services Tax ID.</p>
               </div>
@@ -329,7 +329,7 @@ export default function ShopSettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-3">
-                <Label htmlFor="terms">Terms & Conditions</Label>
+                <Label htmlFor="terms" className="flex items-center gap-2"><FileCheck />Terms & Conditions</Label>
                 <Textarea
                   id="terms"
                   value={settings.terms}

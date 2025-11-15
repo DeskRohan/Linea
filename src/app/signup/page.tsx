@@ -12,15 +12,12 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, User as UserIcon, Mail, Lock } from "lucide-react";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -142,7 +139,7 @@ export default function SignupPage() {
           </p>
           <form onSubmit={handleEmailSignUp} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="displayName">Full Name</Label>
+              <Label htmlFor="displayName" className="flex items-center gap-2"><UserIcon />Full Name</Label>
               <Input
                 id="displayName"
                 type="text"
@@ -155,7 +152,7 @@ export default function SignupPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="flex items-center gap-2"><Mail />Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -168,7 +165,7 @@ export default function SignupPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="flex items-center gap-2"><Lock />Password</Label>
               <Input
                 id="password"
                 type="password"

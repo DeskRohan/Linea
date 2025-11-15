@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Store, Mail, Lock, Key } from "lucide-react";
 
 const VALID_ACTIVATION_KEY = "rhlinea2k25";
 
@@ -78,7 +78,7 @@ export default function StoreSignupPage() {
         <CardContent>
           <form onSubmit={handleEmailSignUp} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="storeName">Store Name</Label>
+              <Label htmlFor="storeName" className="flex items-center gap-2"><Store />Store Name</Label>
               <Input
                 id="storeName"
                 type="text"
@@ -90,7 +90,7 @@ export default function StoreSignupPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Business Email</Label>
+              <Label htmlFor="email" className="flex items-center gap-2"><Mail />Business Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -102,7 +102,7 @@ export default function StoreSignupPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="flex items-center gap-2"><Lock />Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -114,7 +114,7 @@ export default function StoreSignupPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="activationKey">Activation Key</Label>
+              <Label htmlFor="activationKey" className="flex items-center gap-2"><Key />Activation Key</Label>
               <Input
                 id="activationKey"
                 type="password"
