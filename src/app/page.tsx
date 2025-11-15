@@ -4,7 +4,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Store, ChevronRight } from "lucide-react";
+import { User, Store, ChevronRight, ScanSearch } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function RoleSelectionPage() {
@@ -34,6 +34,12 @@ export default function RoleSelectionPage() {
             icon={User}
             title="Customer"
             description="Start a new shopping session and scan items."
+          />
+          <RoleLink
+            href="/exit-scan"
+            icon={ScanSearch}
+            title="Exit Scanner"
+            description="Verify purchases at the store exit."
           />
         </CardContent>
       </Card>

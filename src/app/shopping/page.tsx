@@ -230,18 +230,87 @@ export default function ShoppingPage() {
   };
 
   const handlePayment = async () => {
-    if (!user || !selectedStore) {
-        toast({ variant: 'destructive', title: 'Error', description: 'User or store information is missing.' });
+    if (!user || !selectedStore || !firestore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'User, store, or database information is missing.' });
         return;
     }
+    if (cartItems.length === 0) {
+        toast({ variant: 'destructive', title: 'Empty Cart', description: 'Please add items to your cart before proceeding.' });
+        return;
+    }
+
     setIsProcessing(true);
 
-    // Simulate a short delay for processing
-    setTimeout(() => {
-        router.push(`/bill`);
-        // No need to call clearCart() here as the bill page will display the final cart
+    const subtotal = totalPrice();
+    const cgst = subtotal * 0.09;
+    const sgst = subtotal * 0.09;
+    const totalAmount = subtotal + cgst + sgst;
+
+    const orderData = {
+        customerId: user.uid,
+        customerName: user.displayName,
+        customerEmail: user.email,
+        customerPhotoURL: user.photoURL,
+        storeId: selectedStore.id,
+        storeName: selectedStore.name,
+        items: cartItems.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity })),
+        subtotal,
+        cgst,
+        sgst,
+        totalAmount,
+        totalItems: totalItems(),
+        createdAt: serverTimestamp(),
+        status: "completed"
+    };
+
+    try {
+        const batch = writeBatch(firestore);
+
+        // 1. Create order in the store's subcollection
+        const storeOrderRef = doc(collection(firestore, 'stores', selectedStore.id, 'orders'));
+        batch.set(storeOrderRef, orderData);
+        
+        // 2. Create order in the user's subcollection
+        const userOrderRef = doc(firestore, 'users', user.uid, 'orders', storeOrderRef.id);
+        batch.set(userOrderRef, orderData);
+
+        // 3. Update product quantities
+        for (const item of cartItems) {
+            const productRef = doc(firestore, 'stores', selectedStore.id, 'products', item.id);
+            batch.update(productRef, {
+                quantity: increment(-item.quantity)
+            });
+        }
+        
+        await batch.commit();
+        
+        clearCart();
+        toast({
+            title: "Payment Successful!",
+            description: "Your order has been placed.",
+        });
+
+        router.push(`/invoice/${storeOrderRef.id}?storeId=${selectedStore.id}`);
+
+    } catch (error: any) {
+        console.error("Error processing payment: ", error);
+        toast({
+            variant: "destructive",
+            title: "Payment Failed",
+            description: "There was an issue creating your order. Please try again.",
+        });
+
+        // Emit a detailed error for debugging security rules
+        const permissionError = new FirestorePermissionError({
+            path: `/stores/${selectedStore.id}/orders/{generatedId} and /users/${user.uid}/orders/{generatedId}`,
+            operation: 'create',
+            requestResourceData: orderData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+    } finally {
         setIsProcessing(false);
-    }, 1000);
+    }
   };
 
   if (userLoading) {
