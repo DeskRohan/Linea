@@ -82,7 +82,7 @@ export default function StoreSignupPage() {
               <Input
                 id="storeName"
                 type="text"
-                placeholder="My Awesome Store"
+                placeholder="Enter your store name"
                 required
                 value={storeName}
                 onChange={(e) => setStoreName(e.target.value)}
@@ -94,7 +94,7 @@ export default function StoreSignupPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="store@example.com"
+                placeholder="Enter your business email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -106,6 +106,7 @@ export default function StoreSignupPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="Enter your password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

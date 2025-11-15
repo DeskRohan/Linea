@@ -82,7 +82,7 @@ export default function StoreLoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="store@example.com"
+                placeholder="Enter your business email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -94,6 +94,7 @@ export default function StoreLoginPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="Enter your password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
