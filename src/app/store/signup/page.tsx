@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useAuth, useFirestore } from "@/firebase";
-import { doc, getDoc, runTransaction } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -37,34 +37,27 @@ export default function StoreSignupPage() {
     event.preventDefault();
     setIsLoading(true);
 
-    const keyRef = doc(firestore, "activation_keys", activationKey);
+    if (activationKey !== "rhlinea25") {
+      toast({
+        variant: "destructive",
+        title: "Signup Failed",
+        description: "Invalid activation key.",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      await runTransaction(firestore, async (transaction) => {
-        const keyDoc = await transaction.get(keyRef);
+      // Key is valid, proceed with creating the user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCredential.user, { displayName: storeName });
 
-        if (!keyDoc.exists() || keyDoc.data().isUsed) {
-          throw new Error("Invalid or already used activation key.");
-        }
-
-        // Key is valid, proceed with creating the user
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCredential.user, { displayName: storeName });
-
-        // Mark the key as used
-        transaction.update(keyRef, { 
-          isUsed: true, 
-          usedBy: userCredential.user.uid,
-          usedAt: new Date()
-        });
-        
-        // Create the store document
-        const storeRef = doc(firestore, "stores", userCredential.user.uid);
-        transaction.set(storeRef, {
-            shopName: storeName,
-            ownerEmail: email,
-            createdAt: new Date(),
-        });
+      // Create the store document
+      const storeRef = doc(firestore, "stores", userCredential.user.uid);
+      await setDoc(storeRef, {
+          shopName: storeName,
+          ownerEmail: email,
+          createdAt: new Date(),
       });
 
       toast({
@@ -74,7 +67,7 @@ export default function StoreSignupPage() {
       router.push("/store/dashboard");
 
     } catch (error: any) {
-      console.error("Signup transaction failed: ", error);
+      console.error("Signup failed: ", error);
        toast({
         variant: "destructive",
         title: "Signup Failed",

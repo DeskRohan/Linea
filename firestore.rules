@@ -40,20 +40,5 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
-
-    // Rule for the 'activation_keys' collection
-    match /activation_keys/{keyId} {
-      // Allow reading a single key for validation during signup.
-      allow get: if true;
-      // Allow a logged-in user to list all keys for the admin panel.
-      allow list: if request.auth != null;
-      // Allow a logged-in user to create new keys.
-      allow create: if request.auth != null;
-      // The `isUsed` field can only be changed from false to true.
-      allow update: if request.resource.data.isUsed == true 
-                    && resource.data.isUsed == false;
-      // Nobody can delete keys from the client.
-      allow delete: if false;
-    }
   }
 }
