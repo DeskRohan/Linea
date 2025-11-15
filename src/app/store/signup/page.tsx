@@ -127,7 +127,7 @@ export default function StoreSignupPage() {
                <p className="text-xs text-muted-foreground px-1">
                 Don't have a key?{' '}
                 <a
-                  href="https://wa.me/9110218701?text=I%20need%20the%20activation%20key%20for%20my%20store"
+                  href="https://wa.me/9110218701?text=Hello!%20I'm%20setting%20up%20my%20store%20on%20Linea%20and%20would%20like%20to%20request%20an%20activation%20key.%20Thank%20you!"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline text-primary"
