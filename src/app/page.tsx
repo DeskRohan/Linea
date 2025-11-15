@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Store, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,10 +12,13 @@ export default function RoleSelectionPage() {
     <main className="flex h-screen w-screen flex-col items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md card-paper">
         <CardHeader className="text-center items-center p-6">
-          {/* Logo Placeholder */}
-          <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-background border-2 border-dashed">
-            <span className="text-sm text-muted-foreground">Logo</span>
-          </div>
+          <Image
+            src="/logo.png"
+            alt="App Logo"
+            width={96}
+            height={96}
+            className="mb-4 rounded-full"
+          />
           <CardTitle className="font-headline text-3xl">Welcome to Linea</CardTitle>
           <CardDescription>How would you like to continue?</CardDescription>
         </CardHeader>
