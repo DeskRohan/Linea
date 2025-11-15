@@ -16,10 +16,7 @@ import {
   Store,
   PanelLeft,
   Mail,
-  Instagram,
-  MessageSquare,
   Loader2,
-  Building,
   User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,6 +41,13 @@ import {
 import { cn } from "@/lib/utils";
 import OnboardingTour from "./OnboardingTour";
 
+const navLinks = [
+  { href: "/store/dashboard", text: "Dashboard", icon: LayoutDashboard },
+  { href: "/store/inventory", text: "Inventory", icon: Boxes },
+  { href: "/store/analytics", text: "Analytics", icon: BarChart3 },
+  { href: "/store/customers", text: "Customers", icon: Users },
+  { href: "/store/settings", text: "Settings", icon: Settings },
+];
 
 export default function StoreLayout({
   children,
@@ -74,7 +78,6 @@ export default function StoreLayout({
     setShowTour(false);
   };
 
-
   const handleLogout = async () => {
     await signOut(auth);
     router.push("/");
@@ -93,11 +96,10 @@ export default function StoreLayout({
     return parts[0].substring(0, 2).toUpperCase();
   }
 
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <OnboardingTour open={showTour} onOpenChange={setShowTour} onComplete={handleTourComplete} />
-      <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
         <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
           <Link
             href="/store/dashboard"
@@ -106,7 +108,7 @@ export default function StoreLayout({
             <Store className="h-6 w-6" />
             <span className="sr-only">My Store</span>
           </Link>
-          <NavLinks pathname={pathname} />
+          <DesktopNavLinks pathname={pathname} />
         </nav>
         <Sheet>
           <SheetTrigger asChild>
@@ -120,16 +122,7 @@ export default function StoreLayout({
             </Button>
           </SheetTrigger>
           <SheetContent side="left">
-            <nav className="grid gap-6 text-lg font-medium">
-              <Link
-                href="/store/dashboard"
-                className="flex items-center gap-2 text-lg font-semibold"
-              >
-                <Store className="h-6 w-6" />
-                <span className="">My Store</span>
-              </Link>
-              <NavLinks pathname={pathname} mobile />
-            </nav>
+             {/* This content is now managed by the bottom nav bar on mobile */}
           </SheetContent>
         </Sheet>
         <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
@@ -184,48 +177,34 @@ export default function StoreLayout({
                       <span className="text-sm font-medium">simplinovus@gmail.com</span>
                     </a>
                   </div>
-
               </div>
             </DialogContent>
           </Dialog>
         </div>
       </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+      <main className="flex-1 overflow-auto p-4 md:p-8 pb-20 md:pb-8">
         {children}
       </main>
+      <MobileBottomNav pathname={pathname} />
     </div>
   );
 }
 
-const NavLinks = ({ mobile, pathname }: { mobile?: boolean, pathname: string }) => {
-  const links = [
-    { href: "/store/dashboard", text: "Dashboard", icon: LayoutDashboard },
-    { href: "/store/inventory", text: "Inventory", icon: Boxes },
-    { href: "/store/analytics", text: "Analytics", icon: BarChart3 },
-    { href: "/store/customers", text: "Customers", icon: Users },
-    { href: "/store/settings", text: "Settings", icon: Settings },
-  ];
-
-  const baseClasses = "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-  const activeClasses = "bg-muted text-primary"
-
-  const mobileClasses = "text-lg font-semibold";
+const DesktopNavLinks = ({ pathname }: { pathname: string }) => {
+  const baseClasses = "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary";
+  const activeClasses = "bg-muted text-primary";
   const desktopClasses = "text-base";
 
   return (
     <>
-      {links.map((link) => {
+      {navLinks.map((link) => {
         const isActive = pathname.startsWith(link.href);
         const Icon = link.icon;
         return (
           <Link
             key={link.href}
             href={link.href}
-            className={cn(
-              baseClasses,
-              mobile ? mobileClasses : desktopClasses,
-              isActive && activeClasses
-            )}
+            className={cn(baseClasses, desktopClasses, isActive && activeClasses)}
           >
             <Icon className="h-5 w-5" />
             {link.text}
@@ -233,5 +212,31 @@ const NavLinks = ({ mobile, pathname }: { mobile?: boolean, pathname: string }) 
         );
       })}
     </>
+  );
+};
+
+const MobileBottomNav = ({ pathname }: { pathname: string }) => {
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background p-2 md:hidden">
+      <div className="grid h-full max-w-lg grid-cols-5 mx-auto">
+        {navLinks.map((link) => {
+          const isActive = pathname.startsWith(link.href);
+          const Icon = link.icon;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "group inline-flex flex-col items-center justify-center p-2 text-center rounded-lg",
+                isActive ? "text-primary" : "text-muted-foreground hover:bg-muted"
+              )}
+            >
+              <Icon className="w-6 h-6 mb-1" />
+              <span className="text-[10px] font-medium">{link.text}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 };

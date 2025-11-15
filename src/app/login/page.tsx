@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LineaLogo } from "@/components/icons/linea-logo";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -113,9 +112,6 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-      <Link href="/" className="absolute top-8">
-          <LineaLogo className="h-16 w-16" />
-      </Link>
       <Card className="w-full max-w-sm card-paper">
         <header className="title-bar">
             <h1 className="text-lg">Customer Login</h1>

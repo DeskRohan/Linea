@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from 'react';
@@ -25,6 +26,7 @@ const Scanner = ({ onScanSuccess, onScanError = () => {} }: ScannerProps) => {
         },
         rememberLastUsedCamera: true,
         supportedScanTypes: [], // Use all supported scan types
+        facingMode: "environment", // Prioritize back camera
       };
 
       html5QrcodeScanner = new Html5QrcodeScanner(qrcodeRegionId, config, false);

@@ -216,8 +216,8 @@ export default function ShopSettingsPage() {
         <h1 className="text-2xl font-bold tracking-tight">Shop Settings</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 grid gap-8 auto-rows-min">
+      <div className="flex flex-col md:grid md:grid-cols-3 gap-8">
+        <div className="md:col-span-2 flex flex-col gap-8">
           <Card>
             <CardHeader>
               <CardTitle>Shop Details</CardTitle>
@@ -282,11 +282,10 @@ export default function ShopSettingsPage() {
               </div>
             </CardContent>
           </Card>
-
         </div>
 
-        <div className="md:col-span-1 grid gap-8 auto-rows-min">
-          <Card>
+        <div className="md:col-span-1 flex flex-col gap-8">
+          <Card className="order-last md:order-first">
             <CardHeader>
               <CardTitle>Save Changes</CardTitle>
               <CardDescription>
