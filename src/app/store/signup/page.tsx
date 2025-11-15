@@ -28,6 +28,7 @@ export default function StoreSignupPage() {
   const [storeName, setStoreName] = useState("");
   const [activationKey, setActivationKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
@@ -36,13 +37,10 @@ export default function StoreSignupPage() {
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
+    setEmailError(""); 
 
     if (!email.endsWith("@linea.com")) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Email Domain",
-        description: "Only emails from @linea.com are allowed for store accounts.",
-      });
+      setEmailError("Only emails from @linea.com are allowed.");
       setIsLoading(false);
       return;
     }
@@ -124,6 +122,7 @@ export default function StoreSignupPage() {
                 disabled={isLoading}
                 className="input-paper"
               />
+              {emailError && <p className="text-sm font-medium text-destructive">{emailError}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="flex items-center gap-2"><Lock />Password</Label>
