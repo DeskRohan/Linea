@@ -20,28 +20,28 @@ service cloud.firestore {
         // Allow a customer to only update the 'quantity' field
         allow update: if request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity']);
       }
-
-      // This rule manages access to a store's orders subcollection.
-      match /orders/{orderId} {
-        // Customers can create orders if the order belongs to them.
-        allow create: if request.auth != null && request.resource.data.customerId == request.auth.uid;
-        // The store owner can read, update, or delete any order in their store.
-        allow read, update, delete: if request.auth != null && request.auth.uid == storeId;
-      }
     }
-
+    
     // Rule for the 'users' collection
     match /users/{userId} {
       // A user can only read or write to their own document
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
 
-      // Rules for the user's orders subcollection
-      match /orders/{orderId} {
-        // Allow a user to create their own order record.
-        allow create: if request.auth != null && request.resource.data.customerId == request.auth.uid;
-        // Allow a user to read, update, and delete their own orders after they've been created.
-        allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-      }
+    // Rule for the root 'orders' collection
+    match /orders/{orderId} {
+      // A customer can create an order if the order belongs to them.
+      allow create: if request.auth != null && request.resource.data.customerId == request.auth.uid;
+      
+      // An order can be read by the customer who owns it or the store owner it belongs to.
+      allow read: if request.auth != null && (resource.data.customerId == request.auth.uid || resource.data.storeId == request.auth.uid);
+
+      // An order can be updated by the store owner.
+      // A customer could potentially update it if rules were added (e.g., to cancel)
+      allow update: if request.auth != null && resource.data.storeId == request.auth.uid;
+      
+      // An order can be deleted by the store owner.
+      allow delete: if request.auth != null && resource.data.storeId == request.auth.uid;
     }
   }
 }

@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Users, DollarSign, Crown, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useUser, useFirestore } from "@/firebase";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -49,7 +49,7 @@ export default function CustomersPage() {
 
     setLoading(true);
     const storeId = user.uid;
-    const ordersQuery = collection(firestore, "stores", storeId, "orders");
+    const ordersQuery = query(collection(firestore, "orders"), where("storeId", "==", storeId));
 
     const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
         const customerData: { [uid: string]: Customer } = {};

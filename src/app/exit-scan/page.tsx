@@ -69,20 +69,18 @@ export default function ExitScanPage() {
     }
     
     try {
-        // Assume the QR code contains the order ID.
-        // We need a store ID to find the order. This is a simplification.
-        // In a real app, the scanner might belong to a specific store.
-        // We'll have to search all stores, which is inefficient but works for a demo.
-        const querySnapshot = await getDoc(doc(firestore, "stores", "dXPoWL061Gc72GzTORiRkDV2gpl2", "orders", decodedText)); // Hardcoded store for demo
+      const orderRef = doc(firestore, "orders", decodedText);
+      const orderSnap = await getDoc(orderRef);
 
-      if (querySnapshot.exists()) {
-        const orderData = querySnapshot.data();
+      if (orderSnap.exists()) {
+        const orderData = orderSnap.data();
         if (orderData.status === 'completed') {
             setVerificationStatus('success');
             toast({
                 title: 'Order Verified!',
                 description: `Thank you, ${orderData.customerName}!`,
             });
+            // In a real scenario, this would trigger a physical gate.
         } else {
              setVerificationStatus('error');
              toast({ variant: 'destructive', title: 'Order Not Completed', description: 'This order has not been paid for.' });
@@ -167,4 +165,3 @@ export default function ExitScanPage() {
     </main>
   );
 }
-

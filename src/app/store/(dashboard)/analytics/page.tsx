@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/chart";
 import { DollarSign, Users, CreditCard, Activity, Package, Loader2 } from "lucide-react";
 import { useUser, useFirestore } from "@/firebase";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -62,7 +62,7 @@ export default function AnalyticsPage() {
     if (!user) return;
 
     const storeId = user.uid;
-    const ordersQuery = collection(firestore, "stores", storeId, "orders");
+    const ordersQuery = query(collection(firestore, "orders"), where("storeId", "==", storeId));
 
     const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
       if (snapshot.empty) {

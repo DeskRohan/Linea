@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, orderBy, where } from 'firebase/firestore';
 import { Loader2, Receipt, ShoppingBag, ArrowLeft } from 'lucide-react';
 import {
   Card,
@@ -50,7 +50,8 @@ export default function CustomerOrdersPage() {
 
     setLoading(true);
     const ordersQuery = query(
-      collection(firestore, 'users', user.uid, 'orders'),
+      collection(firestore, 'orders'),
+      where('customerId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
 
@@ -145,7 +146,7 @@ export default function CustomerOrdersPage() {
                         <TableCell className="text-right">{formatCurrency(order.totalAmount)}</TableCell>
                          <TableCell className="text-right">
                             <Button variant="outline" size="sm" asChild>
-                               <Link href={`/invoice/${order.id}?storeId=${order.storeId}`}>
+                               <Link href={`/invoice/${order.id}`}>
                                     <Receipt className="mr-2 h-4 w-4" />
                                     View Bill
                                 </Link>

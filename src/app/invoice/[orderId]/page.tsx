@@ -32,6 +32,7 @@ interface Order {
     sgst: number;
     totalAmount: number;
     createdAt: { toDate: () => Date };
+    storeId: string;
 }
 
 interface StoreSettings {
@@ -46,7 +47,6 @@ export default function InvoicePage() {
   const router = useRouter();
   const params = useParams();
   const { orderId } = params;
-  const storeId = new URLSearchParams(window.location.search).get('storeId');
 
   const firestore = useFirestore();
   const { user, loading: userLoading } = useUser();
@@ -56,32 +56,31 @@ export default function InvoicePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!orderId || !storeId || !firestore) return;
+    if (!orderId || !firestore) return;
 
     const fetchOrderAndStore = async () => {
       setLoading(true);
       try {
-        // Fetch Order
-        const orderRef = doc(firestore, 'stores', storeId as string, 'orders', orderId as string);
+        // Fetch Order from root collection
+        const orderRef = doc(firestore, 'orders', orderId as string);
         const orderSnap = await getDoc(orderRef);
 
         if (!orderSnap.exists()) {
           console.error("No such order!");
-          // Handle error, maybe redirect
           router.push('/customer/orders');
           return;
         }
-        setOrder({ id: orderSnap.id, ...orderSnap.data() } as Order);
+        const orderData = { id: orderSnap.id, ...orderSnap.data() } as Order;
+        setOrder(orderData);
 
-        // Fetch Store Details
-        const storeRef = doc(firestore, 'stores', storeId as string);
+        // Fetch Store Details using storeId from the order
+        const storeRef = doc(firestore, 'stores', orderData.storeId);
         const storeSnap = await getDoc(storeRef);
         if (storeSnap.exists()) {
             setStore(storeSnap.data() as StoreSettings);
         } else {
-             // Fallback store settings if not found
             setStore({
-                shopName: "Your Favorite Store",
+                shopName: orderData.storeName || "Your Favorite Store",
                 shopAddress: "123 Market Street, Shopsville",
                 invoiceFooter: "Thank you for your purchase!",
                 gstin: "STORE-GSTIN-001",
@@ -96,7 +95,7 @@ export default function InvoicePage() {
     };
 
     fetchOrderAndStore();
-  }, [orderId, storeId, firestore, router]);
+  }, [orderId, firestore, router]);
 
   if (loading || userLoading) {
     return (

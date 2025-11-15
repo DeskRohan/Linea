@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useUser, useFirestore } from "@/firebase";
-import { collection, onSnapshot, query, limit, orderBy, getCountFromServer } from "firebase/firestore";
+import { collection, onSnapshot, query, limit, orderBy, where } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -50,9 +50,12 @@ export default function StoreDashboard() {
     setLoading(true);
     const storeId = user.uid;
 
+    const ordersCollectionRef = collection(firestore, "orders");
+
     // Real-time listener for recent orders
     const recentOrdersQuery = query(
-      collection(firestore, "stores", storeId, "orders"),
+      ordersCollectionRef,
+      where("storeId", "==", storeId),
       orderBy("createdAt", "desc"),
       limit(5)
     );
@@ -78,7 +81,7 @@ export default function StoreDashboard() {
     });
 
     // Real-time listener for all orders to calculate stats
-    const allOrdersQuery = collection(firestore, "stores", storeId, "orders");
+    const allOrdersQuery = query(ordersCollectionRef, where("storeId", "==", storeId));
     const unsubscribeAll = onSnapshot(allOrdersQuery, (snapshot) => {
       let revenue = 0;
       const customerIds = new Set<string>();

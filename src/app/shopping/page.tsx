@@ -66,7 +66,7 @@ import {
 import { useAuth, useUser, useFirestore } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { formatCurrency } from "@/lib/utils";
-import { collection, query, where, getDocs, limit, onSnapshot, writeBatch, doc, serverTimestamp, increment } from "firebase/firestore";
+import { collection, query, where, getDocs, limit, onSnapshot, writeBatch, doc, serverTimestamp, increment, addDoc } from "firebase/firestore";
 import { useCartStore } from "@/store/cart-store";
 import { type Store } from "@/lib/types";
 import Link from "next/link";
@@ -265,16 +265,12 @@ export default function ShoppingPage() {
 
     try {
         const batch = writeBatch(firestore);
-
-        // 1. Create order in the store's subcollection
-        const storeOrderRef = doc(collection(firestore, 'stores', selectedStore.id, 'orders'));
-        batch.set(storeOrderRef, orderData);
         
-        // 2. Create order in the user's subcollection
-        const userOrderRef = doc(firestore, 'users', user.uid, 'orders', storeOrderRef.id);
-        batch.set(userOrderRef, orderData);
+        // 1. Create order in the root 'orders' collection
+        const newOrderRef = doc(collection(firestore, 'orders'));
+        batch.set(newOrderRef, orderData);
 
-        // 3. Update product quantities
+        // 2. Update product quantities in the store's inventory
         for (const item of cartItems) {
             const productRef = doc(firestore, 'stores', selectedStore.id, 'products', item.id);
             batch.update(productRef, {
@@ -290,19 +286,19 @@ export default function ShoppingPage() {
             description: "Your order has been placed.",
         });
 
-        router.push(`/invoice/${storeOrderRef.id}?storeId=${selectedStore.id}`);
+        router.push(`/invoice/${newOrderRef.id}`);
 
     } catch (error: any) {
         console.error("Error processing payment: ", error);
         toast({
             variant: "destructive",
             title: "Payment Failed",
-            description: "There was an issue creating your order. Please try again.",
+            description: "There was an error creating your order. Please try again.",
         });
 
         // Emit a detailed error for debugging security rules
         const permissionError = new FirestorePermissionError({
-            path: `/stores/${selectedStore.id}/orders/{generatedId} and /users/${user.uid}/orders/{generatedId}`,
+            path: `/orders/{generatedId}`,
             operation: 'create',
             requestResourceData: orderData,
         });
