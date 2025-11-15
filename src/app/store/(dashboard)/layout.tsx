@@ -110,21 +110,7 @@ export default function StoreLayout({
           </Link>
           <DesktopNavLinks pathname={pathname} />
         </nav>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0 md:hidden"
-            >
-              <PanelLeft className="h-5 w-5" />
-              <span className="sr-only">Toggle navigation menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-             {/* This content is now managed by the bottom nav bar on mobile */}
-          </SheetContent>
-        </Sheet>
+        
         <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <Dialog>
             <DropdownMenu>
