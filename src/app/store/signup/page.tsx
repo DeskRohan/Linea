@@ -4,8 +4,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { useAuth, useFirestore } from "@/firebase";
+import { doc, getDoc, runTransaction } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,8 +22,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Store, Mail, Lock, Key } from "lucide-react";
 
-const VALID_ACTIVATION_KEY = "rhlinea2k25";
-
 export default function StoreSignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,30 +31,50 @@ export default function StoreSignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
 
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
 
-    if (activationKey !== VALID_ACTIVATION_KEY) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Activation Key",
-        description:
-          "Please enter the correct activation key to create a store.",
-      });
-      setIsLoading(false);
-      return;
-    }
+    const keyRef = doc(firestore, "activation_keys", activationKey);
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      await runTransaction(firestore, async (transaction) => {
+        const keyDoc = await transaction.get(keyRef);
+
+        if (!keyDoc.exists() || keyDoc.data().isUsed) {
+          throw new Error("Invalid or already used activation key.");
+        }
+
+        // Key is valid, proceed with creating the user
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: storeName });
+
+        // Mark the key as used
+        transaction.update(keyRef, { 
+          isUsed: true, 
+          usedBy: userCredential.user.uid,
+          usedAt: new Date()
+        });
+        
+        // Create the store document
+        const storeRef = doc(firestore, "stores", userCredential.user.uid);
+        transaction.set(storeRef, {
+            shopName: storeName,
+            ownerEmail: email,
+            createdAt: new Date(),
+        });
+      });
+
       toast({
         title: "Store Account Created & Logged In",
         description: "Redirecting to your dashboard...",
       });
       router.push("/store/dashboard");
+
     } catch (error: any) {
+      console.error("Signup transaction failed: ", error);
        toast({
         variant: "destructive",
         title: "Signup Failed",
@@ -68,14 +87,14 @@ export default function StoreSignupPage() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-      <Card className="w-full max-w-sm shadow-2xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Create Your Store</CardTitle>
-          <CardDescription>
-            Join Linea and start selling today.
+      <Card className="w-full max-w-sm card-paper">
+        <header className="title-bar">
+          <h1 className="text-lg">Create Your Store</h1>
+        </header>
+        <CardContent className="p-6">
+          <CardDescription className="text-center mb-4">
+            Join Linea and start selling today. An activation key is required.
           </CardDescription>
-        </CardHeader>
-        <CardContent>
           <form onSubmit={handleEmailSignUp} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="storeName" className="flex items-center gap-2"><Store />Store Name</Label>
@@ -87,6 +106,7 @@ export default function StoreSignupPage() {
                 value={storeName}
                 onChange={(e) => setStoreName(e.target.value)}
                 disabled={isLoading}
+                className="input-paper"
               />
             </div>
             <div className="space-y-2">
@@ -99,6 +119,7 @@ export default function StoreSignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
+                className="input-paper"
               />
             </div>
             <div className="space-y-2">
@@ -106,23 +127,25 @@ export default function StoreSignupPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Choose a strong password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
+                className="input-paper"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="activationKey" className="flex items-center gap-2"><Key />Activation Key</Label>
               <Input
                 id="activationKey"
-                type="password"
+                type="text"
                 placeholder="Enter your activation key"
                 required
                 value={activationKey}
                 onChange={(e) => setActivationKey(e.target.value)}
                 disabled={isLoading}
+                className="input-paper"
               />
                <p className="text-xs text-muted-foreground px-1">
                 Don't have a key?{' '}
@@ -136,13 +159,13 @@ export default function StoreSignupPage() {
                 </a>
               </p>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full btn-paper btn-primary" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Store
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4 justify-center text-center text-sm text-muted-foreground">
+        <CardFooter className="flex flex-col gap-2 justify-center text-center text-sm text-muted-foreground p-6 pt-0">
           <p>
             Already have an account?{" "}
             <Link
@@ -152,9 +175,6 @@ export default function StoreSignupPage() {
               Sign in
             </Link>
           </p>
-          <Link href="/" className="text-primary hover:underline">
-            Back to role selection
-          </Link>
         </CardFooter>
       </Card>
     </main>

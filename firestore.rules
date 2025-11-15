@@ -40,5 +40,20 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
+
+    // Rule for the 'activation_keys' collection
+    match /activation_keys/{keyId} {
+      // Anyone can read a key to validate it during signup.
+      allow get: if true;
+      // Only an admin (you) should be able to create new keys. 
+      // For now, we allow any authenticated user to create, but you should lock this down.
+      // You can manage keys directly in the Firebase Console.
+      allow create: if request.auth != null;
+      // The `isUsed` field can only be changed from false to true.
+      allow update: if request.resource.data.isUsed == true 
+                    && resource.data.isUsed == false;
+      // Nobody can delete keys from the client.
+      allow delete: if false;
+    }
   }
 }
