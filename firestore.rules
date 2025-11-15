@@ -35,9 +35,12 @@ service cloud.firestore {
       // A user can only read or write to their own document
       allow read, write: if request.auth != null && request.auth.uid == userId;
 
-      // Allow a user to read and write to their own orders subcollection
+      // Rules for the user's orders subcollection
       match /orders/{orderId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        // Allow a user to create their own order record.
+        allow create: if request.auth != null && request.resource.data.customerId == request.auth.uid && request.auth.uid == userId;
+        // Allow a user to read, update, and delete their own orders after they've been created.
+        allow read, update, delete: if request.auth != null && request.auth.uid == userId;
       }
     }
   }
