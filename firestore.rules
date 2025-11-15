@@ -5,19 +5,18 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Rule for the 'stores' collection
     match /stores/{storeId} {
-      // Allow anyone to read the list of stores for the dropdown
+      // Allow anyone to read store details (shop name, address etc.)
       allow read: if true;
       // Only the authenticated store owner can write to their own store document
       allow write: if request.auth != null && request.auth.uid == storeId;
 
       // This rule allows a store owner to manage products in their own store.
-      // A customer can only update the quantity field when making a purchase.
       match /products/{productId} {
         allow read: if true;
         allow create, delete: if request.auth != null && request.auth.uid == storeId;
         // Allow full update for store owner
         allow update: if request.auth != null && request.auth.uid == storeId;
-        // Allow a customer to only update the 'quantity' field
+        // Allow a customer to only update the 'quantity' field (e.g. stock decrement)
         allow update: if request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity']);
       }
     }
@@ -30,8 +29,7 @@ service cloud.firestore {
 
     // Rule for the root 'orders' collection
     match /orders/{orderId} {
-      // A customer can create an order if they are logged in.
-      // We will rely on the app logic to ensure customerId is set correctly.
+      // A customer can create an order if they are logged in and the order belongs to them.
       allow create: if request.auth != null && request.resource.data.customerId == request.auth.uid;
       
       // An order can be read by the customer who owns it OR the store owner it belongs to.

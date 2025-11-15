@@ -79,6 +79,7 @@ export default function InvoicePage() {
         if (storeSnap.exists()) {
             setStore(storeSnap.data() as StoreSettings);
         } else {
+            // Fallback store details if store document is not found
             setStore({
                 shopName: orderData.storeName || "Your Favorite Store",
                 shopAddress: "123 Market Street, Shopsville",

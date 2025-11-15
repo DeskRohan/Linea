@@ -45,7 +45,7 @@ export default function StoreDashboard() {
   const [recentSales, setRecentSales] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !firestore) return;
 
     setLoading(true);
     const storeId = user.uid;

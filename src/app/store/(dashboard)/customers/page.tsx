@@ -45,7 +45,7 @@ export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !firestore) return;
 
     setLoading(true);
     const storeId = user.uid;
@@ -76,7 +76,7 @@ export default function CustomersPage() {
         setLoading(false);
     }, (serverError) => {
         const permissionError = new FirestorePermissionError({
-          path: ordersQuery.path,
+          path: `orders where storeId == ${user.uid}`,
           operation: 'list',
         });
         errorEmitter.emit('permission-error', permissionError);

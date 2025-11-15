@@ -59,7 +59,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !firestore) return;
 
     const storeId = user.uid;
     const ordersQuery = query(collection(firestore, "orders"), where("storeId", "==", storeId));
@@ -119,7 +119,7 @@ export default function AnalyticsPage() {
       setLoading(false);
     }, (serverError) => {
         const permissionError = new FirestorePermissionError({
-          path: ordersQuery.path,
+          path: `orders where storeId == ${user.uid}`,
           operation: 'list',
         });
         errorEmitter.emit('permission-error', permissionError);

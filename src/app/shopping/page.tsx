@@ -126,7 +126,7 @@ export default function ShoppingPage() {
       (snapshot) => {
         const storesData: Store[] = snapshot.docs.map(docSnap => ({
           id: docSnap.id,
-          ownerUid: docSnap.id,
+          ownerUid: docSnap.id, // The document ID is the owner's UID
           name: docSnap.data().shopName || "Unnamed Store",
           address: docSnap.data().shopAddress || "No address provided",
         }));
