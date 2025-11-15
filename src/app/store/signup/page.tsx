@@ -124,6 +124,17 @@ export default function StoreSignupPage() {
                 onChange={(e) => setActivationKey(e.target.value)}
                 disabled={isLoading}
               />
+               <p className="text-xs text-muted-foreground px-1">
+                Don't have a key?{' '}
+                <a
+                  href="https://wa.me/9110218701?text=I%20need%20the%20activation%20key%20for%20my%20store"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-primary"
+                >
+                  Contact support
+                </a>
+              </p>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
