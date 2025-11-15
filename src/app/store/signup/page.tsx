@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useAuth, useFirestore } from "@/firebase";
 import { doc, setDoc } from "firebase/firestore";
@@ -23,36 +23,29 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Store, Mail, Lock, Key } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const STATIC_ACTIVATION_KEY = "LINEA-STORE-2024";
+
 export default function StoreSignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [storeName, setStoreName] = useState("");
+  const [activationKey, setActivationKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const [keyError, setKeyError] = useState("");
   
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
-
-  const activationKey = searchParams.get('key');
-
-  useEffect(() => {
-    if (!activationKey) {
-        toast({
-            variant: "destructive",
-            title: "Invalid Access",
-            description: "No activation key provided. Please use the link sent to your email.",
-        });
-    }
-  }, [activationKey, toast]);
 
 
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
+    // Reset errors on each submission attempt
     setEmailError("");
+    setKeyError("");
 
     if (!email.endsWith("@linea.com")) {
         setEmailError("Only emails from @linea.com are allowed.");
@@ -60,19 +53,11 @@ export default function StoreSignupPage() {
         return;
     }
 
-    if (!activationKey) {
-         toast({
-            variant: "destructive",
-            title: "Missing Activation Key",
-            description: "Please use the unique sign-up link from your email.",
-        });
+    if (activationKey !== STATIC_ACTIVATION_KEY) {
+        setKeyError("Invalid activation key. Please contact support.");
         setIsLoading(false);
         return;
     }
-
-    // In a real implementation, you would validate the activationKey against
-    // a backend service (e.g., a Cloud Function) here.
-    // For now, we assume if a key is present, it's valid.
 
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -154,8 +139,22 @@ export default function StoreSignupPage() {
                 className="input-paper"
               />
             </div>
+             <div className="space-y-2">
+              <Label htmlFor="activationKey" className="flex items-center gap-2"><Key />Activation Key</Label>
+              <Input
+                id="activationKey"
+                type="password"
+                placeholder="Enter your activation key"
+                required
+                value={activationKey}
+                onChange={(e) => setActivationKey(e.target.value)}
+                disabled={isLoading}
+                className={cn("input-paper", keyError && "border-destructive animate-shake")}
+              />
+              {keyError && <p className="text-sm font-medium text-destructive">{keyError}</p>}
+            </div>
             
-            <Button type="submit" className="w-full btn-paper btn-primary" disabled={isLoading || !activationKey}>
+            <Button type="submit" className="w-full btn-paper btn-primary" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Store
             </Button>
