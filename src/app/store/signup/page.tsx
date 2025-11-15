@@ -37,7 +37,7 @@ export default function StoreSignupPage() {
     event.preventDefault();
     setIsLoading(true);
 
-    if (activationKey !== "rhlinea25") {
+    if (activationKey !== "L1N-51M-9M9-NV5") {
       toast({
         variant: "destructive",
         title: "Signup Failed",
