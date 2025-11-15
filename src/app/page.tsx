@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 
 export default function RoleSelectionPage() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-muted/40 p-4">
+    <main className="flex h-screen w-screen flex-col items-center justify-center bg-muted/40">
       <Card className="w-full max-w-md card-paper">
-        <CardHeader className="text-center items-center">
+        <CardHeader className="text-center items-center p-6">
           {/* Logo Placeholder */}
           <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-background border-2 border-dashed">
             <span className="text-sm text-muted-foreground">Logo</span>
@@ -18,7 +18,7 @@ export default function RoleSelectionPage() {
           <CardTitle className="font-headline text-3xl">Welcome to Linea</CardTitle>
           <CardDescription>How would you like to continue?</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4 p-6">
+        <CardContent className="flex flex-col gap-4 p-6 pt-0">
           <RoleLink
             href="/store/login"
             icon={Store}
