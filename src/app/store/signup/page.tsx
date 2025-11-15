@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useAuth, useFirestore } from "@/firebase";
 import { doc, setDoc } from "firebase/firestore";
@@ -27,73 +27,80 @@ export default function StoreSignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [storeName, setStoreName] = useState("");
-  const [activationKey, setActivationKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
-  const [activationKeyError, setActivationKeyError] = useState("");
+  
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
 
+  const activationKey = searchParams.get('key');
+
+  useEffect(() => {
+    if (!activationKey) {
+        toast({
+            variant: "destructive",
+            title: "Invalid Access",
+            description: "No activation key provided. Please use the link sent to your email.",
+        });
+    }
+  }, [activationKey, toast]);
+
+
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
-
-    // Reset errors before validation to re-trigger animation
+    setIsLoading(true);
     setEmailError("");
-    setActivationKeyError("");
-    
-    // Use a timeout to allow React to re-render before we potentially set new errors
-    // This ensures the animation class is removed and then re-added.
-    setTimeout(async () => {
-        let hasError = false;
-        if (!email.endsWith("@linea.com")) {
-            setEmailError("Only emails from @linea.com are allowed.");
-            hasError = true;
-        }
 
-        if (activationKey !== "L1N-51M-9M9-NV5") {
-            setActivationKeyError("Invalid activation key. Please contact support");
-            hasError = true;
-        }
+    if (!email.endsWith("@linea.com")) {
+        setEmailError("Only emails from @linea.com are allowed.");
+        setIsLoading(false);
+        return;
+    }
 
-        if (hasError) {
-            setIsLoading(false);
-            return;
-        }
+    if (!activationKey) {
+         toast({
+            variant: "destructive",
+            title: "Missing Activation Key",
+            description: "Please use the unique sign-up link from your email.",
+        });
+        setIsLoading(false);
+        return;
+    }
 
-        setIsLoading(true);
+    // In a real implementation, you would validate the activationKey against
+    // a backend service (e.g., a Cloud Function) here.
+    // For now, we assume if a key is present, it's valid.
 
-        try {
-            // Key is valid, proceed with creating the user
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            await updateProfile(userCredential.user, { displayName: storeName });
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: storeName });
 
-            // Create the store document
-            const storeRef = doc(firestore, "stores", userCredential.user.uid);
-            await setDoc(storeRef, {
-                shopName: storeName,
-                ownerEmail: email,
-                createdAt: new Date(),
-            });
+        const storeRef = doc(firestore, "stores", userCredential.user.uid);
+        await setDoc(storeRef, {
+            shopName: storeName,
+            ownerEmail: email,
+            createdAt: new Date(),
+        });
 
-            toast({
-                title: "Store Account Created & Logged In",
-                description: "Redirecting to your dashboard...",
-            });
-            router.push("/store/dashboard");
+        toast({
+            title: "Store Account Created & Logged In",
+            description: "Redirecting to your dashboard...",
+        });
+        router.push("/store/dashboard");
 
-        } catch (error: any) {
-            console.error("Signup failed: ", error);
-            toast({
-                variant: "destructive",
-                title: "Signup Failed",
-                description: error.message || "An unexpected error occurred. The email might already be in use.",
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    }, 0)
+    } catch (error: any) {
+        console.error("Signup failed: ", error);
+        toast({
+            variant: "destructive",
+            title: "Signup Failed",
+            description: error.message || "An unexpected error occurred. The email might already be in use.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -104,7 +111,7 @@ export default function StoreSignupPage() {
         </header>
         <CardContent className="p-6">
           <CardDescription className="text-center mb-4">
-            Join Linea and start selling today. An activation key is required.
+            Complete the form below to set up your store account.
           </CardDescription>
           <form onSubmit={handleEmailSignUp} className="space-y-4">
             <div className="space-y-2">
@@ -147,32 +154,8 @@ export default function StoreSignupPage() {
                 className="input-paper"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="activationKey" className="flex items-center gap-2"><Key />Activation Key</Label>
-              <Input
-                id="activationKey"
-                type="text"
-                placeholder="Enter your activation key"
-                required
-                value={activationKey}
-                onChange={(e) => setActivationKey(e.target.value)}
-                disabled={isLoading}
-                className={cn("input-paper", activationKeyError && "border-destructive animate-shake")}
-              />
-              {activationKeyError && <p className="text-sm font-medium text-destructive">{activationKeyError}</p>}
-               <p className="text-xs text-muted-foreground px-1">
-                Don't have a key?{' '}
-                <a
-                  href="https://wa.me/9110218701?text=Hello!%20I'm%20setting%20up%20my%20store%20on%20Linea%20and%20would%20like%20to%20request%20an%20activation%20key.%20Thank%20you!"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline text-primary"
-                >
-                  Contact support
-                </a>
-              </p>
-            </div>
-            <Button type="submit" className="w-full btn-paper btn-primary" disabled={isLoading}>
+            
+            <Button type="submit" className="w-full btn-paper btn-primary" disabled={isLoading || !activationKey}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Store
             </Button>
