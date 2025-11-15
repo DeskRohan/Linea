@@ -29,6 +29,7 @@ export default function StoreSignupPage() {
   const [activationKey, setActivationKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const [activationKeyError, setActivationKeyError] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
@@ -37,7 +38,8 @@ export default function StoreSignupPage() {
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
-    setEmailError(""); 
+    setEmailError("");
+    setActivationKeyError("");
 
     if (!email.endsWith("@linea.com")) {
       setEmailError("Only emails from @linea.com are allowed.");
@@ -46,11 +48,7 @@ export default function StoreSignupPage() {
     }
 
     if (activationKey !== "L1N-51M-9M9-NV5") {
-      toast({
-        variant: "destructive",
-        title: "Signup Failed",
-        description: "Invalid activation key.",
-      });
+      setActivationKeyError("Invalid activation key.");
       setIsLoading(false);
       return;
     }
@@ -149,6 +147,7 @@ export default function StoreSignupPage() {
                 disabled={isLoading}
                 className="input-paper"
               />
+              {activationKeyError && <p className="text-sm font-medium text-destructive">{activationKeyError}</p>}
                <p className="text-xs text-muted-foreground px-1">
                 Don't have a key?{' '}
                 <a
