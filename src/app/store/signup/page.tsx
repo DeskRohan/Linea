@@ -38,55 +38,62 @@ export default function StoreSignupPage() {
 
   const handleEmailSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
-    setIsLoading(true);
+
+    // Reset errors before validation to re-trigger animation
     setEmailError("");
     setActivationKeyError("");
-    let hasError = false;
+    
+    // Use a timeout to allow React to re-render before we potentially set new errors
+    // This ensures the animation class is removed and then re-added.
+    setTimeout(async () => {
+        let hasError = false;
+        if (!email.endsWith("@linea.com")) {
+            setEmailError("Only emails from @linea.com are allowed.");
+            hasError = true;
+        }
 
-    if (!email.endsWith("@linea.com")) {
-      setEmailError("Only emails from @linea.com are allowed.");
-      hasError = true;
-    }
+        if (activationKey !== "L1N-51M-9M9-NV5") {
+            setActivationKeyError("Invalid activation key.");
+            hasError = true;
+        }
 
-    if (activationKey !== "L1N-51M-9M9-NV5") {
-      setActivationKeyError("Invalid activation key.");
-      hasError = true;
-    }
+        if (hasError) {
+            setIsLoading(false);
+            return;
+        }
 
-    if(hasError) {
-        setIsLoading(false);
-        return;
-    }
+        setIsLoading(true);
 
-    try {
-      // Key is valid, proceed with creating the user
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName: storeName });
+        try {
+            // Key is valid, proceed with creating the user
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(userCredential.user, { displayName: storeName });
 
-      // Create the store document
-      const storeRef = doc(firestore, "stores", userCredential.user.uid);
-      await setDoc(storeRef, {
-          shopName: storeName,
-          ownerEmail: email,
-          createdAt: new Date(),
-      });
+            // Create the store document
+            const storeRef = doc(firestore, "stores", userCredential.user.uid);
+            await setDoc(storeRef, {
+                shopName: storeName,
+                ownerEmail: email,
+                createdAt: new Date(),
+            });
 
-      toast({
-        title: "Store Account Created & Logged In",
-        description: "Redirecting to your dashboard...",
-      });
-      router.push("/store/dashboard");
+            toast({
+                title: "Store Account Created & Logged In",
+                description: "Redirecting to your dashboard...",
+            });
+            router.push("/store/dashboard");
 
-    } catch (error: any) {
-      console.error("Signup failed: ", error);
-       toast({
-        variant: "destructive",
-        title: "Signup Failed",
-        description: error.message || "An unexpected error occurred. The email might already be in use.",
-      });
-    } finally {
-        setIsLoading(false);
-    }
+        } catch (error: any) {
+            console.error("Signup failed: ", error);
+            toast({
+                variant: "destructive",
+                title: "Signup Failed",
+                description: error.message || "An unexpected error occurred. The email might already be in use.",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }, 0)
   };
 
   return (
