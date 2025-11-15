@@ -347,27 +347,29 @@ const ShoppingScreen = ({
 
          <CardContent className="flex-grow flex flex-col items-center justify-center p-4 text-center bg-foreground/5 font-mono">
             <h2 className="text-sm text-foreground/60 tracking-widest mb-2">SCANNING WINDOW</h2>
-            <div className="relative w-full max-w-md aspect-square bg-background border-2 border-border shadow-inner p-4">
-                <div className="w-full h-full relative border-2 border-dashed border-border/30 flex items-center justify-center">
+            <div className="relative w-full max-w-md aspect-video rounded-lg bg-background border-2 border-border shadow-inner overflow-hidden">
+                <div className="w-full h-full relative flex items-center justify-center">
                     {isScanning ? (
                         <>
                             <Scanner onScanSuccess={onScanSuccess} />
                             <div className="absolute inset-0 pointer-events-none border-[1rem] border-background/80 shadow-inner" />
-                            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-destructive/70 shadow-[0_0_10px_1px_theme(colors.destructive)] animate-pulse" />
+                            <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-destructive/70 shadow-[0_0_10px_1px_theme(colors.destructive)] animate-pulse" />
                         </>
                     ) : (
                        <div className="flex flex-col items-center justify-center gap-4 p-4">
                             <button
-                                className="h-full w-full flex flex-col items-center justify-center gap-2 text-foreground/40 hover:text-foreground transition-colors"
+                                className="h-full w-full flex flex-col items-center justify-center gap-2 text-foreground/40 hover:text-foreground transition-colors group"
                                 onClick={() => onSetIsScanning(true)}
                                 disabled={!selectedStore}
                             >
-                                <ScanLine className="h-16 w-16" />
-                                <h3 className="font-semibold tracking-wider">SYSTEM STATUS:</h3>
-                                <p className="text-lg">AWAITING INPUT</p>
+                                <div className="p-5 rounded-full bg-foreground/5 group-hover:bg-foreground/10 transition-colors">
+                                  <ScanLine className="h-16 w-16" />
+                                </div>
+                                <h3 className="font-sans font-semibold tracking-wider mt-2">Tap to Scan</h3>
+                                <p className="font-sans text-xs max-w-xs">Place a product's barcode in the scanner window.</p>
                             </button>
                            {!selectedStore && (
-                              <p className="text-destructive mt-1 max-w-xs text-sm">Please select a store to begin scanning.</p>
+                              <p className="text-destructive mt-1 max-w-xs text-sm font-sans">Please select a store to begin scanning.</p>
                            )}
                         </div>
                     )}
@@ -503,3 +505,5 @@ const CartFooterActions = ({
     </>
   );
 };
+
+    
