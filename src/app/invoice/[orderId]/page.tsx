@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/utils';
-import { CheckCircle2, Home, Download, Loader2 } from 'lucide-react';
+import { CheckCircle2, Home, Download, Loader2, Share2 } from 'lucide-react';
 import { type CartItem } from '@/store/cart-store';
 
 interface Order {
@@ -97,6 +97,27 @@ export default function InvoicePage() {
 
     fetchOrderAndStore();
   }, [orderId, firestore, router]);
+  
+  const handleShareOnWhatsApp = () => {
+    if (!order || !store) return;
+
+    const message = `
+Hello!
+
+Here is my bill from *${store.shopName}*.
+
+*Order ID:* ${order.id.slice(0, 8)}...
+*Total Amount:* ${formatCurrency(order.totalAmount)}
+
+You can view the full bill here:
+${window.location.href}
+
+Thank you!
+    `;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   if (loading || userLoading) {
     return (
@@ -139,13 +160,18 @@ export default function InvoicePage() {
                 <ClassicTemplate order={order} store={store} />
             </div>
         </CardContent>
-        <CardFooter className="p-6 flex flex-col sm:flex-row gap-4 border-t print:hidden">
-          <Button asChild className="w-full">
-             <Link href="/shopping"><Home className="mr-2" /> New Session</Link>
-          </Button>
-          <Button variant="outline" className="w-full" onClick={() => window.print()}>
-            <Download className="mr-2" /> Download / Print Bill
-          </Button>
+        <CardFooter className="p-6 flex flex-col gap-4 border-t print:hidden">
+            <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <Button asChild className="w-full">
+                    <Link href="/shopping"><Home className="mr-2" /> New Session</Link>
+                </Button>
+                <Button variant="outline" className="w-full" onClick={handleShareOnWhatsApp}>
+                    <Share2 className="mr-2" /> Share on WhatsApp
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => window.print()}>
+                    <Download className="mr-2" /> Download/Print
+                </Button>
+            </div>
         </CardFooter>
       </Card>
     </div>
@@ -208,7 +234,7 @@ const ClassicTemplate = ({ order, store }: { order: Order; store: StoreSettings 
     <div className="text-center text-xs mt-6 space-y-4">
        <div className="flex flex-col items-center justify-center">
             <QRCode value={order.id} size={128} />
-            <p className="mt-2 font-sans font-semibold">Scan at exit</p>
+            <p className="font-sans font-semibold">Scan at exit</p>
         </div>
       <p>{store.invoiceFooter}</p>
       <p className="mt-2">{store.terms}</p>
