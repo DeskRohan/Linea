@@ -153,11 +153,14 @@ export default function StoreSignupPage() {
               />
               {keyError && <p className="text-sm font-medium text-destructive">{keyError}</p>}
                <p className="text-xs text-muted-foreground pt-1">
-                Contact support at{' '}
-                <a href="mailto:simplinovus@gmail.com" className="underline text-primary">
-                    simplinovus@gmail.com
-                </a>{' '}
-                to get your key.
+                Don't have an activation key?{' '}
+                <a 
+                    href="https://wa.me/9110218701?text=I'm%20asking%20for%20the%20activation%20key%20for%20my%20new%20store" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline text-primary">
+                    contact support
+                </a>
                </p>
             </div>
             
