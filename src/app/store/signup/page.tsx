@@ -152,6 +152,13 @@ export default function StoreSignupPage() {
                 className={cn("input-paper", keyError && "border-destructive animate-shake")}
               />
               {keyError && <p className="text-sm font-medium text-destructive">{keyError}</p>}
+               <p className="text-xs text-muted-foreground pt-1">
+                Contact support at{' '}
+                <a href="mailto:simplinovus@gmail.com" className="underline text-primary">
+                    simplinovus@gmail.com
+                </a>{' '}
+                to get your key.
+               </p>
             </div>
             
             <Button type="submit" className="w-full btn-paper btn-primary" disabled={isLoading}>
