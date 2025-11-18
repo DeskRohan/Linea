@@ -38,17 +38,17 @@ export default function SplashScreen({ onFinished }: { onFinished: () => void })
   return (
     <div
       className={cn(
-        'fixed inset-0 z-50 flex flex-col items-center justify-center bg-background transition-opacity duration-700 ease-out',
+        'fixed inset-0 z-50 flex flex-col items-center justify-center bg-background transition-opacity duration-700 ease-out p-4',
         isFadingOut ? 'opacity-0' : 'opacity-100'
       )}
     >
       <div
         className={cn(
-          'transition-all duration-1000 ease-out',
+          'w-full max-w-md transition-all duration-1000 ease-out',
           isMounted ? 'scale-100 opacity-100' : 'scale-90 opacity-0'
         )}
       >
-        {animationData && <Lottie animationData={animationData} className="w-64 h-64" loop={false} />}
+        {animationData && <Lottie animationData={animationData} className="w-full h-auto" loop={false} />}
       </div>
       <div
         className={cn(
