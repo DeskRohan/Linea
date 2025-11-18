@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 
 export default function SplashScreen({ onFinished }: { onFinished: () => void }) {
   const [isMounted, setIsMounted] = useState(false);
+  const [showText, setShowText] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [animationData, setAnimationData] = useState(null);
 
@@ -21,6 +22,11 @@ export default function SplashScreen({ onFinished }: { onFinished: () => void })
       .catch((error) => console.error('Error loading animation:', error));
 
     setIsMounted(true);
+    
+    const textTimer = setTimeout(() => {
+        setShowText(true);
+    }, 1000); // Show text 1 second after component mounts
+
     const fadeOutTimer = setTimeout(() => {
       setIsFadingOut(true);
     }, 4200); // Start fading out after 4.2 seconds
@@ -30,6 +36,7 @@ export default function SplashScreen({ onFinished }: { onFinished: () => void })
     }, 5000); // Fully hide after 5 seconds
 
     return () => {
+      clearTimeout(textTimer);
       clearTimeout(fadeOutTimer);
       clearTimeout(finishTimer);
     };
@@ -53,7 +60,7 @@ export default function SplashScreen({ onFinished }: { onFinished: () => void })
       <div
         className={cn(
           'text-center transition-all duration-1000 ease-out mt-4',
-           isMounted ? 'opacity-100' : 'opacity-0'
+           showText ? 'opacity-100' : 'opacity-0'
         )}
       >
         <p className="text-lg font-headline text-foreground">Linea</p>
