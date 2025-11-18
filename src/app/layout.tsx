@@ -2,9 +2,11 @@
 "use client";
 
 import "./globals.css";
+import { useState, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import { Playfair_Display, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import SplashScreen from "@/components/SplashScreen";
 
 const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
@@ -30,6 +32,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
     <html lang="en" suppressHydrationWarning className={`${playfairDisplay.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
       <head>
@@ -37,10 +41,14 @@ export default function RootLayout({
         <meta name="description" content="A contactless scan-as-you-go shopping experience." />
       </head>
       <body className="font-body antialiased">
-        <FirebaseClientProvider>
-          {children}
-          <Toaster />
-        </FirebaseClientProvider>
+        {isLoading ? (
+          <SplashScreen onFinished={() => setIsLoading(false)} />
+        ) : (
+          <FirebaseClientProvider>
+            {children}
+            <Toaster />
+          </FirebaseClientProvider>
+        )}
       </body>
     </html>
   );
