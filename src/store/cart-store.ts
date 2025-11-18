@@ -18,12 +18,19 @@ export interface CartState {
   totalPrice: () => number;
 }
 
-export const useCartStore = create<CartState>()(
+// Separate non-persisted state
+const useTransientStore = create<{ hasSeenWelcomeAnimation: boolean; setHasSeenWelcomeAnimation: (seen: boolean) => void }>()((set) => ({
+  hasSeenWelcomeAnimation: false,
+  setHasSeenWelcomeAnimation: (seen) => set({ hasSeenWelcomeAnimation: seen }),
+}));
+
+
+// Persisted state
+const usePersistentStore = create<Omit<CartState, 'hasSeenWelcomeAnimation' | 'setHasSeenWelcomeAnimation'>>()(
   persist(
     (set, get) => ({
       items: [],
       store: null,
-      hasSeenWelcomeAnimation: false,
       addItem: (product) => {
         const existingItem = get().items.find((item) => item.id === product.id);
         if (existingItem) {
@@ -62,9 +69,6 @@ export const useCartStore = create<CartState>()(
         }
         set({ store });
       },
-      setHasSeenWelcomeAnimation: (seen) => {
-        set({ hasSeenWelcomeAnimation: seen });
-      },
       clearCart: () => {
         set({ items: [] });
       },
@@ -81,3 +85,20 @@ export const useCartStore = create<CartState>()(
     }
   )
 );
+
+// Combined store hook
+export const useCartStore = (): CartState => {
+    const persistentState = usePersistentStore();
+    const transientState = useTransientStore();
+
+    return {
+        ...persistentState,
+        ...transientState,
+    }
+}
+
+// Expose setters for direct use if needed outside of the combined hook
+useCartStore.getState = () => ({
+    ...usePersistentStore.getState(),
+    ...useTransientStore.getState()
+})

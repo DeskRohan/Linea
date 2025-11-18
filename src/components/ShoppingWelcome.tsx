@@ -4,12 +4,10 @@
 import { useState, useEffect } from 'react';
 import Lottie from 'lottie-react';
 import { cn } from '@/lib/utils';
-import { useCartStore } from '@/store/cart-store';
 
-export default function ShoppingWelcome() {
+export default function ShoppingWelcome({ onFinished }: { onFinished: () => void }) {
   const [animationData, setAnimationData] = useState(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
-  const setHasSeenWelcome = useCartStore((s) => s.setHasSeenWelcomeAnimation);
 
   useEffect(() => {
     fetch('/animations/shop.json')
@@ -24,7 +22,7 @@ export default function ShoppingWelcome() {
     }, 2500);
 
     const finishTimer = setTimeout(() => {
-      setHasSeenWelcome(true);
+      onFinished();
     }, 3000);
 
     return () => {
@@ -32,7 +30,7 @@ export default function ShoppingWelcome() {
         clearTimeout(finishTimer);
     }
 
-  }, [setHasSeenWelcome]);
+  }, [onFinished]);
 
   return (
     <div

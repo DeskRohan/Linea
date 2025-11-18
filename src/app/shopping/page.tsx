@@ -106,7 +106,8 @@ export default function ShoppingPage() {
     clearCart,
     addItem, 
     updateItemQuantity,
-    setStore
+    setStore,
+    setHasSeenWelcomeAnimation
   } = useCartStore();
 
 
@@ -356,7 +357,7 @@ export default function ShoppingPage() {
   if (!user) return null;
 
   if (!hasSeenWelcomeAnimation) {
-    return <ShoppingWelcome />;
+    return <ShoppingWelcome onFinished={() => setHasSeenWelcomeAnimation(true)} />;
   }
 
   return (
