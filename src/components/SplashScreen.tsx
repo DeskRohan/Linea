@@ -4,13 +4,22 @@
 import { useState, useEffect } from 'react';
 import Lottie from 'lottie-react';
 import { cn } from '@/lib/utils';
-import splashAnimation from '../../../public/animations/splash.json';
+// The import was removed as it's incorrect for public assets.
 
 export default function SplashScreen({ onFinished }: { onFinished: () => void }) {
   const [isMounted, setIsMounted] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [animationData, setAnimationData] = useState(null);
 
   useEffect(() => {
+    // Fetch animation data from the public directory
+    fetch('/animations/splash.json')
+      .then((response) => response.json())
+      .then((data) => {
+        setAnimationData(data);
+      })
+      .catch((error) => console.error('Error loading animation:', error));
+
     setIsMounted(true);
     const fadeOutTimer = setTimeout(() => {
       setIsFadingOut(true);
@@ -39,7 +48,7 @@ export default function SplashScreen({ onFinished }: { onFinished: () => void })
           isMounted ? 'scale-100 opacity-100' : 'scale-90 opacity-0'
         )}
       >
-        <Lottie animationData={splashAnimation} className="w-64 h-64" loop={false} />
+        {animationData && <Lottie animationData={animationData} className="w-64 h-64" loop={false} />}
       </div>
       <div
         className={cn(
