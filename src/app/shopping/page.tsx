@@ -71,6 +71,7 @@ import { useCartStore } from "@/store/cart-store";
 import Link from "next/link";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
+import ShoppingWelcome from "@/components/ShoppingWelcome";
 
 
 export type Store = {
@@ -101,6 +102,7 @@ export default function ShoppingPage() {
     store: selectedStore,
     totalPrice,
     totalItems,
+    hasSeenWelcomeAnimation,
     clearCart,
     addItem, 
     updateItemQuantity,
@@ -353,7 +355,9 @@ export default function ShoppingPage() {
   
   if (!user) return null;
 
-
+  if (!hasSeenWelcomeAnimation) {
+    return <ShoppingWelcome />;
+  }
 
   return (
     <div className="min-h-screen bg-background p-4 flex justify-center">

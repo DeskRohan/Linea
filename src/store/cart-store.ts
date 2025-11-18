@@ -7,10 +7,12 @@ import { type Store } from '@/lib/types';
 export interface CartState {
   items: CartItem[];
   store: Store | null;
+  hasSeenWelcomeAnimation: boolean;
   addItem: (product: Product) => void;
   removeItem: (productId: string) => void;
   updateItemQuantity: (productId: string, quantity: number) => void;
   setStore: (store: Store | null) => void;
+  setHasSeenWelcomeAnimation: (seen: boolean) => void;
   clearCart: () => void;
   totalItems: () => number;
   totalPrice: () => number;
@@ -21,6 +23,7 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       store: null,
+      hasSeenWelcomeAnimation: false,
       addItem: (product) => {
         const existingItem = get().items.find((item) => item.id === product.id);
         if (existingItem) {
@@ -58,6 +61,9 @@ export const useCartStore = create<CartState>()(
            get().clearCart();
         }
         set({ store });
+      },
+      setHasSeenWelcomeAnimation: (seen) => {
+        set({ hasSeenWelcomeAnimation: seen });
       },
       clearCart: () => {
         set({ items: [] });
