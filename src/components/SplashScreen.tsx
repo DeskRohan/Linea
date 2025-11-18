@@ -23,11 +23,11 @@ export default function SplashScreen({ onFinished }: { onFinished: () => void })
     setIsMounted(true);
     const fadeOutTimer = setTimeout(() => {
       setIsFadingOut(true);
-    }, 9200); // Start fading out after 9.2 seconds
+    }, 4200); // Start fading out after 4.2 seconds
 
     const finishTimer = setTimeout(() => {
       onFinished();
-    }, 10000); // Fully hide after 10 seconds
+    }, 5000); // Fully hide after 5 seconds
 
     return () => {
       clearTimeout(fadeOutTimer);
